@@ -1,0 +1,11 @@
+---
+configs:
+  - app_name: "some_app"
+    log_path: "/var/log/some_app"
+    cron_expression: "0 4 * * *"
+    run_agent: "some_server"
+    action:
+      type: truncate
+      from: top
+      by: megabytes
+      size: 2048
