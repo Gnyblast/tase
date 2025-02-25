@@ -1,6 +1,6 @@
 const std = @import("std");
 const zig_time = @import("zig-time");
-const utils = @import("./app/utils.zig");
+const utils = @import("./utils/helper.zig");
 
 pub fn log(
     comptime level: std.log.Level,

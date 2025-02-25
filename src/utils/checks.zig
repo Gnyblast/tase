@@ -1,6 +1,6 @@
 const std = @import("std");
-const configs = @import("config.zig");
-const enums = @import("enum.zig");
+const configs = @import("../cli/config.zig");
+const enums = @import("../enum/config_enum.zig");
 
 pub fn doInitialChecks(cfgs: std.ArrayList(configs.LogConf)) !void {
     for (cfgs.items) |cfg| {

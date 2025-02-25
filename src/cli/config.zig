@@ -1,28 +1,6 @@
 const std = @import("std");
-const enums = @import("./enum.zig");
+const enums = @import("../enum/config_enum.zig");
 const Allocator = std.mem.Allocator;
-
-pub const Tesa = struct {
-    configs: std.ArrayList(LogConf),
-    cli_args: ?argOpts = null,
-    allocator: Allocator,
-
-    pub fn init(allocator: Allocator) Tesa {
-        const arr_list = std.ArrayList(LogConf).init(allocator);
-        return Tesa{
-            .allocator = allocator,
-            .configs = arr_list,
-            .cli_args = null,
-        };
-    }
-    pub fn AddConf(self: *Tesa, conf: LogConf) !void {
-        try self.configs.append(conf);
-    }
-
-    pub fn deinit(self: *Tesa) void {
-        self.configs.deinit();
-    }
-};
 
 pub const LogConf = struct {
     app_name: []const u8,

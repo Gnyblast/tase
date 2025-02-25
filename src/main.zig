@@ -1,9 +1,9 @@
 const std = @import("std");
 const yaml = @import("yaml");
 
-const configs = @import("./app/config.zig");
-const checks = @import("./app/checks.zig");
-const parser = @import("./app/parser.zig");
+const configs = @import("./cli/config.zig");
+const app = @import("./cli/tase.zig");
+const parser = @import("./utils/parser.zig");
 const root = @import("root.zig");
 
 pub const std_options = .{ .logFn = root.log, .log_level = .info };
@@ -32,35 +32,29 @@ pub fn main() void {
     };
     defer typed.deinit();
 
-    const confWrapper = struct { configs: []configs.LogConf };
-
     std.log.info("loading conf to struct", .{});
-    const confs = typed.parse(confWrapper) catch |err| {
+    const confs = typed.parse(struct { configs: []configs.LogConf }) catch |err| {
         std.log.err("error parsing into struct: {}", .{err});
         std.process.exit(1);
     };
     allocator.free(fileContents);
 
-    var tesa = configs.Tesa.init(allocator);
-    defer tesa.deinit();
+    var tase = app.Tase.init(allocator);
+    defer tase.deinit();
 
     const cli_args = parser.parseCLI(allocator) catch |err| {
         std.log.err("error parsing CLI arguments: {}", .{err});
         std.process.exit(1);
     };
-    tesa.cli_args = cli_args.options;
+    tase.cli_args = cli_args.options;
     cli_args.deinit();
 
     for (confs.configs) |c| {
-        tesa.AddConf(c) catch |err| {
+        tase.addConf(c) catch |err| {
             std.log.err("could not add the config to app: {}", .{err});
             std.process.exit(1);
         };
     }
 
-    std.log.info("doing initial value checks", .{});
-    checks.doInitialChecks(tesa.configs) catch |err| {
-        std.log.err("failed to confirm config values: {}", .{err});
-        std.process.exit(1);
-    };
+    tase.run();
 }

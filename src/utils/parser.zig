@@ -1,7 +1,7 @@
 const std = @import("std");
 const argsParser = @import("args");
 
-const configs = @import("config.zig");
+const configs = @import("../cli/config.zig");
 
 const Allocator = std.mem.Allocator;
 
