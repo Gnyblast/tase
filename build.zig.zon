@@ -27,6 +27,14 @@
             .url = "https://github.com/kubkon/zig-yaml/archive/refs/tags/0.0.1.tar.gz",
             .hash = "1220fbd48b78d55097fbdee3308759dfa7ed9fdd6d3995b7fa04d4a9e790bf7d8cf1",
         },
+        .@"zig-time" = .{
+            .url = "git+https://github.com/deatil/zig-time?ref=main#8e389894f1cd172c604ebc692ef8310b8353f7ab",
+            .hash = "122094523f9f34368ef09c3a1e02289f180aa73c5ea402c41d5d21e1315f53d2649f",
+        },
+        .args = .{
+            .url = "git+https://github.com/ikskuh/zig-args?ref=zig-0.13.x#1df15086e5d1b245acedadbec03440bb37871e5e",
+            .hash = "1220904d2fdcd970dd0d216211d092eb3ef6da01117163cc9393ab845a1d66c029d9",
+        },
     },
     .paths = .{
         "build.zig",
