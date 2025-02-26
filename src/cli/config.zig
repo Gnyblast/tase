@@ -1,5 +1,5 @@
 const std = @import("std");
-const enums = @import("../enum/config_enum.zig");
+const enums = @import("../pkg/enum/config_enum.zig");
 const Allocator = std.mem.Allocator;
 
 pub const LogConf = struct {
@@ -8,13 +8,68 @@ pub const LogConf = struct {
     cron_expression: []const u8,
     run_agent: []const u8,
     action: LogAction,
+
+    pub fn configValid(self: LogConf) !void {
+        if (self.cron_expression.len < 1) {
+            return error.CronCannotBeUndefined;
+        }
+
+        return try self.action.checkConfigValidity();
+    }
 };
 
 const LogAction = struct {
-    type: []const u8,
+    strategy: []const u8,
     from: []const u8,
     by: []const u8,
     size: u32 = 1024,
+    days_old: u32 = 7,
+
+    fn checkConfigValidity(self: LogAction) !void {
+        if (std.mem.eql(u8, self.strategy, enums.ActionStrategy.str(enums.ActionStrategy.rotate)) or
+            (std.mem.eql(u8, self.strategy, enums.ActionStrategy.str(enums.ActionStrategy.delete))))
+        {
+            if (self.days_old < 1) {
+                return error.DeleteRequiresDaysOldField;
+            }
+        } else if (std.mem.eql(u8, self.strategy, enums.ActionStrategy.str(enums.ActionStrategy.truncate))) {
+            if (self.by.len < 1) {
+                return error.TruncateRequiresByField;
+            }
+            if (!self.isActionByValid()) {
+                return error.InvalidByFieldValue;
+            }
+
+            if (self.from.len < 1) {
+                return error.TruncateRequiresFromField;
+            }
+            if (!self.isActionFromValid()) {
+                return error.InvalidFromFieldValue;
+            }
+        } else {
+            return error.UnknownStrategy;
+        }
+    }
+
+    fn isActionByValid(self: LogAction) bool {
+        if (std.mem.eql(u8, self.by, enums.ActionBy.str(enums.ActionBy.megaBytes)) or
+            std.mem.eql(u8, self.by, enums.ActionBy.str(enums.ActionBy.lines)))
+        {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    fn isActionFromValid(self: LogAction) bool {
+        if (std.mem.eql(u8, self.from, enums.ActionFrom.str(enums.ActionFrom.fromBottom)) or
+            std.mem.eql(u8, self.from, enums.ActionFrom.str(enums.ActionFrom.fromTop)))
+        {
+            return true;
+        } else {
+            return false;
+        }
+    }
 };
 
 pub const argOpts = struct {

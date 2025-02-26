@@ -1,16 +1,16 @@
-pub const ActionType = enum {
+pub const ActionStrategy = enum {
     truncate,
     rotate,
     delete,
 
-    pub const ActionTypeName = [@typeInfo(ActionType).Enum.fields.len][:0]const u8{
+    pub const ActionStrategyName = [@typeInfo(ActionStrategy).Enum.fields.len][:0]const u8{
         "truncate",
         "rotate",
         "delete",
     };
 
-    pub fn str(self: ActionType) [:0]const u8 {
-        return ActionTypeName[@intFromEnum(self)];
+    pub fn str(self: ActionStrategy) [:0]const u8 {
+        return ActionStrategyName[@intFromEnum(self)];
     }
 };
 

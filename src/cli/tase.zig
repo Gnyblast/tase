@@ -2,7 +2,6 @@ const std = @import("std");
 
 const Allocator = std.mem.Allocator;
 
-const checks = @import("../utils/checks.zig");
 const configs = @import("./config.zig");
 
 pub const Tase = struct {
@@ -19,13 +18,11 @@ pub const Tase = struct {
         };
     }
 
-    pub fn run(self: *Tase) void {
-        std.log.info("doing initial value checks", .{});
-        checks.doInitialChecks(self.configs) catch |err| {
-            std.log.err("failed to confirm config values: {}", .{err});
-            std.process.exit(1);
-        };
-        //TODO run logic here
+    pub fn run(self: *Tase) !void {
+        std.log.info("{s}:{d} doing initial value checks", .{ @src().fn_name, @src().line });
+        for (self.configs.items) |cfg| {
+            try cfg.configValid();
+        }
     }
 
     pub fn addConf(self: *Tase, conf: configs.LogConf) !void {

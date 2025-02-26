@@ -5,7 +5,8 @@ configs:
     cron_expression: "0 4 * * *"
     run_agent: "some_server"
     action:
-      type: truncate
+      strategy: truncate
       from: top
       by: megabytes
       size: 2048
+      days_old: 2
