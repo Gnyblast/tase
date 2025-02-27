@@ -3,10 +3,10 @@ const yaml = @import("yaml");
 
 const configs = @import("./cli/config.zig");
 const app = @import("./cli/tase.zig");
-const parser = @import("./pkg/utils/parser.zig");
-const logger = @import("./pkg/utils/logger.zig");
+const parser = @import("./utils/parser.zig");
+const logger = @import("./utils/logger.zig");
 
-pub const std_options = .{ .logFn = logger.log, .log_level = .info };
+pub const std_options: std.Options = .{ .logFn = logger.log, .log_level = .info };
 
 pub fn main() void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};

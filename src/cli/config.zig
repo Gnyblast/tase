@@ -1,5 +1,5 @@
 const std = @import("std");
-const enums = @import("../pkg/enum/config_enum.zig");
+const enums = @import("../enum/config_enum.zig");
 const Allocator = std.mem.Allocator;
 
 pub const LogConf = struct {

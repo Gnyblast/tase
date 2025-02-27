@@ -1,6 +1,8 @@
 const std = @import("std");
 const zig_time = @import("zig-time");
 const utils = @import("../utils/helper.zig");
+const parser = @import("../utils/parser.zig");
+const configs = @import("../cli/config.zig");
 
 pub fn log(
     comptime level: std.log.Level,
@@ -9,7 +11,16 @@ pub fn log(
     args: anytype,
 ) void {
     const allocator = std.heap.page_allocator;
-    const path = std.fmt.allocPrint(allocator, "{s}", .{"/home/gsaramal/.local/share/tase.log"}) catch |err| {
+
+    const cli_args = parser.parseCLI(allocator) catch |err| {
+        std.debug.print("error parsing CLI arguments: {}", .{err});
+        std.process.exit(1);
+    };
+    defer cli_args.deinit();
+
+    const log_path = getLogPath(cli_args.options.@"logs-path");
+
+    const path = std.fmt.allocPrint(allocator, "{s}/{s}", .{ log_path, "tase.log" }) catch |err| {
         std.debug.print("Failed to create log file path: {}\n", .{err});
         return;
     };
@@ -64,4 +75,16 @@ fn openOrCreateLogFile(path: []const u8) !std.fs.File {
 fn getTimeStamp(alloc: std.mem.Allocator, timestamp: i64, comptime fmt: []const u8) ![]const u8 {
     const instant = zig_time.Time.fromTimestamp(timestamp).setLoc(zig_time.UTC);
     return try instant.formatAlloc(alloc, fmt);
+}
+
+fn getLogPath(path: []const u8) []const u8 {
+    if (path.len > 1)
+        return "/var/log/tase";
+
+    const last_char = path[path.len - 1 .. path.len];
+    if (std.mem.eql(u8, last_char, "/")) {
+        return path[0 .. path.len - 1];
+    }
+
+    return path;
 }
