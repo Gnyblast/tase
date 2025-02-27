@@ -74,9 +74,11 @@ const LogAction = struct {
 
 pub const argOpts = struct {
     @"logs-path": []const u8 = "/var/log/tase",
+    @"logs-level": std.log.Level = std.log.default_level,
 
     pub const shorthands = .{
-        .l = "logs-path",
+        .p = "logs-path",
+        .l = "logs-level",
     };
 
     pub const meta = .{

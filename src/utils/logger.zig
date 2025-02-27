@@ -1,24 +1,18 @@
 const std = @import("std");
 const zig_time = @import("zig-time");
-const utils = @import("../utils/helper.zig");
-const parser = @import("../utils/parser.zig");
+const argsParser = @import("args");
+const helpers = @import("../utils/helper.zig");
 const configs = @import("../cli/config.zig");
 
 pub fn log(
     comptime level: std.log.Level,
     comptime scope: @Type(.EnumLiteral),
     comptime format: []const u8,
+    log_file_path: []const u8,
     args: anytype,
 ) void {
     const allocator = std.heap.page_allocator;
-
-    const cli_args = parser.parseCLI(allocator) catch |err| {
-        std.debug.print("error parsing CLI arguments: {}", .{err});
-        std.process.exit(1);
-    };
-    defer cli_args.deinit();
-
-    const log_path = getLogPath(cli_args.options.@"logs-path");
+    const log_path = getLogFilePath(log_file_path);
 
     const path = std.fmt.allocPrint(allocator, "{s}/{s}", .{ log_path, "tase.log" }) catch |err| {
         std.debug.print("Failed to create log file path: {}\n", .{err});
@@ -49,7 +43,7 @@ pub fn log(
     };
 
     defer allocator.free(time_stamp);
-    const prefix = "[{s}] " ++ comptime utils.toUpperCase(level.asText()) ++ " " ++ "(" ++ @tagName(scope) ++ ") ";
+    const prefix = "[{s}] " ++ comptime helpers.toUpperCase(level.asText()) ++ " " ++ "(" ++ @tagName(scope) ++ ") ";
 
     var message_buffer: [4096]u8 = undefined;
     const message = std.fmt.bufPrint(message_buffer[0..], prefix ++ format ++ "\n", .{time_stamp} ++ args) catch |err| {
@@ -77,7 +71,7 @@ fn getTimeStamp(alloc: std.mem.Allocator, timestamp: i64, comptime fmt: []const 
     return try instant.formatAlloc(alloc, fmt);
 }
 
-fn getLogPath(path: []const u8) []const u8 {
+fn getLogFilePath(path: []const u8) []const u8 {
     if (path.len > 1)
         return "/var/log/tase";
 

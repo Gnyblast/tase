@@ -17,3 +17,18 @@ pub fn concatString(allocator: Allocator, a: []const u8, b: []const u8) ![]const
     std.mem.copyForwards(u8, new_str[a.len..], b);
     return new_str;
 }
+
+pub fn printApplicationInfo(version: []const u8) void {
+    const ascii =
+        \\==================================
+        \\████████╗ █████╗ ███████╗███████╗
+        \\╚══██╔══╝██╔══██╗██╔════╝██╔════╝
+        \\   ██║   ███████║███████╗█████╗  
+        \\   ██║   ██╔══██║╚════██║██╔══╝  
+        \\   ██║   ██║  ██║███████║███████╗
+        \\   ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝
+        \\==================================
+    ;
+
+    std.log.info("\n{s}\nversion: {s}", .{ ascii, version });
+}
