@@ -1,6 +1,7 @@
 const std = @import("std");
 const yaml = @import("yaml");
 const argsParser = @import("args");
+const cron = @import("cron");
 
 const configs = @import("./cli/config.zig");
 const app = @import("./cli/tase.zig");
@@ -10,7 +11,7 @@ const Allocator = std.mem.Allocator;
 pub const std_options: std.Options = .{ .logFn = logFn, .log_level = .debug };
 
 var log_level = std.log.default_level;
-pub var log_path: []const u8 = "/var/log/tase";
+pub var log_path: []const u8 = ""; //? The logic for default log dir is in logger.zig getLogFilePath()
 
 fn logFn(
     comptime message_level: std.log.Level,

@@ -54,6 +54,12 @@ pub fn build(b: *std.Build) void {
     const zig_args = b.dependency("args", .{ .target = target, .optimize = optimize });
     exe.root_module.addImport("args", zig_args.module("args"));
 
+    const cron = b.dependency("cron", .{ .target = target, .optimize = optimize });
+    exe.root_module.addImport("cron", cron.module("cron"));
+
+    const datetime = b.dependency("datetime", .{ .target = target, .optimize = optimize });
+    exe.root_module.addImport("datetime", datetime.module("zig-datetime"));
+
     // This *creates* a Run step in the build graph, to be executed when another
     // step is evaluated that depends on it. The next line below will establish
     // such a dependency.
