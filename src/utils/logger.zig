@@ -15,23 +15,26 @@ pub fn log(
     const log_path = getLogFilePath(log_file_path);
 
     const path = std.fmt.allocPrint(allocator, "{s}/{s}", .{ log_path, "tase.log" }) catch |err| {
-        std.debug.print("Failed to create log file path: {}\n", .{err});
+        std.debug.print("Failed to generate logging path: {}\n", .{err});
         return;
     };
     defer allocator.free(path);
 
     const file = openOrCreateLogFile(path) catch |err| {
-        std.debug.print("Failed to open or create log file: {}\n", .{err});
+        std.debug.print("Failed to open or create log file, make sure log dir exist with required permissions: {}\n", .{err});
+        std.process.exit(1);
         return;
     };
     defer file.close();
 
     const stat = file.stat() catch |err| {
         std.debug.print("Failed to get stat of log file: {}\n", .{err});
+        std.process.exit(1);
         return;
     };
     file.seekTo(stat.size) catch |err| {
         std.debug.print("Failed to seek log file: {}\n", .{err});
+        std.process.exit(1);
         return;
     };
 

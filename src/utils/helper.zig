@@ -18,6 +18,16 @@ pub fn concatString(allocator: Allocator, a: []const u8, b: []const u8) ![]const
     return new_str;
 }
 
+pub fn arrayContains(comptime T: type, haystack: []const []const T, needle: []const T) bool {
+    for (haystack) |item| {
+        if (std.mem.eql(T, item, needle)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 pub fn printApplicationInfo(version: []const u8) void {
     const ascii =
         \\==================================
@@ -30,5 +40,5 @@ pub fn printApplicationInfo(version: []const u8) void {
         \\==================================
     ;
 
-    std.log.info("\n{s}\nversion: {s}", .{ ascii, version });
+    std.log.info("\n{s}\nversion: v{s}", .{ ascii, version });
 }

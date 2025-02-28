@@ -3,10 +3,20 @@ configs:
   - app_name: "some_app"
     log_path: "/var/log/some_app"
     cron_expression: "0 4 * * *"
-    run_agent: "some_server"
+    run_agent_name:
+      - "test"
+      - "test2"
     action:
       strategy: truncate
       from: top
       by: megabytes
       size: 2048
       days_old: 2
+
+agents:
+  - name: test
+    hostname: some-host-name
+    port: 2000
+  - name: test2
+    hostname: some-host-name2
+    port: 2001

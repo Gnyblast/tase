@@ -56,27 +56,18 @@ pub fn main() void {
     };
     defer typed.deinit();
 
+    var tase = app.Tase.init(allocator);
+
     std.log.debug("Loading conf to struct", .{});
-    const confs = typed.parse(struct { configs: []configs.LogConf }) catch |err| {
+    tase.yamlCfg = typed.parse(configs.YamlCfgContainer) catch |err| {
         std.log.err("Error parsing into struct: {}", .{err});
         std.process.exit(1);
     };
     allocator.free(fileContents);
-
-    var tase = app.Tase.init(allocator);
-    defer tase.deinit();
-
-    tase.cli_args = cli_args.options;
     cli_args.deinit();
 
-    for (confs.configs) |c| {
-        tase.addConf(c) catch |err| {
-            std.log.err("Could not add the config to app: {}", .{err});
-            std.process.exit(1);
-        };
-    }
-
     tase.run() catch |err| {
+        std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"logs-path"});
         std.log.err("Could not start application: {}", .{err});
         std.process.exit(1);
     };

@@ -5,34 +5,29 @@ const Allocator = std.mem.Allocator;
 const configs = @import("./config.zig");
 const helpers = @import("../utils/helper.zig");
 
+pub const version = "0.0.1";
+
 pub const Tase = struct {
-    configs: std.ArrayList(configs.LogConf),
+    yamlCfg: ?configs.YamlCfgContainer = null,
     cli_args: ?configs.argOpts = null,
-    comptime version: []const u8 = "0.0.1",
+    comptime version: []const u8 = version,
     allocator: Allocator,
 
     pub fn init(allocator: Allocator) Tase {
-        const arr_list = std.ArrayList(configs.LogConf).init(allocator);
         return Tase{
             .allocator = allocator,
-            .configs = arr_list,
             .cli_args = null,
+            .yamlCfg = null,
         };
     }
 
     pub fn run(self: *Tase) !void {
         std.log.debug("Doing initial value checks", .{});
-        for (self.configs.items) |cfg| {
-            try cfg.configValid();
-        }
+        try self.yamlCfg.?.isValidYaml(self.allocator);
         helpers.printApplicationInfo(self.version);
     }
 
-    pub fn addConf(self: *Tase, conf: configs.LogConf) !void {
-        try self.configs.append(conf);
-    }
-
-    pub fn deinit(self: *Tase) void {
-        self.configs.deinit();
-    }
+    // pub fn addConf(self: *Tase, conf: configs.LogConf) !void {
+    //     try self.configs.append(conf);
+    // }
 };
