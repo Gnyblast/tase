@@ -3,12 +3,16 @@ const yaml = @import("yaml");
 const argsParser = @import("args");
 const cron = @import("cron");
 
-const configs = @import("./cli/config.zig");
-const app = @import("./cli/tase.zig");
+const configs = @import("./app/config.zig");
+const app = @import("./app/tase.zig");
 const logger = @import("./utils/logger.zig");
 const Allocator = std.mem.Allocator;
 
 pub const std_options: std.Options = .{ .logFn = logFn, .log_level = .debug };
+pub const scope_levels = [_]std.log.ScopeLevel{
+    .{ .scope = .parse, .level = .info },
+    .{ .scope = .tokenizer, .level = .info },
+};
 
 var log_level = std.log.default_level;
 pub var log_path: []const u8 = ""; //? The logic for default log dir is in logger.zig getLogFilePath()
@@ -30,21 +34,24 @@ pub fn main() void {
 
     const allocator = gpa.allocator();
 
-    const cli_args = argsParser.parseForCurrentProcess(configs.argOpts, allocator, .silent) catch |err| {
+    const cli_args = argsParser.parseForCurrentProcess(configs.argOpts, allocator, .print) catch |err| {
         std.debug.print("Error parsing CLI arguments: {}", .{err});
         std.process.exit(1);
     };
     log_level = cli_args.options.@"logs-level";
     log_path = cli_args.options.@"logs-path";
-    std.log.info("CLI argument: --logs-path: {s} --logs-level: {}", .{ cli_args.options.@"logs-path", cli_args.options.@"logs-level" });
+    std.log.info("CLI argument: --logs-path: {s} --logs-level: {} --master: {} --slave: {}", .{ cli_args.options.@"logs-path", cli_args.options.@"logs-level", cli_args.options.master, cli_args.options.slave });
+
+    var tase = app.Tase.init(allocator);
+    tase.cli_args = cli_args.options;
 
     var arena = std.heap.ArenaAllocator.init(gpa.allocator());
     defer arena.deinit();
     const arena_alloc = arena.allocator();
 
-    std.log.debug("Parsing config file at {s}", .{".config.yaml"});
+    std.log.debug("Parsing config file at {s}", .{tase.cli_args.?.config});
     const cwd = std.fs.cwd();
-    const fileContents = cwd.readFileAlloc(allocator, "./config.yaml", 4096) catch |err| {
+    const fileContents = cwd.readFileAlloc(allocator, tase.cli_args.?.config, 4096) catch |err| {
         std.log.err("Could not locate config (yaml) file: {}", .{err});
         std.process.exit(1);
     };
@@ -55,8 +62,6 @@ pub fn main() void {
         std.process.exit(1);
     };
     defer typed.deinit();
-
-    var tase = app.Tase.init(allocator);
 
     std.log.debug("Loading conf to struct", .{});
     tase.yamlCfg = typed.parse(configs.YamlCfgContainer) catch |err| {

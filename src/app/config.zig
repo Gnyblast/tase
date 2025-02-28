@@ -116,11 +116,11 @@ const LogAction = struct {
 pub const argOpts = struct {
     @"logs-path": []const u8 = "/var/log/tase",
     @"logs-level": std.log.Level = std.log.default_level,
+    master: bool = false,
+    slave: bool = false,
+    config: []const u8 = "/etc/tase/app.yaml",
 
-    pub const shorthands = .{
-        .p = "logs-path",
-        .l = "logs-level",
-    };
+    pub const shorthands = .{ .p = "logs-path", .l = "logs-level", .m = "master", .s = "slave", .c = "config" };
 
     pub const meta = .{
         .option_docs = .{ .@"logs-path" = "Directory path for log files of the tase app" },

@@ -2,7 +2,7 @@ const std = @import("std");
 const zig_time = @import("zig-time");
 const argsParser = @import("args");
 const helpers = @import("../utils/helper.zig");
-const configs = @import("../cli/config.zig");
+const configs = @import("../app/config.zig");
 
 pub fn log(
     comptime level: std.log.Level,
@@ -11,6 +11,11 @@ pub fn log(
     log_file_path: []const u8,
     args: anytype,
 ) void {
+    //? These are to ignore yaml parser logs
+    if (scope == .parse or scope == .tokenizer) {
+        return;
+    }
+
     const allocator = std.heap.page_allocator;
     const log_path = getLogFilePath(log_file_path);
 

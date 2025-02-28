@@ -24,6 +24,12 @@ pub const Tase = struct {
     pub fn run(self: *Tase) !void {
         std.log.debug("Doing initial value checks", .{});
         try self.yamlCfg.?.isValidYaml(self.allocator);
+        if (!self.cli_args.?.master and !self.cli_args.?.slave) {
+            return error.ServerMustStartedEitherAsMasterOrSlave;
+        }
+        if (self.cli_args.?.master and self.cli_args.?.slave) {
+            return error.ServerCannotBeStartedBothAsMasterAndSlave;
+        }
         helpers.printApplicationInfo(self.version);
     }
 
