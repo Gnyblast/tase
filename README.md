@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> Tase is not working at the moment, being actively developed.
+
 # Tase
 
 Tase is a lightweight log management system written in Zig. It consists of a daemon running on a master server and lightweight agents deployed across multiple servers. With a single `config.yaml`, Tase allows centralized control over log file management, including deletion, rotation, and truncation.
