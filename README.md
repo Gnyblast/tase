@@ -25,7 +25,7 @@ cd tase
 zig build
 
 # Run the master daemon
-zig-out/bin/tase-master
+zig-out/bin/tase -m master -l info -p /var/log/tase
 ```
 
 ## Configuration
