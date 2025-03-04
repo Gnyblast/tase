@@ -41,7 +41,7 @@ pub fn main() void {
     tase.yamlCfg = parseYAMLOrExit(&loaded);
 
     tase.run() catch |err| {
-        std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-path"});
+        std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-dir"});
         std.log.err("Could not start application: {}", .{err});
         std.process.exit(1);
     };
@@ -54,7 +54,7 @@ fn parseCLIOrExit(allocator: Allocator) argsParser.ParseArgsResult(configs.argOp
     };
     //? Do not log anything into std.log before below lines.
     log_level = cli_args.options.@"log-level";
-    log_path = cli_args.options.@"log-path";
+    log_path = cli_args.options.@"log-dir";
 
     if (cli_args.options.help) {
         argsParser.printHelp(configs.argOpts, "Tase", std.io.getStdOut().writer()) catch |err| {

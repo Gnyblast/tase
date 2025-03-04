@@ -8,7 +8,7 @@ pub fn log(
     comptime level: std.log.Level,
     comptime scope: @Type(.EnumLiteral),
     comptime format: []const u8,
-    log_file_path: []const u8,
+    log_file_dir: []const u8,
     args: anytype,
 ) void {
     //? These are to ignore yaml parser logs
@@ -17,9 +17,14 @@ pub fn log(
     }
 
     const allocator = std.heap.page_allocator;
-    const log_path = getLogFilePath(log_file_path);
+    createLogDirIfNotExist(log_file_dir) catch |err| {
+        std.debug.print("Failed to create logging dir: {}\n", .{err});
+        std.process.exit(1);
+        return;
+    };
+    const log_dir = getLogFilePath(log_file_dir);
 
-    const path = std.fmt.allocPrint(allocator, "{s}/{s}", .{ log_path, "tase.log" }) catch |err| {
+    const path = std.fmt.allocPrint(allocator, "{s}/{s}", .{ log_dir, "tase.log" }) catch |err| {
         std.debug.print("Failed to generate logging path: {}\n", .{err});
         return;
     };
@@ -63,6 +68,29 @@ pub fn log(
     };
 }
 
+fn createLogDirIfNotExist(log_dir: []const u8) !void {
+    _ = std.fs.openDirAbsolute(log_dir, .{}) catch |err| {
+        if (err == std.fs.Dir.OpenError.FileNotFound) {
+            try std.fs.makeDirAbsolute(log_dir);
+            return;
+        }
+
+        return err;
+    };
+}
+
+fn getLogFilePath(lod_dir: []const u8) []const u8 {
+    if (lod_dir.len < 1)
+        return "/var/log/tase";
+
+    const last_char = lod_dir[lod_dir.len - 1 .. lod_dir.len];
+    if (std.mem.eql(u8, last_char, "/")) {
+        return lod_dir[0 .. lod_dir.len - 1];
+    }
+
+    return lod_dir;
+}
+
 fn openOrCreateLogFile(path: []const u8) !std.fs.File {
     const file = std.fs.openFileAbsolute(path, .{ .mode = .read_write }) catch |err| switch (err) {
         std.fs.File.OpenError.FileNotFound => return try std.fs.createFileAbsolute(path, .{ .mode = 0o666 }),
@@ -77,16 +105,4 @@ fn openOrCreateLogFile(path: []const u8) !std.fs.File {
 fn getTimeStamp(alloc: std.mem.Allocator, timestamp: i64, comptime fmt: []const u8) ![]const u8 {
     const instant = zig_time.Time.fromTimestamp(timestamp).setLoc(zig_time.UTC);
     return try instant.formatAlloc(alloc, fmt);
-}
-
-fn getLogFilePath(path: []const u8) []const u8 {
-    if (path.len < 1)
-        return "/var/log/tase";
-
-    const last_char = path[path.len - 1 .. path.len];
-    if (std.mem.eql(u8, last_char, "/")) {
-        return path[0 .. path.len - 1];
-    }
-
-    return path;
 }

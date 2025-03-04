@@ -122,7 +122,7 @@ const MasterServerConf = struct {
 };
 
 pub const argOpts = struct {
-    @"log-path": []const u8 = "/var/log/tase",
+    @"log-dir": []const u8 = "/var/log/tase",
     @"log-level": std.log.Level = std.log.default_level,
     master: bool = false,
     agent: bool = false,
@@ -135,7 +135,7 @@ pub const argOpts = struct {
 
     pub const meta = .{
         .option_docs = .{
-            .@"log-path" = "Directory path for log files of the tase app",
+            .@"log-dir" = "Directory path for log files of the tase app",
             .@"log-level" = "Log levels: DEBUG, INFO, ERROR, FATAL",
             .master = "Set this if this server will be the master",
             .agent = "Set this if this server will be one of the agents",
