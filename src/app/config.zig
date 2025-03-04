@@ -6,6 +6,7 @@ const Allocator = std.mem.Allocator;
 pub const YamlCfgContainer = struct {
     configs: []LogConf,
     agents: []Agents,
+    server: MasterServerConf,
 
     pub fn isValidYaml(self: YamlCfgContainer, allocator: Allocator) !void {
         var arena = std.heap.ArenaAllocator.init(allocator);
@@ -41,6 +42,7 @@ pub const Agents = struct {
     name: []const u8,
     hostname: []const u8,
     port: u16,
+    secret: []const u8,
 };
 
 pub const LogConf = struct {
@@ -113,14 +115,22 @@ const LogAction = struct {
     }
 };
 
+const MasterServerConf = struct {
+    host: []const u8 = "127.0.0.1",
+    port: u16 = 7423,
+    type: []const u8 = "tcp",
+};
+
 pub const argOpts = struct {
     @"logs-path": []const u8 = "/var/log/tase",
     @"logs-level": std.log.Level = std.log.default_level,
     master: bool = false,
-    slave: bool = false,
+    agent: bool = false,
     config: []const u8 = "/etc/tase/app.yaml",
-
-    pub const shorthands = .{ .p = "logs-path", .l = "logs-level", .m = "master", .s = "slave", .c = "config" };
+    secret: ?[]const u8 = null,
+    host: []const u8 = "127.0.0.1",
+    port: u16 = 7423,
+    @"server-type": []const u8 = "tcp",
 
     pub const meta = .{
         .option_docs = .{ .@"logs-path" = "Directory path for log files of the tase app" },

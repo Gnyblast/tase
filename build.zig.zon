@@ -43,6 +43,10 @@
             .url = "https://github.com/frmdstryr/zig-datetime/archive/70aebf28fb3e137cd84123a9349d157a74708721.tar.gz",
             .hash = "122077215ce36e125a490e59ec1748ffd4f6ba00d4d14f7308978e5360711d72d77f",
         },
+        .jwt = .{
+            .url = "https://github.com/softprops/zig-jwt/archive/refs/tags/v0.1.0.tar.gz",
+            .hash = "12208cb520dabbb84d7ca2a91a3dacb2bc92ac6bb55eed367f05fa9351eff5832617",
+        },
     },
     .paths = .{
         "build.zig",

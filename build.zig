@@ -60,6 +60,12 @@ pub fn build(b: *std.Build) void {
     const datetime = b.dependency("datetime", .{ .target = target, .optimize = optimize });
     exe.root_module.addImport("datetime", datetime.module("zig-datetime"));
 
+    const jwt = b.dependency("jwt", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.root_module.addImport("jwt", jwt.module("jwt"));
+
     // This *creates* a Run step in the build graph, to be executed when another
     // step is evaluated that depends on it. The next line below will establish
     // such a dependency.

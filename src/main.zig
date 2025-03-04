@@ -6,13 +6,10 @@ const cron = @import("cron");
 const configs = @import("./app/config.zig");
 const app = @import("./app/tase.zig");
 const logger = @import("./utils/logger.zig");
+const serverFactory = @import("./server/server_factory.zig");
 const Allocator = std.mem.Allocator;
 
 pub const std_options: std.Options = .{ .logFn = logFn, .log_level = .debug };
-pub const scope_levels = [_]std.log.ScopeLevel{
-    .{ .scope = .parse, .level = .info },
-    .{ .scope = .tokenizer, .level = .info },
-};
 
 var log_level = std.log.default_level;
 pub var log_path: []const u8 = ""; //? The logic for default log dir is in logger.zig getLogFilePath()
@@ -40,7 +37,7 @@ pub fn main() void {
     };
     log_level = cli_args.options.@"logs-level";
     log_path = cli_args.options.@"logs-path";
-    std.log.info("CLI argument: --logs-path: {s} --logs-level: {} --master: {} --slave: {}", .{ cli_args.options.@"logs-path", cli_args.options.@"logs-level", cli_args.options.master, cli_args.options.slave });
+    std.log.info("CLI argument: --logs-path: {s} --logs-level: {} --master: {} --slave: {}", .{ cli_args.options.@"logs-path", cli_args.options.@"logs-level", cli_args.options.master, cli_args.options.agent });
 
     var tase = app.Tase.init(allocator);
     tase.cli_args = cli_args.options;
