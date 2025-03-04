@@ -80,7 +80,7 @@ fn getTimeStamp(alloc: std.mem.Allocator, timestamp: i64, comptime fmt: []const 
 }
 
 fn getLogFilePath(path: []const u8) []const u8 {
-    if (path.len > 1)
+    if (path.len < 1)
         return "/var/log/tase";
 
     const last_char = path[path.len - 1 .. path.len];

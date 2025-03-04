@@ -30,47 +30,70 @@ pub fn main() void {
     defer _ = gpa.deinit();
 
     const allocator = gpa.allocator();
-
-    const cli_args = argsParser.parseForCurrentProcess(configs.argOpts, allocator, .print) catch |err| {
-        std.debug.print("Error parsing CLI arguments: {}", .{err});
-        std.process.exit(1);
-    };
-    log_level = cli_args.options.@"logs-level";
-    log_path = cli_args.options.@"logs-path";
-    std.log.info("CLI argument: --logs-path: {s} --logs-level: {} --master: {} --slave: {}", .{ cli_args.options.@"logs-path", cli_args.options.@"logs-level", cli_args.options.master, cli_args.options.agent });
+    const cli_args = parseCLIOrExit(allocator);
+    defer cli_args.deinit();
 
     var tase = app.Tase.init(allocator);
     tase.cli_args = cli_args.options;
 
-    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
-    defer arena.deinit();
-    const arena_alloc = arena.allocator();
+    var loaded = loadYAMLFileOrExit(allocator, tase.cli_args.?.config);
+    defer loaded.deinit();
+    tase.yamlCfg = parseYAMLOrExit(&loaded);
 
-    std.log.debug("Parsing config file at {s}", .{tase.cli_args.?.config});
+    tase.run() catch |err| {
+        std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-path"});
+        std.log.err("Could not start application: {}", .{err});
+        std.process.exit(1);
+    };
+}
+
+fn parseCLIOrExit(allocator: Allocator) argsParser.ParseArgsResult(configs.argOpts, null) {
+    const cli_args = argsParser.parseForCurrentProcess(configs.argOpts, allocator, .print) catch |err| {
+        std.debug.print("Error parsing CLI arguments: {}", .{err});
+        std.process.exit(1);
+    };
+    //? Do not log anything into std.log before below lines.
+    log_level = cli_args.options.@"log-level";
+    log_path = cli_args.options.@"log-path";
+
+    if (cli_args.options.help) {
+        argsParser.printHelp(configs.argOpts, "Tase", std.io.getStdOut().writer()) catch |err| {
+            std.log.err("Could not print help: {}", .{err});
+        };
+        std.process.exit(0);
+    }
+
+    std.log.debug("parsed options:", .{});
+    inline for (std.meta.fields(@TypeOf(cli_args.options))) |fld| {
+        std.log.debug("\t\t{s} = {any}", .{
+            fld.name,
+            @field(cli_args.options, fld.name),
+        });
+    }
+
+    return cli_args;
+}
+
+fn loadYAMLFileOrExit(allocator: Allocator, file_path: []const u8) yaml.Yaml {
+    std.log.debug("Parsing config file at {s}", .{file_path});
     const cwd = std.fs.cwd();
-    const fileContents = cwd.readFileAlloc(allocator, tase.cli_args.?.config, 4096) catch |err| {
+    const fileContents = cwd.readFileAlloc(allocator, file_path, 4096) catch |err| {
         std.log.err("Could not locate config (yaml) file: {}", .{err});
         std.process.exit(1);
     };
+    defer allocator.free(fileContents);
 
     std.log.debug("Loading conf file content", .{});
-    var typed = yaml.Yaml.load(arena_alloc, fileContents) catch |err| {
+    return yaml.Yaml.load(allocator, fileContents) catch |err| {
         std.log.err("Error loading file contents: {}", .{err});
         std.process.exit(1);
     };
-    defer typed.deinit();
+}
 
+fn parseYAMLOrExit(loaded: *yaml.Yaml) configs.YamlCfgContainer {
     std.log.debug("Loading conf to struct", .{});
-    tase.yamlCfg = typed.parse(configs.YamlCfgContainer) catch |err| {
+    return loaded.parse(configs.YamlCfgContainer) catch |err| {
         std.log.err("Error parsing into struct: {}", .{err});
-        std.process.exit(1);
-    };
-    allocator.free(fileContents);
-    cli_args.deinit();
-
-    tase.run() catch |err| {
-        std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"logs-path"});
-        std.log.err("Could not start application: {}", .{err});
         std.process.exit(1);
     };
 }

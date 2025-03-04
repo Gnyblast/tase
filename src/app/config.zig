@@ -122,8 +122,8 @@ const MasterServerConf = struct {
 };
 
 pub const argOpts = struct {
-    @"logs-path": []const u8 = "/var/log/tase",
-    @"logs-level": std.log.Level = std.log.default_level,
+    @"log-path": []const u8 = "/var/log/tase",
+    @"log-level": std.log.Level = std.log.default_level,
     master: bool = false,
     agent: bool = false,
     config: []const u8 = "/etc/tase/app.yaml",
@@ -131,8 +131,20 @@ pub const argOpts = struct {
     host: []const u8 = "127.0.0.1",
     port: u16 = 7423,
     @"server-type": []const u8 = "tcp",
+    help: bool = false,
 
     pub const meta = .{
-        .option_docs = .{ .@"logs-path" = "Directory path for log files of the tase app" },
+        .option_docs = .{
+            .@"log-path" = "Directory path for log files of the tase app",
+            .@"log-level" = "Log levels: DEBUG, INFO, ERROR, FATAL",
+            .master = "Set this if this server will be the master",
+            .agent = "Set this if this server will be one of the agents",
+            .config = "YAML config file path",
+            .secret = "Secret for the JWT communication",
+            .host = "Server host address for agent/master communication: default: 127.0.0.1",
+            .port = "Server port for agent/master communication: default: 7423",
+            .@"server-type" = "Server type for agent/master communication",
+            .help = "Print help",
+        },
     };
 };

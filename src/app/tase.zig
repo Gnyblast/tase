@@ -38,11 +38,13 @@ pub const Tase = struct {
 
         helpers.printApplicationInfo(self.version);
         var server: serverFactory.Server = undefined;
+
         if (self.cli_args.?.agent) {
-            server = try serverFactory.getServer(self.cli_args.?.@"server-type", self.cli_args.?.host, self.cli_args.?.port, self.cli_args.?.secret);
+            server = try serverFactory.getServer(self.cli_args.?.@"server-type", self.cli_args.?.host, self.cli_args.?.port);
         } else {
-            server = try serverFactory.getServer(self.yamlCfg.?.server.type, self.yamlCfg.?.server.host, self.yamlCfg.?.server.port, "test");
+            server = try serverFactory.getServer(self.yamlCfg.?.server.type, self.yamlCfg.?.server.host, self.yamlCfg.?.server.port);
         }
+
         try server.startServer();
     }
 

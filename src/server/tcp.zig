@@ -1,7 +1,7 @@
 const std = @import("std");
+const jwt = @import("jwt");
 const net = std.net;
 const posix = std.posix;
-const jwt = @import("jwt");
 const configs = @import("../app/config.zig");
 
 const Allocator = std.mem.Allocator;
@@ -11,14 +11,9 @@ const server_factory = @import("./server_factory.zig");
 pub const TCPServer = struct {
     host: []const u8,
     port: u16,
-    secret: []const u8,
 
-    pub fn init(host: []const u8, port: u16, secret: []const u8) TCPServer {
-        return TCPServer{
-            .host = host,
-            .port = port,
-            .secret = secret,
-        };
+    pub fn init(host: []const u8, port: u16) TCPServer {
+        return TCPServer{ .host = host, .port = port };
     }
 
     pub fn getServer(self: *TCPServer) server_factory.Server {
@@ -66,14 +61,18 @@ pub const TCPServer = struct {
 
             var payload = std.mem.splitSequence(u8, &buf, "\n");
             var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+            _ = gpa.deinit();
+
             var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+            defer arena.deinit();
 
             var decoded = jwt.decode(arena.allocator(), configs.LogConf, payload.first(), .{ .secret = "secret" }, .{}) catch |err| {
-                std.log.err("JWT Decode error: {}", .{err});
+                std.log.scoped(.server).err("JWT Decode error: {}", .{err});
                 continue;
             };
             defer decoded.deinit();
-            std.log.info("{s}", .{decoded.claims.app_name});
+
+            std.log.info("{any}", .{decoded.claims});
         }
     }
 };
