@@ -123,7 +123,7 @@ const MasterServerConf = struct {
 
 pub const argOpts = struct {
     @"log-dir": []const u8 = "/var/log/tase",
-    @"log-level": std.log.Level = std.log.default_level,
+    @"log-level": std.log.Level = std.log.Level.info,
     master: bool = false,
     agent: bool = false,
     config: []const u8 = "/etc/tase/app.yaml",

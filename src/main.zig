@@ -33,15 +33,19 @@ pub fn main() void {
     const cli_args = parseCLIOrExit(allocator);
     defer cli_args.deinit();
 
-    var tase = app.Tase.init(allocator);
-    tase.cli_args = cli_args.options;
+    var loaded_yaml = loadYAMLFileOrExit(allocator, cli_args.options.config);
+    defer loaded_yaml.deinit();
 
-    var loaded = loadYAMLFileOrExit(allocator, tase.cli_args.?.config);
-    defer loaded.deinit();
-    tase.yamlCfg = parseYAMLOrExit(&loaded);
+    const yaml_cfg = parseYAMLOrExit(&loaded_yaml);
+    var tase = app.Tase.init(allocator, &cli_args.options, &yaml_cfg) catch |err| {
+        std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-dir"});
+        std.log.err("Could not create application: {}", .{err});
+        std.process.exit(1);
+    };
+    defer tase.deinit();
 
     tase.run() catch |err| {
-        std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-dir"});
+        std.debug.print("Check logs for more details at: {s}", .{tase.cli_args.@"log-dir"});
         std.log.err("Could not start application: {}", .{err});
         std.process.exit(1);
     };
