@@ -11,23 +11,33 @@ const serverFactory = @import("./server_factory.zig");
 pub const TCPServer = struct {
     host: []const u8,
     port: u16,
+    secret: []const u8,
+    agents: ?[]configs.Agents,
 
-    pub fn init(host: []const u8, port: u16) TCPServer {
-        return TCPServer{ .host = host, .port = port };
-    }
-
-    pub fn getServer(self: *TCPServer) serverFactory.Server {
-        return serverFactory.Server{
-            .ptr = self,
-            .startServerFn = startServer,
-            .destroyFn = destroy,
+    pub fn init(host: []const u8, port: u16, secret: []const u8) TCPServer {
+        return TCPServer{
+            .host = host,
+            .port = port,
+            .secret = secret,
+            .agents = null,
         };
     }
 
-    pub fn create(allocator: Allocator, host: []const u8, port: u16) !serverFactory.Server {
+    fn setAgents(ptr: *anyopaque, agents: []configs.Agents) void {
+        const self: *TCPServer = @ptrCast(@alignCast(ptr));
+        self.agents = agents;
+    }
+
+    pub fn create(allocator: Allocator, host: []const u8, port: u16, secret: []const u8) !serverFactory.Server {
         const tcp = try allocator.create(TCPServer);
-        tcp.* = TCPServer{ .host = host, .port = port };
-        return serverFactory.Server{ .ptr = tcp, .destroyFn = destroy, .startServerFn = startServer };
+        tcp.* = TCPServer.init(host, port, secret);
+        return serverFactory.Server{
+            .ptr = tcp,
+            .destroyFn = destroy,
+            .startAgentServerFn = startAgentServer,
+            .startMasterServerFn = startMasterServer,
+            .setAgentsFn = setAgents,
+        };
     }
 
     fn destroy(ptr: *anyopaque, allocator: Allocator) void {
@@ -35,18 +45,24 @@ pub const TCPServer = struct {
         allocator.destroy(self);
     }
 
-    fn startServer(ptr: *anyopaque) !void {
-        const self: *TCPServer = @ptrCast(@alignCast(ptr));
-
+    fn createTCPServer(self: TCPServer) !posix.socket_t {
         const address = try net.Address.parseIp(self.host, self.port);
         const tpe: u32 = posix.SOCK.STREAM;
         const protocol = posix.IPPROTO.TCP;
         const listener = try posix.socket(address.any.family, tpe, protocol);
-        defer posix.close(listener);
 
         try posix.setsockopt(listener, posix.SOL.SOCKET, posix.SO.REUSEADDR, &std.mem.toBytes(@as(c_int, 1)));
         try posix.bind(listener, &address.any, address.getOsSockLen());
         try posix.listen(listener, 128);
+
+        return listener;
+    }
+
+    fn startAgentServer(ptr: *anyopaque) !void {
+        const self: *TCPServer = @ptrCast(@alignCast(ptr));
+
+        const listener = try self.createTCPServer();
+        defer posix.close(listener);
 
         var gpa = std.heap.GeneralPurposeAllocator(.{}){};
         defer _ = gpa.deinit();
@@ -74,18 +90,38 @@ pub const TCPServer = struct {
                 continue;
             }
 
-            var payload = std.mem.splitSequence(u8, &buf, "\n");
-
             var arena = std.heap.ArenaAllocator.init(gpa.allocator());
             defer arena.deinit();
 
-            var decoded = jwt.decode(arena.allocator(), configs.LogConf, payload.first(), .{ .secret = "secret" }, .{}) catch |err| {
+            var decoded = jwt.decode(arena.allocator(), configs.LogConf, buf[0..read], .{ .secret = self.secret }, .{}) catch |err| {
                 std.log.scoped(.server).err("JWT Decode error: {}", .{err});
                 continue;
             };
             defer decoded.deinit();
 
+            //TODO start action in threads here
             std.log.info("{any}", .{decoded.claims});
         }
+    }
+
+    fn startMasterServer(ptr: *anyopaque) !void {
+        const self: *TCPServer = @ptrCast(@alignCast(ptr));
+        const listener = try self.createTCPServer();
+        defer posix.close(listener);
+
+        while (true) {
+            //TODO read agent hostname
+            _ = try self.getAgentSecretByHostName("");
+        }
+    }
+
+    fn getAgentSecretByHostName(self: TCPServer, hostname: []const u8) ![]const u8 {
+        for (self.agents.?) |agent| {
+            if (std.mem.eql(u8, agent.hostname, hostname)) {
+                return agent.secret;
+            }
+        }
+
+        return error.NotValidAgentHostname;
     }
 };

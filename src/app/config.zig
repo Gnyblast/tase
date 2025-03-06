@@ -51,6 +51,7 @@ pub const LogConf = struct {
     cron_expression: []const u8,
     run_agent_name: [][]const u8,
     action: LogAction,
+    exp: ?u64,
 
     pub fn isConfigValid(self: LogConf) !void {
         if (self.cron_expression.len < 1) {
