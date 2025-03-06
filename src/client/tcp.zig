@@ -33,7 +33,9 @@ pub const TCPClient = struct {
 
     fn sendMessage(ptr: *anyopaque, message: *configs.LogConf, allocator: Allocator) !void {
         const self: *TCPClient = @ptrCast(@alignCast(ptr));
-        message.*.exp = 162376271312;
+
+        //? one minute expiration added top of it
+        message.*.exp = std.time.timestamp() + 60;
 
         const encoded = try jwt.encode(allocator, .{ .alg = .HS256 }, message.*, .{ .secret = self.secret });
 

@@ -80,6 +80,10 @@ pub const TCPServer = struct {
 
             std.log.scoped(.server).debug("{} connected", .{client_address});
 
+            const timeout = posix.timeval{ .tv_sec = 2, .tv_usec = 500_000 };
+            try posix.setsockopt(socket, posix.SOL.SOCKET, posix.SO.RCVTIMEO, &std.mem.toBytes(timeout));
+            try posix.setsockopt(socket, posix.SOL.SOCKET, posix.SO.SNDTIMEO, &std.mem.toBytes(timeout));
+
             var buf: [4096]u8 = undefined;
             const read = posix.read(socket, &buf) catch |err| {
                 std.log.scoped(.server).err("error reading: {}", .{err});
@@ -99,8 +103,16 @@ pub const TCPServer = struct {
             };
             defer decoded.deinit();
 
-            //TODO start action in threads here
             std.log.info("{any}", .{decoded.claims});
+            const write = posix.write(socket, "Accepted!") catch |err| {
+                std.log.scoped(.server).err("Error sending response back to master: {}", .{err});
+                continue;
+            };
+            if (write == 0) {
+                continue;
+            }
+
+            //TODO start action in threads here
         }
     }
 
