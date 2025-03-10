@@ -4,7 +4,7 @@ configs:
     log_path: "/var/log/some_app"
     cron_expression: "0 4 * * *"
     run_agent_name:
-      - "dev"
+      - "local"
     action:
       strategy: truncate
       from: top
@@ -12,11 +12,11 @@ configs:
       size: 2048
       days_old: 2
 
-agents:
-  - name: dev
-    hostname: localhost
-    port: 2000
-    secret: b9d36fa4b6cd3d8a2f5527c792143bfc
+# agents:
+#   - name: dev
+#     hostname: localhost
+#     port: 2000
+#     secret: b9d36fa4b6cd3d8a2f5527c792143bfc
 
 server:
   host: "127.0.0.1"

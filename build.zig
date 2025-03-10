@@ -54,11 +54,11 @@ pub fn build(b: *std.Build) void {
     const zig_args = b.dependency("args", .{ .target = target, .optimize = optimize });
     exe.root_module.addImport("args", zig_args.module("args"));
 
-    const cron = b.dependency("cron", .{ .target = target, .optimize = optimize });
-    exe.root_module.addImport("cron", cron.module("cron"));
+    const cron = b.dependency("cron-time", .{ .target = target, .optimize = optimize });
+    exe.root_module.addImport("cron-time", cron.module("cron"));
 
     const datetime = b.dependency("datetime", .{ .target = target, .optimize = optimize });
-    exe.root_module.addImport("datetime", datetime.module("zig-datetime"));
+    exe.root_module.addImport("datetime", datetime.module("datetime"));
 
     const jwt = b.dependency("jwt", .{
         .target = target,

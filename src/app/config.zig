@@ -3,9 +3,11 @@ const enums = @import("../enum/config_enum.zig");
 const utils = @import("../utils/helper.zig");
 const Allocator = std.mem.Allocator;
 
+const LOCAL = "local";
+
 pub const YamlCfgContainer = struct {
     configs: []LogConf,
-    agents: []Agents,
+    agents: ?[]Agents,
     server: MasterServerConf,
 
     pub fn isValidYaml(self: YamlCfgContainer, allocator: Allocator) !void {
@@ -13,21 +15,27 @@ pub const YamlCfgContainer = struct {
         var agent_names = std.ArrayList([]const u8).init(arena.allocator());
         var agent_host_names = std.ArrayList([]const u8).init(arena.allocator());
         defer arena.deinit();
-        for (self.agents) |a| {
-            if (utils.arrayContains(u8, agent_names.items, a.name)) {
-                return error.DuplicateAgentName;
+
+        if (self.agents != null) {
+            for (self.agents.?) |a| {
+                if (utils.arrayContains(u8, agent_names.items, a.name)) {
+                    return error.DuplicateAgentName;
+                }
+                if (utils.arrayContains(u8, agent_host_names.items, a.hostname)) {
+                    return error.DuplicateAgentHostName;
+                }
+                try agent_names.append(a.name);
+                try agent_host_names.append(a.hostname);
             }
-            if (utils.arrayContains(u8, agent_host_names.items, a.hostname)) {
-                return error.DuplicateAgentHostName;
-            }
-            try agent_names.append(a.name);
-            try agent_host_names.append(a.hostname);
         }
 
         for (self.configs) |c| {
             try c.isConfigValid();
 
             for (c.run_agent_name) |a| {
+                if (std.mem.eql(u8, a, LOCAL))
+                    continue;
+
                 if (!utils.arrayContains(u8, agent_names.items, a)) {
                     return error.ConfigAgentNotDefinedInAgents;
                 }
@@ -58,33 +66,34 @@ pub const LogConf = struct {
             return error.CronCannotBeUndefined;
         }
 
-        return try self.action.checkConfigValidity();
+        return try self.action.checkActionValidity();
     }
 };
 
-const LogAction = struct {
+pub const LogAction = struct {
     strategy: []const u8,
-    from: []const u8,
-    by: []const u8,
-    size: u32 = 1024,
-    days_old: u32 = 7,
+    from: ?[]const u8 = null,
+    by: ?[]const u8 = null,
+    size: ?u32 = 1024,
+    days_old: ?u32 = 7,
+    compression_type: ?[]const u8 = "gzip",
 
-    fn checkConfigValidity(self: LogAction) !void {
+    fn checkActionValidity(self: LogAction) !void {
         if (std.mem.eql(u8, self.strategy, enums.ActionStrategy.str(enums.ActionStrategy.rotate)) or
             (std.mem.eql(u8, self.strategy, enums.ActionStrategy.str(enums.ActionStrategy.delete))))
         {
-            if (self.days_old < 1) {
+            if (self.days_old != null and self.days_old.? < 1) {
                 return error.DeleteRequiresDaysOldField;
             }
         } else if (std.mem.eql(u8, self.strategy, enums.ActionStrategy.str(enums.ActionStrategy.truncate))) {
-            if (self.by.len < 1) {
+            if (self.by != null and self.by.?.len < 1) {
                 return error.TruncateRequiresByField;
             }
             if (!self.isActionByValid()) {
                 return error.InvalidByFieldValue;
             }
 
-            if (self.from.len < 1) {
+            if (self.from != null and self.from.?.len < 1) {
                 return error.TruncateRequiresFromField;
             }
             if (!self.isActionFromValid()) {
@@ -96,8 +105,10 @@ const LogAction = struct {
     }
 
     fn isActionByValid(self: LogAction) bool {
-        if (std.mem.eql(u8, self.by, enums.ActionBy.str(enums.ActionBy.megaBytes)) or
-            std.mem.eql(u8, self.by, enums.ActionBy.str(enums.ActionBy.lines)))
+        if (self.by == null)
+            return false;
+        if (std.mem.eql(u8, self.by.?, enums.ActionBy.str(enums.ActionBy.megaBytes)) or
+            std.mem.eql(u8, self.by.?, enums.ActionBy.str(enums.ActionBy.lines)))
         {
             return true;
         } else {
@@ -106,8 +117,10 @@ const LogAction = struct {
     }
 
     fn isActionFromValid(self: LogAction) bool {
-        if (std.mem.eql(u8, self.from, enums.ActionFrom.str(enums.ActionFrom.fromBottom)) or
-            std.mem.eql(u8, self.from, enums.ActionFrom.str(enums.ActionFrom.fromTop)))
+        if (self.from == null)
+            return false;
+        if (std.mem.eql(u8, self.from.?, enums.ActionFrom.str(enums.ActionFrom.fromBottom)) or
+            std.mem.eql(u8, self.from.?, enums.ActionFrom.str(enums.ActionFrom.fromTop)))
         {
             return true;
         } else {

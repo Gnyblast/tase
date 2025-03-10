@@ -6,7 +6,8 @@
     //
     // It is redundant to include "zig" in this name because it is already
     // within the Zig package namespace.
-    .name = "tase",
+    .name = .tase,
+    .fingerprint = 0xb5c6f62239f67053,
 
     // This is a [Semantic Version](https://semver.org/).
     // In a future version of Zig it will be used for package deduplication.
@@ -23,29 +24,29 @@
     // Once all dependencies are fetched, `zig build` no longer requires
     // internet connectivity.
     .dependencies = .{
+        .jwt = .{
+            .url = "git+https://github.com/Gnyblast/zig-jwt?ref=main#330a1475432709e50eb966ba1daf58d7055b2a6a",
+            .hash = "jwt-0.1.0-NpgsftSFAADG-pS-fJWagYHRqrrodDluGoJBv8ZJJlrW",
+        },
         .yaml = .{
-            .url = "https://github.com/kubkon/zig-yaml/archive/refs/tags/0.0.1.tar.gz",
-            .hash = "1220fbd48b78d55097fbdee3308759dfa7ed9fdd6d3995b7fa04d4a9e790bf7d8cf1",
+            .url = "git+https://github.com/kubkon/zig-yaml?ref=master#27f63d3d2d13ed228d8fc077635205e6c2a405c7",
+            .hash = "zig_yaml-0.1.0-C1161hVrAgDsyB2EZnq-Vp-QuZ9xJm2y0dECRXGG3UaP",
         },
         .@"zig-time" = .{
-            .url = "git+https://github.com/deatil/zig-time?ref=main#8e389894f1cd172c604ebc692ef8310b8353f7ab",
-            .hash = "122094523f9f34368ef09c3a1e02289f180aa73c5ea402c41d5d21e1315f53d2649f",
-        },
-        .args = .{
-            .url = "git+https://github.com/ikskuh/zig-args?ref=zig-0.13.x#1df15086e5d1b245acedadbec03440bb37871e5e",
-            .hash = "1220904d2fdcd970dd0d216211d092eb3ef6da01117163cc9393ab845a1d66c029d9",
-        },
-        .cron = .{
-            .url = "git+https://github.com/dying-will-bullet/cron?ref=master#85183419e421cce235119204abf3f9b387ed7599",
-            .hash = "1220679f5224a838ce1079bd7238451eaad630acde87b8439c5f12be96ffb66aa7a9",
+            .url = "git+https://github.com/deatil/zig-time?ref=main#8e8e5d6e9ab218fdad660b485d92073892097411",
+            .hash = "zig_time-1.0.15-FD_-CmKfAQAyCNpd_zTknuLfqICbphDXTG69tW1pE8k1",
         },
         .datetime = .{
-            .url = "https://github.com/frmdstryr/zig-datetime/archive/70aebf28fb3e137cd84123a9349d157a74708721.tar.gz",
-            .hash = "122077215ce36e125a490e59ec1748ffd4f6ba00d4d14f7308978e5360711d72d77f",
+            .url = "git+https://github.com/frmdstryr/zig-datetime?ref=master#4d0e84cd8844c0672e0cbe247a3130750c9e0f27",
+            .hash = "datetime-0.8.0-cJNXzJSJAQB5RKwPglxoEq875GmehZoLjuAlKzvWp4_O",
         },
-        .jwt = .{
-            .url = "https://github.com/softprops/zig-jwt/archive/refs/tags/v0.1.0.tar.gz",
-            .hash = "12208cb520dabbb84d7ca2a91a3dacb2bc92ac6bb55eed367f05fa9351eff5832617",
+        .args = .{
+            .url = "git+https://github.com/ikskuh/zig-args?ref=master#9425b94c103a031777fdd272c555ce93a7dea581",
+            .hash = "args-0.0.0-CiLiqv_NAAC97fGpk9hS2K681jkiqPsWP6w3ucb_ctGH",
+        },
+        .@"cron-time" = .{
+            .url = "git+https://github.com/dying-will-bullet/cron?ref=master#447a621f3f79f80e4f42ab3ad5d39ccf3f368ec5",
+            .hash = "cron-0.1.0-joDqxCjlAAA7s2S_Vwz5eWwwUVN_oFPuxeN08kdBkmYl",
         },
     },
     .paths = .{

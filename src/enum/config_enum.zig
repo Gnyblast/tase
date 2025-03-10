@@ -3,7 +3,7 @@ pub const ActionStrategy = enum {
     rotate,
     delete,
 
-    pub const ActionStrategyName = [@typeInfo(ActionStrategy).Enum.fields.len][:0]const u8{
+    pub const ActionStrategyName = [@typeInfo(ActionStrategy).@"enum".fields.len][:0]const u8{
         "truncate",
         "rotate",
         "delete",
@@ -18,7 +18,7 @@ pub const ActionFrom = enum {
     fromBottom,
     fromTop,
 
-    pub const ActionFromName = [@typeInfo(ActionFrom).Enum.fields.len][:0]const u8{
+    pub const ActionFromName = [@typeInfo(ActionFrom).@"enum".fields.len][:0]const u8{
         "bottom",
         "top",
     };
@@ -32,12 +32,28 @@ pub const ActionBy = enum {
     lines,
     megaBytes,
 
-    pub const ActionByName = [@typeInfo(ActionBy).Enum.fields.len][:0]const u8{
+    pub const ActionByName = [@typeInfo(ActionBy).@"enum".fields.len][:0]const u8{
         "lines",
         "megabytes",
     };
 
     pub fn str(self: ActionBy) [:0]const u8 {
         return ActionByName[@intFromEnum(self)];
+    }
+};
+
+pub const CompressType = enum {
+    gzip,
+    zstd,
+    xz,
+
+    pub const CompressTypeName = [@typeInfo(CompressType).@"enum".fields.len][:0]const u8{
+        "gzip",
+        "zstd",
+        "xz",
+    };
+
+    pub fn str(self: CompressType) [:0]const u8 {
+        return CompressTypeName[@intFromEnum(self)];
     }
 };

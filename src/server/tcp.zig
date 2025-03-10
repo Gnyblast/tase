@@ -80,7 +80,7 @@ pub const TCPServer = struct {
 
             std.log.scoped(.server).debug("{} connected", .{client_address});
 
-            const timeout = posix.timeval{ .tv_sec = 2, .tv_usec = 500_000 };
+            const timeout = posix.timeval{ .sec = 2, .usec = 500_000 };
             try posix.setsockopt(socket, posix.SOL.SOCKET, posix.SO.RCVTIMEO, &std.mem.toBytes(timeout));
             try posix.setsockopt(socket, posix.SOL.SOCKET, posix.SO.SNDTIMEO, &std.mem.toBytes(timeout));
 

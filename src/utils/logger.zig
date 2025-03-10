@@ -6,7 +6,7 @@ const configs = @import("../app/config.zig");
 
 pub fn log(
     comptime level: std.log.Level,
-    comptime scope: @Type(.EnumLiteral),
+    comptime scope: @Type(.enum_literal),
     comptime format: []const u8,
     log_file_dir: []const u8,
     args: anytype,
