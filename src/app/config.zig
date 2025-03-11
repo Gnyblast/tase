@@ -75,8 +75,8 @@ pub const LogAction = struct {
     strategy: []const u8,
     from: ?[]const u8 = null,
     by: ?[]const u8 = null,
-    size: ?u32 = 1024,
-    n_days_old: ?u32 = 7,
+    size: ?u32 = null,
+    delete_older_than_days: ?u32 = 7,
     compress: ?bool = false,
     compression_type: ?[]const u8 = "gzip",
     compression_level: ?u8 = 0,
@@ -96,15 +96,25 @@ pub const LogAction = struct {
     }
 
     fn checkMandatoryFieldsForDelete(self: LogAction) !void {
-        if (self.n_days_old == null or self.n_days_old.? < 1)
+        if (self.delete_older_than_days == null or self.delete_older_than_days.? < 1)
             return error.NDaysOldRequired;
 
         return;
     }
 
     fn checkMandatoryFieldsForRotate(self: LogAction) !void {
-        if (self.n_days_old == null or self.n_days_old.? < 1)
-            return error.NDaysOldRequired;
+        if (self.by == null or self.by.?.len < 1) {
+            return error.RotateRequiresByField;
+        }
+
+        switch (std.meta.stringToEnum(enums.ActionBy, self.by.?) orelse return error.InvalidRotateBy) {
+            enums.ActionBy.days, enums.ActionBy.megabytes => {},
+            else => return error.InvalidRotateBy,
+        }
+
+        if (self.size == null or self.size.? < 1) {
+            return error.SizeIsRequiredForRotate;
+        }
 
         if (self.compress != null and self.compress.?) {
             if (self.compression_type == null)
@@ -126,21 +136,20 @@ pub const LogAction = struct {
             return error.TruncateRequiresByField;
         }
 
-        switch (std.meta.stringToEnum(enums.ActionBy, self.by.?) orelse return error.InvalidByFieldValue) {
-            enums.ActionBy.lines, enums.ActionBy.megabytes => {
-                return;
-            },
+        switch (std.meta.stringToEnum(enums.ActionBy, self.by.?) orelse return error.InvalidTruncateBy) {
+            enums.ActionBy.lines, enums.ActionBy.megabytes => {},
+            else => return error.InvalidTruncateBy,
+        }
+
+        if (self.size == null or self.size.? < 1) {
+            return error.SizeIsRequiredForTruncate;
         }
 
         if (self.from == null or self.from.?.len < 1) {
             return error.TruncateRequiresFromField;
         }
 
-        switch (std.meta.stringToEnum(enums.ActionFrom, self.from.?) orelse return error.InvalidFromFieldValue) {
-            enums.ActionFrom.fromBottom, enums.ActionFrom.fromTop => {
-                return;
-            },
-        }
+        _ = std.meta.stringToEnum(enums.ActionFrom, self.from.?) orelse return error.InvalidFromFieldValue;
     }
 };
 

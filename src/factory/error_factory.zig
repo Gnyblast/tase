@@ -62,7 +62,7 @@ pub const errors = [_]TaseError{
     },
     .{
         .err = error.NDaysOldRequired,
-        .message = "delete/rotate config required \"n_day_old\" field to set to a number",
+        .message = "delete config required \"delete_older_than_days\" field to set to a number",
     },
     .{
         .err = error.CompressionTypeMandatory,
@@ -81,10 +81,6 @@ pub const errors = [_]TaseError{
         .message = "truncate strategy requires \"by\" field to set",
     },
     .{
-        .err = error.InvalidByFieldValue,
-        .message = "\"by\" filed value is invalid",
-    },
-    .{
         .err = error.TruncateRequiresFromField,
         .message = "truncate strategy requires \"from\" field to set",
     },
@@ -95,5 +91,25 @@ pub const errors = [_]TaseError{
     .{
         .err = error.NotValidAgentHostname,
         .message = "hostname is not valid for any agents",
+    },
+    .{
+        .err = error.SizeIsRequiredForRotate,
+        .message = "rotate strategy requires \"size\" field to set",
+    },
+    .{
+        .err = error.SizeIsRequiredForTruncate,
+        .message = "truncate strategy requires \"size\" field to set",
+    },
+    .{
+        .err = error.RotateRequiresByField,
+        .message = "rotate strategy requires \"by\" field to set",
+    },
+    .{
+        .err = error.InvalidRotateBy,
+        .message = "value for \"by\" field in rotate is invalid",
+    },
+    .{
+        .err = error.InvalidTruncateBy,
+        .message = "value for \"by\" field in truncate is invalid",
     },
 };

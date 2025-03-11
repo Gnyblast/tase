@@ -7,7 +7,6 @@ pub const ActionStrategy = enum {
         "truncate",
         "rotate",
         "delete",
-        "rotatedelete",
     };
 
     pub fn str(self: ActionStrategy) [:0]const u8 {
@@ -16,8 +15,8 @@ pub const ActionStrategy = enum {
 };
 
 pub const ActionFrom = enum {
-    fromBottom,
-    fromTop,
+    bottom,
+    top,
 
     pub const ActionFromName = [@typeInfo(ActionFrom).@"enum".fields.len][:0]const u8{
         "bottom",
@@ -32,10 +31,12 @@ pub const ActionFrom = enum {
 pub const ActionBy = enum {
     lines,
     megabytes,
+    days,
 
     pub const ActionByName = [@typeInfo(ActionBy).@"enum".fields.len][:0]const u8{
         "lines",
         "megabytes",
+        "days",
     };
 
     pub fn str(self: ActionBy) [:0]const u8 {
