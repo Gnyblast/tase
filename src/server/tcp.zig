@@ -6,7 +6,7 @@ const configs = @import("../app/config.zig");
 
 const Allocator = std.mem.Allocator;
 
-const serverFactory = @import("./server_factory.zig");
+const serverFactory = @import("../factory/server_factory.zig");
 
 pub const TCPServer = struct {
     host: []const u8,
@@ -121,9 +121,43 @@ pub const TCPServer = struct {
         const listener = try self.createTCPServer();
         defer posix.close(listener);
 
+        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        defer _ = gpa.deinit();
+
         while (true) {
-            //TODO read agent hostname
-            _ = try self.getAgentSecretByHostName("");
+            var client_address: net.Address = undefined;
+            var client_address_len: posix.socklen_t = @sizeOf(net.Address);
+
+            const socket = posix.accept(listener, &client_address.any, &client_address_len, 0) catch |err| {
+                // Rare that this happens, but in later parts we'll
+                // see examples where it does.
+                std.log.scoped(.server).debug("error accept: {}", .{err});
+                continue;
+            };
+            defer posix.close(socket);
+
+            var buf: [4096]u8 = undefined;
+            const read = posix.read(socket, &buf) catch |err| {
+                std.log.scoped(.server).err("error reading: {}", .{err});
+                continue;
+            };
+
+            if (read == 0) {
+                continue;
+            }
+
+            var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+            defer arena.deinit();
+
+            var decoded = jwt.decodeNoVerify(arena.allocator(), configs.LogConf, buf[0..read]) catch |err| {
+                std.log.scoped(.server).err("JWT Decode error: {}", .{err});
+                continue;
+            };
+            defer decoded.deinit();
+            //TODO this should get caught
+            const secret = try self.getAgentSecretByHostName(decoded.claims.agent_hostname.?);
+            //TODO: now decode and verify the message with correct secret used
+            std.log.info("{s}", .{secret});
         }
     }
 

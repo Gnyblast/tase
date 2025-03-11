@@ -6,13 +6,15 @@ const cron = @import("cron");
 const configs = @import("./app/config.zig");
 const app = @import("./app/tase.zig");
 const logger = @import("./utils/logger.zig");
-const serverFactory = @import("./server/server_factory.zig");
+const errorFactory = @import("./factory/error_factory.zig");
+const serverFactory = @import("./factory/server_factory.zig");
 const Allocator = std.mem.Allocator;
 
 pub const std_options: std.Options = .{ .logFn = logFn, .log_level = .debug };
 
 var log_level = std.log.default_level;
 pub var log_path: []const u8 = ""; //? The logic for default log dir is in logger.zig getLogFilePath()
+pub var is_agent: bool = false;
 
 fn logFn(
     comptime message_level: std.log.Level,
@@ -21,7 +23,7 @@ fn logFn(
     args: anytype,
 ) void {
     if (@intFromEnum(message_level) <= @intFromEnum(log_level)) {
-        logger.log(message_level, scope, format, log_path, args);
+        logger.log(message_level, scope, format, log_path, is_agent, args);
     }
 }
 
@@ -36,19 +38,27 @@ pub fn main() void {
     var loaded_yaml = loadYAMLFileOrExit(allocator, cli_args.options.config);
     defer loaded_yaml.deinit(allocator);
 
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    const yaml_cfg = parseYAMLOrExit(&arena, &loaded_yaml);
+    var yaml_cfg: configs.YamlCfgContainer = undefined;
+
+    if (cli_args.options.master) {
+        var arena = std.heap.ArenaAllocator.init(allocator);
+        defer arena.deinit();
+        yaml_cfg = parseYAMLOrExit(&arena, &loaded_yaml);
+    }
+
     var tase = app.Tase.init(allocator, &cli_args.options, &yaml_cfg) catch |err| {
+        const err_msg = errorFactory.getLogMessageByErr(err);
         std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-dir"});
-        std.log.scoped(.yaml).err("Could not create application: {}", .{err});
+        std.log.scoped(.yaml).err("Could not create application: {s}", .{err_msg});
         std.process.exit(1);
     };
+
     defer tase.deinit();
-    defer arena.deinit();
 
     tase.run() catch |err| {
+        const err_msg = errorFactory.getLogMessageByErr(err);
         std.debug.print("Check logs for more details at: {s}", .{tase.cli_args.@"log-dir"});
-        std.log.err("Could not start application: {}", .{err});
+        std.log.err("Could not start application: {s}", .{err_msg});
         std.process.exit(1);
     };
 }
@@ -61,6 +71,7 @@ fn parseCLIOrExit(allocator: Allocator) argsParser.ParseArgsResult(configs.argOp
     //? Do not log anything into std.log before below lines.
     log_level = cli_args.options.@"log-level";
     log_path = cli_args.options.@"log-dir";
+    is_agent = cli_args.options.agent;
 
     if (cli_args.options.help) {
         argsParser.printHelp(configs.argOpts, "Tase", std.io.getStdOut().writer()) catch |err| {

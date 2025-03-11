@@ -24,10 +24,6 @@
     // Once all dependencies are fetched, `zig build` no longer requires
     // internet connectivity.
     .dependencies = .{
-        .jwt = .{
-            .url = "git+https://github.com/Gnyblast/zig-jwt?ref=main#330a1475432709e50eb966ba1daf58d7055b2a6a",
-            .hash = "jwt-0.1.0-NpgsftSFAADG-pS-fJWagYHRqrrodDluGoJBv8ZJJlrW",
-        },
         .yaml = .{
             .url = "git+https://github.com/kubkon/zig-yaml?ref=master#27f63d3d2d13ed228d8fc077635205e6c2a405c7",
             .hash = "zig_yaml-0.1.0-C1161hVrAgDsyB2EZnq-Vp-QuZ9xJm2y0dECRXGG3UaP",
@@ -47,6 +43,10 @@
         .@"cron-time" = .{
             .url = "git+https://github.com/dying-will-bullet/cron?ref=master#447a621f3f79f80e4f42ab3ad5d39ccf3f368ec5",
             .hash = "cron-0.1.0-joDqxCjlAAA7s2S_Vwz5eWwwUVN_oFPuxeN08kdBkmYl",
+        },
+        .jwt = .{
+            .url = "git+https://github.com/Gnyblast/zig-jwt?ref=main#b4fe2cd1bc5024b727a5caa766145630dc9a27e4",
+            .hash = "jwt-0.1.0-Npgsfr-JAAAnh3ySnGw5GuHKGvaDfFvYqoxlU55EcUpw",
         },
     },
     .paths = .{

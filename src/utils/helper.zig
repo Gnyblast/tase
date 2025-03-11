@@ -28,7 +28,7 @@ pub fn arrayContains(comptime T: type, haystack: []const []const T, needle: []co
     return false;
 }
 
-pub fn printApplicationInfo(version: []const u8) void {
+pub fn printApplicationInfo(run_type: []const u8, version: []const u8, host: []const u8, port: u16) void {
     const ascii =
         \\==================================
         \\████████╗ █████╗ ███████╗███████╗
@@ -40,5 +40,5 @@ pub fn printApplicationInfo(version: []const u8) void {
         \\==================================
     ;
 
-    std.log.info("\n{s}\nversion: v{s}", .{ ascii, version });
+    std.log.info("\n{s}\nType: {s}\nVersion: v{s}\nListening at {s}:{d}", .{ ascii, run_type, version, host, port });
 }

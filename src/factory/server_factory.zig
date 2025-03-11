@@ -1,5 +1,5 @@
 const std = @import("std");
-const tcp = @import("./tcp.zig");
+const tcp = @import("../server/tcp.zig");
 const configs = @import("../app/config.zig");
 
 const Allocator = std.mem.Allocator;

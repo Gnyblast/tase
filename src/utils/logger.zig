@@ -9,6 +9,7 @@ pub fn log(
     comptime scope: @Type(.enum_literal),
     comptime format: []const u8,
     log_file_dir: []const u8,
+    is_agent: bool,
     args: anytype,
 ) void {
     //? These are to ignore yaml parser logs
@@ -24,7 +25,9 @@ pub fn log(
     };
     const log_dir = getLogFilePath(log_file_dir);
 
-    const path = std.fmt.allocPrint(allocator, "{s}/{s}", .{ log_dir, "tase.log" }) catch |err| {
+    const log_file_name = if (is_agent) "tase-agent.log" else "tase-master.log";
+
+    const path = std.fmt.allocPrint(allocator, "{s}/{s}", .{ log_dir, log_file_name }) catch |err| {
         std.debug.print("Failed to generate logging path: {}\n", .{err});
         return;
     };

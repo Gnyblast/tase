@@ -1,7 +1,7 @@
 ---
 configs:
-  - app_name: "some_app"
-    log_path: "/var/log/some_app"
+  - app_name: "truncate_app"
+    log_files_regexp: "/var/log/truncate_app"
     cron_expression: "0 4 * * *"
     run_agent_name:
       - "local"
@@ -10,13 +10,46 @@ configs:
       from: top
       by: megabytes
       size: 2048
-      days_old: 2
 
-# agents:
-#   - name: dev
-#     hostname: localhost
-#     port: 2000
-#     secret: b9d36fa4b6cd3d8a2f5527c792143bfc
+  - app_name: "rotate_app_no_compress"
+    log_files_regexp: "/var/log/rotate_app_no_compress"
+    cron_expression: "0 5 * * *"
+    run_agent_name:
+      - "local"
+      - "dev"
+    action:
+      strategy: rotate
+      n_days_old: 7
+      compress: false
+
+  - app_name: "rotate_app_compress"
+    log_files_regexp: "/var/log/rotate_app_compress"
+    cron_expression: "0 5 * * *"
+    run_agent_name:
+      - "local"
+      - "dev"
+    action:
+      strategy: rotate
+      n_days_old: 7
+      compress: true
+      compression_type: gzip
+      compression_level: 5
+
+  - app_name: "delete_app"
+    log_files_regexp: "/var/log/delete_app"
+    cron_expression: "0 5 * * *"
+    run_agent_name:
+      - "local"
+      - "dev"
+    action:
+      strategy: delete
+      n_days_old: 3
+
+agents:
+  - name: dev
+    hostname: localhost
+    port: 2000
+    secret: b9d36fa4b6cd3d8a2f5527c792143bfc
 
 server:
   host: "127.0.0.1"

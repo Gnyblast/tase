@@ -7,6 +7,7 @@ pub const ActionStrategy = enum {
         "truncate",
         "rotate",
         "delete",
+        "rotatedelete",
     };
 
     pub fn str(self: ActionStrategy) [:0]const u8 {
@@ -30,7 +31,7 @@ pub const ActionFrom = enum {
 
 pub const ActionBy = enum {
     lines,
-    megaBytes,
+    megabytes,
 
     pub const ActionByName = [@typeInfo(ActionBy).@"enum".fields.len][:0]const u8{
         "lines",

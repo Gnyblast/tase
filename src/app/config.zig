@@ -37,7 +37,7 @@ pub const YamlCfgContainer = struct {
                     continue;
 
                 if (!utils.arrayContains(u8, agent_names.items, a)) {
-                    return error.ConfigAgentNotDefinedInAgents;
+                    return error.UndefinedAgent;
                 }
             }
         }
@@ -55,9 +55,10 @@ pub const Agents = struct {
 
 pub const LogConf = struct {
     app_name: []const u8,
-    log_path: []const u8,
+    log_files_regexp: []const u8,
     cron_expression: []const u8,
     run_agent_name: [][]const u8,
+    agent_hostname: ?[]const u8,
     action: LogAction,
     exp: ?i64,
 
@@ -75,56 +76,70 @@ pub const LogAction = struct {
     from: ?[]const u8 = null,
     by: ?[]const u8 = null,
     size: ?u32 = 1024,
-    days_old: ?u32 = 7,
+    n_days_old: ?u32 = 7,
+    compress: ?bool = false,
     compression_type: ?[]const u8 = "gzip",
+    compression_level: ?u8 = 0,
 
     fn checkActionValidity(self: LogAction) !void {
-        if (std.mem.eql(u8, self.strategy, enums.ActionStrategy.str(enums.ActionStrategy.rotate)) or
-            (std.mem.eql(u8, self.strategy, enums.ActionStrategy.str(enums.ActionStrategy.delete))))
-        {
-            if (self.days_old != null and self.days_old.? < 1) {
-                return error.DeleteRequiresDaysOldField;
-            }
-        } else if (std.mem.eql(u8, self.strategy, enums.ActionStrategy.str(enums.ActionStrategy.truncate))) {
-            if (self.by != null and self.by.?.len < 1) {
-                return error.TruncateRequiresByField;
-            }
-            if (!self.isActionByValid()) {
-                return error.InvalidByFieldValue;
-            }
-
-            if (self.from != null and self.from.?.len < 1) {
-                return error.TruncateRequiresFromField;
-            }
-            if (!self.isActionFromValid()) {
-                return error.InvalidFromFieldValue;
-            }
-        } else {
-            return error.UnknownStrategy;
+        switch (std.meta.stringToEnum(enums.ActionStrategy, self.strategy) orelse return error.InvalidStrategy) {
+            enums.ActionStrategy.delete => {
+                return self.checkMandatoryFieldsForDelete();
+            },
+            enums.ActionStrategy.rotate => {
+                return self.checkMandatoryFieldsForRotate();
+            },
+            enums.ActionStrategy.truncate => {
+                return self.checkMandatoryFieldsForTruncate();
+            },
         }
     }
 
-    fn isActionByValid(self: LogAction) bool {
-        if (self.by == null)
-            return false;
-        if (std.mem.eql(u8, self.by.?, enums.ActionBy.str(enums.ActionBy.megaBytes)) or
-            std.mem.eql(u8, self.by.?, enums.ActionBy.str(enums.ActionBy.lines)))
-        {
-            return true;
-        } else {
-            return false;
+    fn checkMandatoryFieldsForDelete(self: LogAction) !void {
+        if (self.n_days_old == null or self.n_days_old.? < 1)
+            return error.NDaysOldRequired;
+
+        return;
+    }
+
+    fn checkMandatoryFieldsForRotate(self: LogAction) !void {
+        if (self.n_days_old == null or self.n_days_old.? < 1)
+            return error.NDaysOldRequired;
+
+        if (self.compress != null and self.compress.?) {
+            if (self.compression_type == null)
+                return error.CompressionTypeMandatory;
+
+            if (self.compression_level == null or self.compression_level.? < 0)
+                return error.CompressionLevelMandatory;
+
+            switch (std.meta.stringToEnum(enums.CompressType, self.compression_type.?) orelse return error.InvalidCompressioType) {
+                enums.CompressType.gzip, enums.CompressType.xz, enums.CompressType.zstd => {
+                    return;
+                },
+            }
         }
     }
 
-    fn isActionFromValid(self: LogAction) bool {
-        if (self.from == null)
-            return false;
-        if (std.mem.eql(u8, self.from.?, enums.ActionFrom.str(enums.ActionFrom.fromBottom)) or
-            std.mem.eql(u8, self.from.?, enums.ActionFrom.str(enums.ActionFrom.fromTop)))
-        {
-            return true;
-        } else {
-            return false;
+    fn checkMandatoryFieldsForTruncate(self: LogAction) !void {
+        if (self.by == null or self.by.?.len < 1) {
+            return error.TruncateRequiresByField;
+        }
+
+        switch (std.meta.stringToEnum(enums.ActionBy, self.by.?) orelse return error.InvalidByFieldValue) {
+            enums.ActionBy.lines, enums.ActionBy.megabytes => {
+                return;
+            },
+        }
+
+        if (self.from == null or self.from.?.len < 1) {
+            return error.TruncateRequiresFromField;
+        }
+
+        switch (std.meta.stringToEnum(enums.ActionFrom, self.from.?) orelse return error.InvalidFromFieldValue) {
+            enums.ActionFrom.fromBottom, enums.ActionFrom.fromTop => {
+                return;
+            },
         }
     }
 };
@@ -146,6 +161,8 @@ pub const argOpts = struct {
     port: u16 = 7423,
     @"server-type": []const u8 = "tcp",
     help: bool = false,
+    @"master-host": ?[]const u8 = null,
+    @"master-port": ?u16 = null,
 
     pub const meta = .{
         .option_docs = .{
@@ -159,6 +176,8 @@ pub const argOpts = struct {
             .port = "Server port for agent/master communication: default: 7423",
             .@"server-type" = "Server type for agent/master communication",
             .help = "Print help",
+            .@"master-host" = "master host address",
+            .@"master-port" = "master port for connection",
         },
     };
 };
