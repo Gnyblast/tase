@@ -5,14 +5,17 @@ const TaseError = struct {
     message: []const u8,
 };
 
-pub fn getLogMessageByErr(erro: anyerror) []const u8 {
+pub fn getLogMessageByErr(alloc: std.mem.Allocator, erro: anyerror) []const u8 {
     inline for (errors) |err| {
         if (erro == err.err) {
             return err.message;
         }
     }
 
-    return "Unknown error occured";
+    const msg = std.fmt.allocPrint(alloc, "error: {}", .{erro}) catch {
+        return "Unkown error";
+    };
+    return msg;
 }
 
 pub const errors = [_]TaseError{

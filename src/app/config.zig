@@ -157,6 +157,7 @@ const MasterServerConf = struct {
     host: []const u8 = "127.0.0.1",
     port: u16 = 7423,
     type: []const u8 = "tcp",
+    time_zone: ?[]const u8 = "UTC",
 };
 
 pub const argOpts = struct {

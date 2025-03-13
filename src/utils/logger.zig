@@ -61,11 +61,12 @@ pub fn log(
     defer allocator.free(time_stamp);
     const prefix = "[{s}] " ++ comptime helpers.toUpperCase(level.asText()) ++ " " ++ "(" ++ @tagName(scope) ++ ") ";
 
-    var message_buffer: [4096]u8 = undefined;
-    const message = std.fmt.bufPrint(message_buffer[0..], prefix ++ format ++ "\n", .{time_stamp} ++ args) catch |err| {
+    const message = std.fmt.allocPrint(allocator, prefix ++ format ++ "\n", .{time_stamp} ++ args) catch |err| {
         std.debug.print("Failed to format log message with args: {}\n", .{err});
         return;
     };
+    defer allocator.free(message);
+
     file.writeAll(message) catch |err| {
         std.debug.print("Failed to write to log file: {}\n", .{err});
     };
@@ -106,6 +107,6 @@ fn openOrCreateLogFile(path: []const u8) !std.fs.File {
 }
 
 fn getTimeStamp(alloc: std.mem.Allocator, timestamp: i64, comptime fmt: []const u8) ![]const u8 {
-    const instant = zig_time.Time.fromTimestamp(timestamp).setLoc(zig_time.UTC);
+    const instant = zig_time.Time.fromTimestamp(timestamp);
     return try instant.formatAlloc(alloc, fmt);
 }

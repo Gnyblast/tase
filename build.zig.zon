@@ -33,16 +33,16 @@
             .hash = "zig_time-1.0.15-FD_-CmKfAQAyCNpd_zTknuLfqICbphDXTG69tW1pE8k1",
         },
         .datetime = .{
-            .url = "git+https://github.com/frmdstryr/zig-datetime?ref=master#4d0e84cd8844c0672e0cbe247a3130750c9e0f27",
-            .hash = "datetime-0.8.0-cJNXzJSJAQB5RKwPglxoEq875GmehZoLjuAlKzvWp4_O",
+            .url = "git+https://github.com/frmdstryr/zig-datetime?ref=master#52d4fbe43a758589b74411ffec8ebcb1f12e2d13",
+            .hash = "datetime-0.8.0-cJNXzNiMAQBz4RV6Gz7qUNeE-xLDNLs_jNU5_zIZ48as",
         },
         .args = .{
             .url = "git+https://github.com/ikskuh/zig-args?ref=master#9425b94c103a031777fdd272c555ce93a7dea581",
             .hash = "args-0.0.0-CiLiqv_NAAC97fGpk9hS2K681jkiqPsWP6w3ucb_ctGH",
         },
         .@"cron-time" = .{
-            .url = "git+https://github.com/dying-will-bullet/cron?ref=master#447a621f3f79f80e4f42ab3ad5d39ccf3f368ec5",
-            .hash = "cron-0.1.0-joDqxCjlAAA7s2S_Vwz5eWwwUVN_oFPuxeN08kdBkmYl",
+            .url = "git+https://github.com/dying-will-bullet/cron?ref=master#1d6f236a426442a52aad6e63af4849364b029e90",
+            .hash = "cron-0.3.0-joDqxHLoAAD4Ym8AxxmpkklAIQ2WiSs5KPMNx8pkpmu5",
         },
         .jwt = .{
             .url = "git+https://github.com/Gnyblast/zig-jwt?ref=main#b4fe2cd1bc5024b727a5caa766145630dc9a27e4",

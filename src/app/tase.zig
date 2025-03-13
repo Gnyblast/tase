@@ -1,5 +1,5 @@
 const std = @import("std");
-const cron = @import("cron-time");
+const datetime = @import("datetime").datetime;
 
 const Allocator = std.mem.Allocator;
 
@@ -7,6 +7,7 @@ const configs = @import("./config.zig");
 const helpers = @import("../utils/helper.zig");
 const serverFactory = @import("../factory/server_factory.zig");
 const clientFactory = @import("../client/client_factory.zig");
+const cronService = @import("../service/cron_service.zig").CronService;
 
 pub const version = "0.0.2";
 
@@ -45,6 +46,9 @@ pub const Tase = struct {
             try self.server.startAgentServer()
         else {
             if (self.yaml_cfg.agents != null) {
+                const tz = try datetime.timezones.getByName(self.yaml_cfg.server.time_zone.?);
+                const cron_service = try cronService.init(self.yaml_cfg.configs, tz);
+                cron_service.start();
                 self.server.setAgents(self.yaml_cfg.agents.?);
                 try self.server.startMasterServer();
 

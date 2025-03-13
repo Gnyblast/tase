@@ -47,16 +47,17 @@ pub fn main() void {
     }
 
     var tase = app.Tase.init(allocator, &cli_args.options, &yaml_cfg) catch |err| {
-        const err_msg = errorFactory.getLogMessageByErr(err);
+        const err_msg = errorFactory.getLogMessageByErr(allocator, err);
+        defer allocator.free(err_msg);
         std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-dir"});
         std.log.scoped(.yaml).err("Could not create application: {s}", .{err_msg});
         std.process.exit(1);
     };
-
     defer tase.deinit();
 
     tase.run() catch |err| {
-        const err_msg = errorFactory.getLogMessageByErr(err);
+        const err_msg = errorFactory.getLogMessageByErr(allocator, err);
+        defer allocator.free(err_msg);
         std.debug.print("Check logs for more details at: {s}", .{tase.cli_args.@"log-dir"});
         std.log.err("Could not start application: {s}", .{err_msg});
         std.process.exit(1);

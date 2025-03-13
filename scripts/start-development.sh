@@ -1,4 +1,5 @@
 #!/bin/bash
+clear
 
 if ! zig build; then
     exit 1
@@ -11,8 +12,8 @@ AGENT_PID=$!
 ./zig-out/bin/tase --master --config ./app.yaml &
 MASTER_PID=$!
 
-echo "master: $MASTER_PID"
-echo "agent: $AGENT_PID"
+echo "master PID: $MASTER_PID"
+echo "agent PID: $AGENT_PID"
 
 # Function to terminate both process groups
 terminate() {
