@@ -84,7 +84,7 @@ pub const TCPServer = struct {
             try posix.setsockopt(socket, posix.SOL.SOCKET, posix.SO.RCVTIMEO, &std.mem.toBytes(timeout));
             try posix.setsockopt(socket, posix.SOL.SOCKET, posix.SO.SNDTIMEO, &std.mem.toBytes(timeout));
 
-            var buf: [4096]u8 = undefined;
+            var buf: [1024]u8 = undefined;
             const read = posix.read(socket, &buf) catch |err| {
                 std.log.scoped(.server).err("error reading: {}", .{err});
                 continue;
@@ -136,7 +136,7 @@ pub const TCPServer = struct {
             };
             defer posix.close(socket);
 
-            var buf: [4096]u8 = undefined;
+            var buf: [1024]u8 = undefined;
             const read = posix.read(socket, &buf) catch |err| {
                 std.log.scoped(.server).err("error reading: {}", .{err});
                 continue;

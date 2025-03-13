@@ -47,8 +47,10 @@ pub const Tase = struct {
         else {
             if (self.yaml_cfg.agents != null) {
                 const tz = try datetime.timezones.getByName(self.yaml_cfg.server.time_zone.?);
-                const cron_service = try cronService.init(self.yaml_cfg.configs, tz);
-                cron_service.start();
+                // const cron_service = try cronService.init(self.yaml_cfg.configs, tz);
+
+                const thread = try std.Thread.spawn(.{}, startCronService, .{ self.yaml_cfg.configs, tz });
+                thread.detach();
                 self.server.setAgents(self.yaml_cfg.agents.?);
                 try self.server.startMasterServer();
 
@@ -57,6 +59,11 @@ pub const Tase = struct {
                 // try client.sendMessage(&self.yaml_cfg.*.configs[0], self.allocator);
             }
         }
+    }
+
+    fn startCronService(cfgs: []configs.LogConf, timezone: datetime.Timezone) !void {
+        const cron_service = try cronService.init(cfgs, timezone);
+        cron_service.start();
     }
 
     fn performCheck(self: Tase) !void {
