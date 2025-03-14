@@ -35,18 +35,10 @@ pub fn main() void {
     const cli_args = parseCLIOrExit(allocator);
     defer cli_args.deinit();
 
-    var loaded_yaml = loadYAMLFileOrExit(allocator, cli_args.options.config);
-    defer loaded_yaml.deinit(allocator);
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
 
-    var yaml_cfg: configs.YamlCfgContainer = undefined;
-
-    if (cli_args.options.master) {
-        var arena = std.heap.ArenaAllocator.init(allocator);
-        defer arena.deinit();
-        yaml_cfg = parseYAMLOrExit(&arena, &loaded_yaml);
-    }
-
-    var tase = app.Tase.init(allocator, &cli_args.options, &yaml_cfg) catch |err| {
+    var tase = app.Tase.init(allocator, arena.allocator(), &cli_args.options) catch |err| {
         const err_msg = errorFactory.getLogMessageByErr(allocator, err);
         defer allocator.free(err_msg);
         std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-dir"});
@@ -90,29 +82,4 @@ fn parseCLIOrExit(allocator: Allocator) argsParser.ParseArgsResult(configs.argOp
     }
 
     return cli_args;
-}
-
-fn loadYAMLFileOrExit(allocator: Allocator, file_path: []const u8) yaml.Yaml {
-    std.log.debug("Parsing config file at {s}", .{file_path});
-    const cwd = std.fs.cwd();
-    const fileContents = cwd.readFileAlloc(allocator, file_path, 4096) catch |err| {
-        std.log.scoped(.yaml).err("Could not locate config (yaml) file: {}", .{err});
-        std.process.exit(1);
-    };
-    defer allocator.free(fileContents);
-
-    std.log.debug("Loading conf file content", .{});
-    return yaml.Yaml.load(allocator, fileContents) catch |err| {
-        std.log.scoped(.yaml).err("Error loading file contents: {}", .{err});
-        std.process.exit(1);
-    };
-}
-
-fn parseYAMLOrExit(arena: *std.heap.ArenaAllocator, loaded: *yaml.Yaml) configs.YamlCfgContainer {
-    const alloc = arena.allocator();
-    std.log.debug("Loading conf to struct", .{});
-    return loaded.parse(alloc, configs.YamlCfgContainer) catch |err| {
-        std.log.scoped(.yaml).err("Error parsing into struct: {}", .{err});
-        std.process.exit(1);
-    };
 }

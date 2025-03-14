@@ -5,8 +5,8 @@ if ! zig build; then
     exit 1
 fi
 
-# Start both processes in the background
-./zig-out/bin/tase --agent --config ./app.yaml --secret b9d36fa4b6cd3d8a2f5527c792143bfc --port 7424 --master-host localhost --master-port 7423 &
+#Start both processes in the background
+./zig-out/bin/tase --agent --secret b9d36fa4b6cd3d8a2f5527c792143bfc --port 7424 --master-host localhost --master-port 7423 &
 AGENT_PID=$!
 
 ./zig-out/bin/tase --master --config ./app.yaml &

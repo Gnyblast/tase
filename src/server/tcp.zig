@@ -8,6 +8,20 @@ const Allocator = std.mem.Allocator;
 
 const serverFactory = @import("../factory/server_factory.zig");
 
+const MasterClaims = struct {
+    agent_hostname: ?[]const u8,
+    message: []const u8,
+    heart_beat: bool,
+    exp: i64,
+};
+
+const AgentClaims = struct {
+    agent_hostname: ?[]const u8,
+    job: configs.LogConf,
+    heart_beat: bool,
+    exp: i64,
+};
+
 pub const TCPServer = struct {
     host: []const u8,
     port: u16,
@@ -97,7 +111,7 @@ pub const TCPServer = struct {
             var arena = std.heap.ArenaAllocator.init(gpa.allocator());
             defer arena.deinit();
 
-            var decoded = jwt.decode(arena.allocator(), configs.LogConf, buf[0..read], .{ .secret = self.secret }, .{}) catch |err| {
+            var decoded = jwt.decode(arena.allocator(), AgentClaims, buf[0..read], .{ .secret = self.secret }, .{}) catch |err| {
                 std.log.scoped(.server).err("JWT Decode error: {}", .{err});
                 continue;
             };
@@ -123,6 +137,11 @@ pub const TCPServer = struct {
 
         var gpa = std.heap.GeneralPurposeAllocator(.{}){};
         defer _ = gpa.deinit();
+        const allocator = gpa.allocator();
+
+        var pool: std.Thread.Pool = undefined;
+        try std.Thread.Pool.init(&pool, .{ .allocator = allocator, .n_jobs = 4 });
+        defer pool.deinit();
 
         while (true) {
             var client_address: net.Address = undefined;
@@ -134,34 +153,42 @@ pub const TCPServer = struct {
                 std.log.scoped(.server).debug("error accept: {}", .{err});
                 continue;
             };
-            defer posix.close(socket);
 
-            var buf: [1024]u8 = undefined;
-            const read = posix.read(socket, &buf) catch |err| {
-                std.log.scoped(.server).err("error reading: {}", .{err});
-                continue;
-            };
-
-            if (read == 0) {
-                continue;
-            }
-
-            var arena = std.heap.ArenaAllocator.init(gpa.allocator());
-            defer arena.deinit();
-
-            var decoded = jwt.decodeNoVerify(arena.allocator(), configs.LogConf, buf[0..read]) catch |err| {
-                std.log.scoped(.server).err("JWT Decode error: {}", .{err});
-                continue;
-            };
-            defer decoded.deinit();
-            //TODO this should get caught
-            const secret = try self.getAgentSecretByHostName(decoded.claims.agent_hostname.?);
-            //TODO: now decode and verify the message with correct secret used
-            std.log.info("{s}", .{secret});
+            try pool.spawn(TCPServer.runMasterSocket, .{ self, allocator, socket });
         }
     }
 
-    fn getAgentSecretByHostName(self: TCPServer, hostname: []const u8) ![]const u8 {
+    fn runMasterSocket(self: *TCPServer, allocator: Allocator, socket: posix.socket_t) void {
+        defer posix.close(socket);
+
+        var buf: [1024]u8 = undefined;
+        const read = posix.read(socket, &buf) catch |err| {
+            std.log.scoped(.server).err("error reading: {}", .{err});
+            return;
+        };
+
+        if (read == 0) {
+            return;
+        }
+
+        var arena = std.heap.ArenaAllocator.init(allocator);
+        defer arena.deinit();
+
+        var decoded = jwt.decodeNoVerify(arena.allocator(), MasterClaims, buf[0..read]) catch |err| {
+            std.log.scoped(.server).err("JWT Decode error: {}", .{err});
+            return;
+        };
+        defer decoded.deinit();
+        const secret = self.getAgentSecretByHostName(decoded.claims.agent_hostname.?) catch |err| {
+            std.log.scoped(.server).err("JWT Decode error: {}", .{err});
+            return;
+        };
+
+        //TODO: now decode and verify the message with correct secret used
+        std.log.info("{s}", .{secret});
+    }
+
+    fn getAgentSecretByHostName(self: *TCPServer, hostname: []const u8) ![]const u8 {
         for (self.agents.?) |agent| {
             if (std.mem.eql(u8, agent.hostname, hostname)) {
                 return agent.secret;

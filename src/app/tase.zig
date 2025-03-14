@@ -8,6 +8,7 @@ const helpers = @import("../utils/helper.zig");
 const serverFactory = @import("../factory/server_factory.zig");
 const clientFactory = @import("../client/client_factory.zig");
 const cronService = @import("../service/cron_service.zig").CronService;
+const YamlParseService = @import("../service/yaml_parse_service.zig").YamlParseService;
 
 pub const version = "0.0.2";
 
@@ -18,11 +19,20 @@ pub const Tase = struct {
     server: serverFactory.Server,
     allocator: Allocator,
 
-    pub fn init(allocator: Allocator, cli_args: *const configs.argOpts, yaml_cfg: *const configs.YamlCfgContainer) !Tase {
-        const server_type = if (cli_args.agent) cli_args.@"server-type" else yaml_cfg.server.type;
-        const server_host = if (cli_args.agent) cli_args.host else yaml_cfg.server.host;
-        const server_port = if (cli_args.agent) cli_args.port else yaml_cfg.server.port;
+    pub fn init(allocator: Allocator, arena: Allocator, cli_args: *const configs.argOpts) !Tase {
+        var server_host = cli_args.host;
+        var server_port = cli_args.port;
+        var server_type = cli_args.@"server-type";
         const secret = cli_args.secret orelse if (cli_args.agent) return error.SecretIsMandatory else "";
+
+        const yaml_cfg: *configs.YamlCfgContainer = try allocator.create(configs.YamlCfgContainer);
+
+        if (cli_args.master) {
+            yaml_cfg.* = try YamlParseService.parse(arena, cli_args.config);
+            server_host = yaml_cfg.server.host;
+            server_port = yaml_cfg.server.port;
+            server_type = yaml_cfg.server.type;
+        }
 
         const server = try serverFactory.getServer(allocator, server_type, server_host, server_port, secret);
 
@@ -49,7 +59,8 @@ pub const Tase = struct {
                 const tz = try datetime.timezones.getByName(self.yaml_cfg.server.time_zone.?);
                 // const cron_service = try cronService.init(self.yaml_cfg.configs, tz);
 
-                const thread = try std.Thread.spawn(.{}, startCronService, .{ self.yaml_cfg.configs, tz });
+                const cron_service = try cronService.init(self.yaml_cfg.configs, tz);
+                const thread = try std.Thread.spawn(.{}, cronService.start, .{cron_service});
                 thread.detach();
                 self.server.setAgents(self.yaml_cfg.agents.?);
                 try self.server.startMasterServer();
@@ -59,11 +70,6 @@ pub const Tase = struct {
                 // try client.sendMessage(&self.yaml_cfg.*.configs[0], self.allocator);
             }
         }
-    }
-
-    fn startCronService(cfgs: []configs.LogConf, timezone: datetime.Timezone) !void {
-        const cron_service = try cronService.init(cfgs, timezone);
-        cron_service.start();
     }
 
     fn performCheck(self: Tase) !void {
