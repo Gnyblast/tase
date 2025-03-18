@@ -7,8 +7,8 @@ const configs = @import("./config.zig");
 const helpers = @import("../utils/helper.zig");
 const serverFactory = @import("../factory/server_factory.zig");
 const clientFactory = @import("../client/client_factory.zig");
-const cronService = @import("../service/cron_service.zig").CronService;
-const YamlParseService = @import("../service/yaml_parse_service.zig").YamlParseService;
+const CronService = @import("../service/cron_service.zig").CronService;
+const YamlParser = @import("../utils/yaml_parser.zig").YamlParseService;
 
 pub const version = "0.0.2";
 
@@ -28,7 +28,7 @@ pub const Tase = struct {
         const yaml_cfg: *configs.YamlCfgContainer = try allocator.create(configs.YamlCfgContainer);
 
         if (cli_args.master) {
-            yaml_cfg.* = try YamlParseService.parse(arena, cli_args.config);
+            yaml_cfg.* = try YamlParser.parse(arena, cli_args.config);
             server_host = yaml_cfg.server.host;
             server_port = yaml_cfg.server.port;
             server_type = yaml_cfg.server.type;
@@ -59,8 +59,8 @@ pub const Tase = struct {
                 const tz = try datetime.timezones.getByName(self.yaml_cfg.server.time_zone.?);
                 // const cron_service = try cronService.init(self.yaml_cfg.configs, tz);
 
-                const cron_service = try cronService.init(self.yaml_cfg.configs, tz);
-                const thread = try std.Thread.spawn(.{}, cronService.start, .{cron_service});
+                const cron_service = try CronService.init(self.yaml_cfg.configs, tz);
+                const thread = try std.Thread.spawn(.{}, CronService.start, .{cron_service});
                 thread.detach();
                 self.server.setAgents(self.yaml_cfg.agents.?);
                 try self.server.startMasterServer();
