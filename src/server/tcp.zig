@@ -18,6 +18,7 @@ const MasterClaims = struct {
 const AgentClaims = struct {
     agent_hostname: ?[]const u8,
     job: configs.LogConf,
+    timezone: []const u8,
     heart_beat: bool,
     exp: i64,
 };

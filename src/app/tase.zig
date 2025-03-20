@@ -46,6 +46,7 @@ pub const Tase = struct {
 
     pub fn deinit(self: *Tase) void {
         self.server.destroy(self.allocator);
+        self.allocator.destroy(self.yaml_cfg);
     }
 
     pub fn run(self: Tase) !void {
