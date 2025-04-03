@@ -1,6 +1,7 @@
 const std = @import("std");
 const enums = @import("../enum/config_enum.zig");
 const utils = @import("../utils/helper.zig");
+const Regex = @import("libregex").Regex;
 const Allocator = std.mem.Allocator;
 
 const LOCAL = "local";
@@ -30,7 +31,7 @@ pub const YamlCfgContainer = struct {
         }
 
         for (self.configs) |c| {
-            try c.isConfigValid();
+            try c.isConfigValid(allocator);
 
             for (c.run_agent_name) |a| {
                 if (std.mem.eql(u8, a, LOCAL))
@@ -62,10 +63,16 @@ pub const LogConf = struct {
     agent_hostname: ?[]const u8,
     action: LogAction,
 
-    pub fn isConfigValid(self: LogConf) !void {
+    pub fn isConfigValid(self: LogConf, allocator: Allocator) !void {
         if (self.cron_expression.len < 1) {
             return error.CronCannotBeUndefined;
         }
+
+        const regex = Regex.initWithoutComptimeFlags(allocator, self.log_files_regexp, "") catch |err| {
+            std.log.err("regex \"{s}\" not valid", .{self.log_files_regexp});
+            return err;
+        };
+        defer regex.deinit();
 
         return try self.action.checkActionValidity();
     }

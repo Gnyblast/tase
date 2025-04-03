@@ -115,4 +115,8 @@ pub const errors = [_]TaseError{
         .err = error.InvalidTruncateBy,
         .message = "value for \"by\" field in truncate is invalid",
     },
+    .{
+        .err = error.compile,
+        .message = "Some of the regex is not valid and cannot be compiled",
+    },
 };

@@ -49,8 +49,8 @@
             .hash = "jwt-0.1.0-Npgsfr-JAAAnh3ySnGw5GuHKGvaDfFvYqoxlU55EcUpw",
         },
         .libregex = .{
-            .url = "git+https://github.com/gnyblast/libregex-z#b498b1dd9e2a1db03ccd03bcede6847767c3f15f",
-            .hash = "libregex-0.1.0-RTzUhbZWAADGEU8ojOE0aMCE_N0-vbs3cPVvQIpWR9R4",
+            .url = "git+https://github.com/gnyblast/libregex-z#1b9afe8565803a0208d7cfc92c50099d869e1aa5",
+            .hash = "libregex-0.1.0-RTzUhRlYAACnCAUq7kW7B6HSwsqTt9K04aWtarpH9m6B",
         },
     },
     .paths = .{
