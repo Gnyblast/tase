@@ -48,6 +48,10 @@
             .url = "git+https://github.com/Gnyblast/zig-jwt?ref=main#b4fe2cd1bc5024b727a5caa766145630dc9a27e4",
             .hash = "jwt-0.1.0-Npgsfr-JAAAnh3ySnGw5GuHKGvaDfFvYqoxlU55EcUpw",
         },
+        .libregex = .{
+            .url = "git+https://github.com/gnyblast/libregex-z#b498b1dd9e2a1db03ccd03bcede6847767c3f15f",
+            .hash = "libregex-0.1.0-RTzUhbZWAADGEU8ojOE0aMCE_N0-vbs3cPVvQIpWR9R4",
+        },
     },
     .paths = .{
         "build.zig",

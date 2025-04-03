@@ -1,9 +1,23 @@
 ---
 configs:
+  ##?? REAL PARTG
+  - app_name: "truncate_app"
+    logs_dir: "/var/log/cups"
+    log_files_regexp: "access_log.*"
+    cron_expression: "05 13 * * *"
+    run_agent_name:
+      - "local"
+    action:
+      strategy: truncate
+      from: top
+      by: megabytes
+      size: 2048
+
   ##?? TRUNCATE
   - app_name: "truncate_app"
-    log_files_regexp: "/var/log/truncate_app"
-    cron_expression: "30 10 * * *"
+    logs_dir: "/var/log/truncate_app"
+    log_files_regexp: ".*"
+    cron_expression: "54 12 * * *"
     run_agent_name:
       - "local"
     action:
@@ -14,7 +28,8 @@ configs:
 
   ##?? ROTATE WITHOUT COMPRESS
   - app_name: "rotate_app_no_compress"
-    log_files_regexp: "/var/log/rotate_app_no_compress"
+    logs_dir: "/var/log/rotate_app_no_compress"
+    log_files_regexp: ".*"
     cron_expression: "30 11 * * *"
     run_agent_name:
       - "local"
@@ -28,7 +43,8 @@ configs:
 
   ##?? ROTATE WITH COMPRESS
   - app_name: "rotate_app_compress"
-    log_files_regexp: "/var/log/rotate_app_compress"
+    logs_dir: "/var/log/rotate_app_compress"
+    log_files_regexp: ".*"
     cron_expression: "25 10 * * *"
     run_agent_name:
       - "local"
@@ -44,7 +60,8 @@ configs:
 
   ##?? ROTATE NO DELETE
   - app_name: "rotate_app_compress"
-    log_files_regexp: "/var/log/rotate_app_compress"
+    logs_dir: "/var/log/rotate_app_compress"
+    log_files_regexp: ".*"
     cron_expression: "0 11 * * *"
     run_agent_name:
       - "local"
@@ -59,7 +76,8 @@ configs:
 
   ##?? DELETE
   - app_name: "delete_app"
-    log_files_regexp: "/var/log/delete_app"
+    logs_dir: "/var/log/delete_app"
+    log_files_regexp: ".*"
     cron_expression: "25 10 * * *"
     run_agent_name:
       - "local"

@@ -60,6 +60,9 @@ pub fn build(b: *std.Build) void {
     const datetime = b.dependency("datetime", .{ .target = target, .optimize = optimize });
     exe.root_module.addImport("datetime", datetime.module("datetime"));
 
+    const regexLib = b.dependency("libregex", .{ .target = target, .optimize = optimize });
+    exe.root_module.addImport("libregex", regexLib.module("libregex"));
+
     const jwt = b.dependency("jwt", .{
         .target = target,
         .optimize = optimize,

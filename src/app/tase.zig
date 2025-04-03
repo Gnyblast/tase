@@ -60,7 +60,7 @@ pub const Tase = struct {
                 const tz = try datetime.timezones.getByName(self.yaml_cfg.server.time_zone.?);
                 // const cron_service = try cronService.init(self.yaml_cfg.configs, tz);
 
-                const cron_service = try CronService.init(self.yaml_cfg.configs, tz);
+                const cron_service = try CronService.init(self.allocator, self.yaml_cfg.configs, tz);
                 const thread = try std.Thread.spawn(.{}, CronService.start, .{cron_service});
                 thread.detach();
                 self.server.setAgents(self.yaml_cfg.agents.?);

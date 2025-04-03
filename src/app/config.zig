@@ -55,6 +55,7 @@ pub const Agents = struct {
 
 pub const LogConf = struct {
     app_name: []const u8,
+    logs_dir: []const u8,
     log_files_regexp: []const u8,
     cron_expression: []const u8,
     run_agent_name: [][]const u8,
