@@ -1,6 +1,7 @@
 const std = @import("std");
 const yaml = @import("yaml");
 const argsParser = @import("args");
+const datetime = @import("datetime");
 const cron = @import("cron");
 
 const configs = @import("./app/config.zig");
@@ -15,6 +16,7 @@ pub const std_options: std.Options = .{ .logFn = logFn, .log_level = .debug };
 var log_level = std.log.default_level;
 pub var log_path: []const u8 = ""; //? The logic for default log dir is in logger.zig getLogFilePath()
 pub var is_agent: bool = false;
+pub var timezone: []const u8 = "UTC";
 
 fn logFn(
     comptime message_level: std.log.Level,
@@ -23,7 +25,17 @@ fn logFn(
     args: anytype,
 ) void {
     if (@intFromEnum(message_level) <= @intFromEnum(log_level)) {
-        logger.log(message_level, scope, format, log_path, is_agent, args);
+        var tz = datetime.timezones.getByName(timezone) catch datetime.timezones.UTC;
+        logger.log(
+            message_level,
+            scope,
+            format,
+            log_path,
+            is_agent,
+            args,
+            &tz,
+            log_level,
+        );
     }
 }
 
@@ -46,6 +58,7 @@ pub fn main() void {
         std.process.exit(1);
     };
     defer tase.deinit();
+    timezone = tase.yaml_cfg.server.time_zone.?;
 
     tase.run() catch |err| {
         const err_msg = errorFactory.getLogMessageByErr(allocator, err);

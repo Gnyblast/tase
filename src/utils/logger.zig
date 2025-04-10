@@ -1,16 +1,18 @@
 const std = @import("std");
-const zig_time = @import("zig-time");
+const datetime = @import("datetime");
 const argsParser = @import("args");
 const helpers = @import("../utils/helper.zig");
 const configs = @import("../app/config.zig");
 
 pub fn log(
-    comptime level: std.log.Level,
+    comptime message_log_level: std.log.Level,
     comptime scope: @Type(.enum_literal),
     comptime format: []const u8,
     log_file_dir: []const u8,
     is_agent: bool,
     args: anytype,
+    tz: *datetime.datetime.Timezone,
+    log_level: std.log.Level,
 ) void {
     //? These are to ignore yaml parser logs
     if (scope == .parse or scope == .tokenizer) {
@@ -52,14 +54,13 @@ pub fn log(
     };
 
     const time = std.time.timestamp();
-    const time_fmt: []const u8 = "YYYY-MM-DD HH:mm:ss:ms z";
-    const time_stamp = getTimeStamp(allocator, time, time_fmt) catch |err| {
+    const time_stamp = getTimeStamp(allocator, time, tz, log_level) catch |err| {
         std.debug.print("Failed to get a timestamp: {}\n", .{err});
         return;
     };
 
     defer allocator.free(time_stamp);
-    const prefix = "[{s}] " ++ comptime helpers.toUpperCase(level.asText()) ++ " " ++ "(" ++ @tagName(scope) ++ ") ";
+    const prefix = "[{s}] " ++ comptime helpers.toUpperCase(message_log_level.asText()) ++ " " ++ "(" ++ @tagName(scope) ++ ") ";
 
     const message = std.fmt.allocPrint(allocator, prefix ++ format ++ "\n", .{time_stamp} ++ args) catch |err| {
         std.debug.print("Failed to format log message with args: {}\n", .{err});
@@ -106,7 +107,11 @@ fn openOrCreateLogFile(path: []const u8) !std.fs.File {
     return file;
 }
 
-fn getTimeStamp(alloc: std.mem.Allocator, timestamp: i64, comptime fmt: []const u8) ![]const u8 {
-    const instant = zig_time.Time.fromTimestamp(timestamp);
-    return try instant.formatAlloc(alloc, fmt);
+fn getTimeStamp(alloc: std.mem.Allocator, timestamp: i64, timezone: *datetime.datetime.Timezone, log_level: std.log.Level) ![]const u8 {
+    const instant = datetime.datetime.Datetime.fromSeconds(@as(f64, @floatFromInt(timestamp)));
+    const now_here = instant.shiftTimezone(timezone);
+    if (log_level == .debug)
+        return try now_here.formatISO8601(alloc, true);
+
+    return try now_here.formatISO8601(alloc, false);
 }

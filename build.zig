@@ -48,9 +48,6 @@ pub fn build(b: *std.Build) void {
     });
     exe.root_module.addImport("yaml", yaml.module("yaml"));
 
-    const zig_time_dep = b.dependency("zig-time", .{});
-    exe.root_module.addImport("zig-time", zig_time_dep.module("zig-time"));
-
     const zig_args = b.dependency("args", .{ .target = target, .optimize = optimize });
     exe.root_module.addImport("args", zig_args.module("args"));
 
