@@ -1,12 +1,12 @@
 const std = @import("std");
-const datetime = @import("datetime").datetime;
+const timezones = @import("datetime").timezones;
 
 const Allocator = std.mem.Allocator;
 
 const configs = @import("./config.zig");
 const helpers = @import("../utils/helper.zig");
 const serverFactory = @import("../factory/server_factory.zig");
-const clientFactory = @import("../client/client_factory.zig");
+const clientFactory = @import("../factory/client_factory.zig");
 const CronService = @import("../service/cron_service.zig").CronService;
 const YamlParser = @import("../utils/yaml_parser.zig").YamlParseService;
 
@@ -57,10 +57,10 @@ pub const Tase = struct {
             try self.server.startAgentServer()
         else {
             if (self.yaml_cfg.agents != null) {
-                const tz = try datetime.timezones.getByName(self.yaml_cfg.server.time_zone.?);
+                const tz = try timezones.getByName(self.yaml_cfg.server.time_zone.?);
                 // const cron_service = try cronService.init(self.yaml_cfg.configs, tz);
 
-                const cron_service = try CronService.init(self.allocator, self.yaml_cfg.configs, tz);
+                const cron_service = try CronService.init(self.yaml_cfg.configs, self.yaml_cfg.agents, self.yaml_cfg.server.type, tz);
                 const thread = try std.Thread.spawn(.{}, CronService.start, .{cron_service});
                 thread.detach();
                 self.server.setAgents(self.yaml_cfg.agents.?);

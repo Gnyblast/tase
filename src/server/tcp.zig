@@ -2,24 +2,23 @@ const std = @import("std");
 const jwt = @import("jwt");
 const net = std.net;
 const posix = std.posix;
-const configs = @import("../app/config.zig");
+const datetime = @import("datetime").datetime;
 
 const Allocator = std.mem.Allocator;
 
 const serverFactory = @import("../factory/server_factory.zig");
+const configs = @import("../app/config.zig");
 
-const MasterClaims = struct {
+pub const MasterClaims = struct {
     agent_hostname: ?[]const u8,
     message: []const u8,
-    heart_beat: bool,
     exp: i64,
 };
 
-const AgentClaims = struct {
+pub const AgentClaims = struct {
     agent_hostname: ?[]const u8,
-    job: configs.LogConf,
-    timezone: []const u8,
-    heart_beat: bool,
+    job: *const configs.LogConf,
+    timezone: datetime.Timezone,
     exp: i64,
 };
 

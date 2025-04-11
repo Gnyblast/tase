@@ -1,10 +1,11 @@
 const std = @import("std");
-const tcp = @import("./tcp.zig");
+const tcp = @import("../client/tcp.zig");
 const configs = @import("../app/config.zig");
+const datetime = @import("datetime").datetime;
 
 const Allocator = std.mem.Allocator;
 
-const ServerTypes = enum { tcp, tls };
+pub const ServerTypes = enum { tcp, tls };
 
 pub fn getClient(allocator: Allocator, server: []const u8, host: []const u8, port: u16, secret: []const u8) !Client {
     const server_type = std.meta.stringToEnum(ServerTypes, server) orelse {
@@ -21,11 +22,11 @@ pub fn getClient(allocator: Allocator, server: []const u8, host: []const u8, por
 
 pub const Client = struct {
     ptr: *anyopaque,
-    sendMessageFn: *const fn (ptr: *anyopaque, message: *configs.LogConf, allocator: Allocator) anyerror!void,
+    sendLogConfFn: *const fn (ptr: *anyopaque, allocator: Allocator, cfg: configs.LogConf, timezone: datetime.Timezone) anyerror!void,
     destroyFn: *const fn (ptr: *anyopaque, allocator: Allocator) void,
 
-    pub fn sendMessage(self: Client, message: *configs.LogConf, allocator: Allocator) !void {
-        return self.sendMessageFn(self.ptr, message, allocator);
+    pub fn sendLogConf(self: Client, allocator: Allocator, cfg: configs.LogConf, timezone: datetime.Timezone) !void {
+        return self.sendLogConfFn(self.ptr, allocator, cfg, timezone);
     }
 
     pub fn destroy(self: Client, allocator: Allocator) void {

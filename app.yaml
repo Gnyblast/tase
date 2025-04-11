@@ -4,9 +4,10 @@ configs:
   - app_name: "truncate_app"
     logs_dir: "/var/log/cups"
     log_files_regexp: "access_log.*"
-    cron_expression: "05 13 * * *"
+    cron_expression: "11 18 * * *"
     run_agent_name:
       - "local"
+      - "dev"
     action:
       strategy: truncate
       from: top
@@ -17,7 +18,7 @@ configs:
   - app_name: "truncate_app"
     logs_dir: "/var/log/truncate_app"
     log_files_regexp: ".*"
-    cron_expression: "54 12 * * *"
+    cron_expression: "35 17 * * *"
     run_agent_name:
       - "local"
     action:
@@ -88,8 +89,8 @@ configs:
 
 agents:
   - name: dev
-    hostname: localhost
-    port: 2000
+    hostname: "127.0.0.1"
+    port: 7424
     secret: b9d36fa4b6cd3d8a2f5527c792143bfc
 
 server:

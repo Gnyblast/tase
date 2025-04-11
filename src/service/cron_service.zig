@@ -5,22 +5,30 @@ const Regex = @import("libregex").Regex;
 const Allocator = std.mem.Allocator;
 
 const configs = @import("../app/config.zig");
+const clientFactory = @import("../factory/client_factory.zig");
+const errorFactory = @import("../factory/error_factory.zig");
 
 pub const CronService = struct {
-    allocator: Allocator,
     confs: []configs.LogConf,
     tz: datetime.Timezone,
+    agents: ?[]configs.Agents,
+    server_type: []const u8,
 
-    pub fn init(allocator: Allocator, cfgs: []configs.LogConf, timezone: datetime.Timezone) !CronService {
+    pub fn init(cfgs: []configs.LogConf, agents: ?[]configs.Agents, server_type: []const u8, timezone: datetime.Timezone) !CronService {
         try validateCronExpression(cfgs);
         return .{
             .confs = cfgs,
             .tz = timezone,
-            .allocator = allocator,
+            .agents = agents,
+            .server_type = server_type,
         };
     }
 
     pub fn start(self: CronService) void {
+        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        defer _ = gpa.deinit();
+        const allocator = gpa.allocator();
+
         sleepUntilNewMinute();
         while (true) {
             for (self.confs) |cfg| {
@@ -40,14 +48,31 @@ pub const CronService = struct {
                 if (duration.seconds < 59) {
                     std.log.scoped(.cron).info("Running logs processing for {s} with cron: {s}", .{ cfg.app_name, cfg.cron_expression });
                     std.debug.print("Running now\n", .{});
-                    const files_to_process = findRegexMatchesInDir(self.allocator, cfg.logs_dir, cfg.log_files_regexp) catch |err| {
-                        std.log.scoped(.cron).err("error getting files to process in {s}: {}", .{ cfg.logs_dir, err });
+
+                    const agents = self.getAgentsByName(allocator, cfg.run_agent_name) catch |err| {
+                        const err_msg = errorFactory.getLogMessageByErr(allocator, err);
+                        defer if (err_msg.allocated) allocator.free(err_msg.message);
+                        std.log.scoped(.cron).err("problem getting agents: {s}", .{err_msg.message});
                         continue;
                     };
-                    defer files_to_process.deinit();
+                    defer agents.deinit();
 
-                    for (files_to_process.items) |file| {
-                        std.debug.print("{s}\n", .{file});
+                    for (agents.items) |agent| {
+
+                        //TODO deal with local hostname
+                        const tcp_client = clientFactory.getClient(allocator, self.server_type, agent.hostname, agent.port, agent.secret) catch |err| {
+                            const err_msg = errorFactory.getLogMessageByErr(allocator, err);
+                            defer if (err_msg.allocated) allocator.free(err_msg.message);
+                            std.log.scoped(.cron).err("problem gettin client to agent: {s}", .{err_msg.message});
+                            continue;
+                        };
+                        defer tcp_client.destroy(allocator);
+                        tcp_client.sendLogConf(allocator, cfg, self.tz) catch |err| {
+                            const err_msg = errorFactory.getLogMessageByErr(allocator, err);
+                            defer if (err_msg.allocated) allocator.free(err_msg.message);
+                            std.log.scoped(.cron).err("problem sending message to agent: {s}", .{err_msg.message});
+                            continue;
+                        };
                     }
                 } else {
                     std.debug.print("running in {d} seconds\n", .{duration.seconds});
@@ -56,6 +81,23 @@ pub const CronService = struct {
 
             std.time.sleep(std.time.ns_per_min);
         }
+    }
+
+    fn getAgentsByName(self: CronService, allocator: Allocator, agent_names: [][]const u8) !std.ArrayList(configs.Agents) {
+        var agents = std.ArrayList(configs.Agents).init(allocator);
+        for (agent_names) |name| {
+            for (self.agents.?) |agent| {
+                if (std.mem.eql(u8, agent.name, name)) {
+                    try agents.append(agent);
+                }
+            }
+        }
+
+        if (agents.items.len > 0) {
+            return agents;
+        }
+
+        return error.NoAgentsFound;
     }
 
     fn validateCronExpression(confs: []configs.LogConf) !void {
@@ -73,29 +115,5 @@ pub const CronService = struct {
 
         std.debug.print("Sleeping for {d} seconds\n", .{sleep_seconds});
         std.time.sleep(sleep_nano_seconds);
-    }
-
-    fn findRegexMatchesInDir(allocator: Allocator, dir: []const u8, regexp: []const u8) !std.ArrayList([]const u8) {
-        var files = try std.fs.openDirAbsolute(dir, .{ .iterate = true, .access_sub_paths = false });
-        defer files.close();
-
-        var matchedFiles = std.ArrayList([]const u8).init(allocator);
-
-        var f_it = files.iterate();
-        while (try f_it.next()) |file| {
-            const regex = try Regex.init(allocator, regexp, "x");
-            defer regex.deinit();
-
-            const matched = regex.matches(file.name) catch |err| {
-                std.log.scoped(.cron).err("error matching file {s}: {}", .{ file.name, err });
-                continue;
-            };
-
-            if (matched) {
-                try matchedFiles.append(file.name);
-            }
-        }
-
-        return matchedFiles;
     }
 };

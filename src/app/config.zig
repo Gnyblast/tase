@@ -60,7 +60,6 @@ pub const LogConf = struct {
     log_files_regexp: []const u8,
     cron_expression: []const u8,
     run_agent_name: [][]const u8,
-    agent_hostname: ?[]const u8,
     action: LogAction,
 
     pub fn isConfigValid(self: LogConf, allocator: Allocator) !void {

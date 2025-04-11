@@ -2,8 +2,11 @@ const std = @import("std");
 const net = std.net;
 const posix = std.posix;
 const jwt = @import("jwt");
+const datetime = @import("datetime").datetime;
+
 const configs = @import("../app/config.zig");
-const clientFactory = @import("./client_factory.zig");
+const AgentClaims = @import("../server/tcp.zig").AgentClaims;
+const clientFactory = @import("../factory/client_factory.zig");
 
 const Allocator = std.mem.Allocator;
 
@@ -22,7 +25,7 @@ pub const TCPClient = struct {
         return clientFactory.Client{
             .ptr = tcp,
             .destroyFn = destroy,
-            .sendMessageFn = sendMessage,
+            .sendLogConfFn = sendLogConf,
         };
     }
 
@@ -31,13 +34,18 @@ pub const TCPClient = struct {
         allocator.destroy(self);
     }
 
-    fn sendMessage(ptr: *anyopaque, message: *configs.LogConf, allocator: Allocator) !void {
+    fn sendLogConf(ptr: *anyopaque, allocator: Allocator, cfg: configs.LogConf, timezone: datetime.Timezone) !void {
         const self: *TCPClient = @ptrCast(@alignCast(ptr));
 
-        //? one minute expiration added top of it
-        message.*.exp = std.time.timestamp() + 60;
+        const clientMsg = AgentClaims{
+            .agent_hostname = "",
+            .job = &cfg,
+            .timezone = timezone,
+            .exp = std.time.timestamp() + 60, //? one minute expiration added top of it
+        };
 
-        const encoded = try jwt.encode(allocator, .{ .alg = .HS256 }, message.*, .{ .secret = self.secret });
+        const encoded = try jwt.encode(allocator, .{ .alg = .HS256 }, clientMsg, .{ .secret = self.secret });
+        defer allocator.free(encoded);
 
         const address = try net.Address.parseIp(self.host, self.port);
         const tpe: u32 = posix.SOCK.STREAM;
@@ -46,7 +54,5 @@ pub const TCPClient = struct {
         defer posix.close(socket);
         try posix.connect(socket, &address.any, address.getOsSockLen());
         _ = try posix.write(socket, encoded);
-
-        defer allocator.free(encoded);
     }
 };

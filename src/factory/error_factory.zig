@@ -5,17 +5,23 @@ const TaseError = struct {
     message: []const u8,
 };
 
-pub fn getLogMessageByErr(alloc: std.mem.Allocator, erro: anyerror) []const u8 {
+pub const ErrorMessage = struct {
+    message: []const u8,
+    allocated: bool = false,
+};
+
+pub fn getLogMessageByErr(alloc: std.mem.Allocator, erro: anyerror) ErrorMessage {
     inline for (errors) |err| {
         if (erro == err.err) {
-            return err.message;
+            return ErrorMessage{ .message = err.message };
         }
     }
 
     const msg = std.fmt.allocPrint(alloc, "error: {}", .{erro}) catch {
-        return "Unkown error";
+        return ErrorMessage{ .message = "Unknown error" };
     };
-    return msg;
+
+    return ErrorMessage{ .message = msg, .allocated = true };
 }
 
 pub const errors = [_]TaseError{
@@ -58,6 +64,10 @@ pub const errors = [_]TaseError{
     .{
         .err = error.UndefinedAgent,
         .message = "agent in configuration is not a valid agent",
+    },
+    .{
+        .err = error.NoAgentsFound,
+        .message = "No matching agents found",
     },
     .{
         .err = error.CronCannotBeUndefined,

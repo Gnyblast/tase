@@ -1,7 +1,7 @@
 const std = @import("std");
 const yaml = @import("yaml");
 const argsParser = @import("args");
-const datetime = @import("datetime");
+const timezones = @import("datetime").timezones;
 const cron = @import("cron");
 
 const configs = @import("./app/config.zig");
@@ -10,6 +10,7 @@ const logger = @import("./utils/logger.zig");
 const errorFactory = @import("./factory/error_factory.zig");
 const serverFactory = @import("./factory/server_factory.zig");
 const Allocator = std.mem.Allocator;
+const ErrorMessage = @import("./factory/error_factory.zig").ErrorMessage;
 
 pub const std_options: std.Options = .{ .logFn = logFn, .log_level = .debug };
 
@@ -25,7 +26,7 @@ fn logFn(
     args: anytype,
 ) void {
     if (@intFromEnum(message_level) <= @intFromEnum(log_level)) {
-        var tz = datetime.timezones.getByName(timezone) catch datetime.timezones.UTC;
+        var tz = timezones.getByName(timezone) catch timezones.UTC;
         logger.log(
             message_level,
             scope,
@@ -52,9 +53,9 @@ pub fn main() void {
 
     var tase = app.Tase.init(allocator, arena.allocator(), &cli_args.options) catch |err| {
         const err_msg = errorFactory.getLogMessageByErr(allocator, err);
-        defer allocator.free(err_msg);
+        defer if (err_msg.allocated) allocator.free(err_msg.message);
         std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-dir"});
-        std.log.scoped(.yaml).err("Could not create application: {s}", .{err_msg});
+        std.log.scoped(.yaml).err("Could not create application: {s}", .{err_msg.message});
         std.process.exit(1);
     };
     defer tase.deinit();
@@ -62,9 +63,9 @@ pub fn main() void {
 
     tase.run() catch |err| {
         const err_msg = errorFactory.getLogMessageByErr(allocator, err);
-        defer allocator.free(err_msg);
+        defer if (err_msg.allocated) allocator.free(err_msg.message);
         std.debug.print("Check logs for more details at: {s}", .{tase.cli_args.@"log-dir"});
-        std.log.err("Could not start application: {s}", .{err_msg});
+        std.log.err("Could not start application: {s}", .{err_msg.message});
         std.process.exit(1);
     };
 }
