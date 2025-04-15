@@ -11,6 +11,7 @@
 
 .zig-cache/
 zig-out/
+alpine-bin/
 /release/
 /debug/
 /build/

@@ -60,10 +60,7 @@ pub fn build(b: *std.Build) void {
     const regexLib = b.dependency("libregex", .{ .target = target, .optimize = optimize });
     exe.root_module.addImport("libregex", regexLib.module("libregex"));
 
-    const jwt = b.dependency("jwt", .{
-        .target = target,
-        .optimize = optimize,
-    });
+    const jwt = b.dependency("jwt", .{ .target = target, .optimize = optimize });
     exe.root_module.addImport("jwt", jwt.module("jwt"));
 
     // This *creates* a Run step in the build graph, to be executed when another

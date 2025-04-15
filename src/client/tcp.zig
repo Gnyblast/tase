@@ -53,6 +53,8 @@ pub const TCPClient = struct {
         const socket = try posix.socket(address.any.family, tpe, protocol);
         defer posix.close(socket);
         try posix.connect(socket, &address.any, address.getOsSockLen());
+
+        //TODO check success
         _ = try posix.write(socket, encoded);
     }
 };

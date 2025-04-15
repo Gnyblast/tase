@@ -25,7 +25,9 @@ pub const YamlParseService = struct {
         defer self.arena.free(fileContents);
 
         std.log.debug("Loading conf file content", .{});
-        return try yaml.Yaml.load(self.arena, fileContents);
+        var yamlParser = yaml.Yaml{ .source = fileContents };
+        try yamlParser.load(self.arena);
+        return yamlParser;
     }
 
     fn parseYAMLToStruct(self: YamlParseService, loaded: yaml.Yaml) !configs.YamlCfgContainer {

@@ -1,22 +1,86 @@
 const std = @import("std");
+const datetime = @import("datetime").datetime;
+
 const configs = @import("../app/config.zig");
 const enums = @import("../enum/config_enum.zig");
+const fileMatcher = @import("./file_matcher_service.zig");
 
-const LogService = struct {
-    file: []const u8,
+const Allocator = std.mem.Allocator;
+
+pub const LogService = struct {
+    timezone: datetime.Timezone,
+    directory: []const u8,
+    matcher: []const u8,
     log_action: configs.LogAction,
 
+    pub fn init(timezone: datetime.Timezone, directory: []const u8, matcher: []const u8, log_action: configs.LogAction) LogService {
+        return LogService{
+            .timezone = timezone,
+            .directory = directory,
+            .matcher = matcher,
+            .log_action = log_action,
+        };
+    }
+
     pub fn run(self: LogService) !void {
+        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        defer _ = gpa.deinit();
+        const allocator = gpa.allocator();
+
+        std.log.scoped(.logs).info("Starting clean up for {s}", .{self.directory});
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.log_action.strategy) orelse return error.InvalidStrategy) {
-            enums.ActionStrategy.delete => return doDelete(),
-            enums.ActionStrategy.rotate => return doRotate(),
-            enums.ActionStrategy.truncate => return doTruncate(),
+            enums.ActionStrategy.delete => return self.doDelete(allocator),
+            enums.ActionStrategy.rotate => return self.doRotate(),
+            enums.ActionStrategy.truncate => return self.doTruncate(),
         }
     }
 
     fn doRotate(_: LogService) !void {}
 
-    fn doDelete(_: LogService) !void {}
+    fn doDelete(self: LogService, allocator: Allocator) !void {
+        std.log.info("Processing file deletions for path: {s}", .{self.directory});
+        const files = try fileMatcher.findRegexMatchesInDir(allocator, self.directory, self.matcher);
+        defer {
+            for (files.items) |name| {
+                allocator.free(name);
+            }
+            files.deinit();
+        }
+
+        for (files.items) |file_name| {
+            var paths = [_][]const u8{ self.directory, file_name };
+            const path = std.fs.path.join(allocator, &paths) catch |err| {
+                std.log.err("error joining paths: {s}/{s}, {}", .{ self.directory, file_name, err });
+                continue;
+            };
+            defer allocator.free(path);
+
+            const file = std.fs.openFileAbsolute(path, .{ .mode = .read_write }) catch |err| {
+                std.log.err("error opening file: {s} {}", .{ path, err });
+                continue;
+            };
+            defer file.close();
+
+            const file_stats = file.metadata() catch |err| {
+                std.log.err("error retrieving file metadata: {s} {}", .{ path, err });
+                continue;
+            };
+
+            const creation_ts = file_stats.created() orelse {
+                std.log.err("filesystem doesn't seem to be supporting creation time... stopping", .{});
+                break;
+            };
+
+            const createion_ms: i64 = @as(i64, @intCast(@divFloor(creation_ts, std.time.ns_per_ms)));
+
+            const creation = datetime.Datetime.fromTimestamp(createion_ms).shiftTimezone(&self.timezone);
+            const now = datetime.Datetime.now().shiftTimezone(&self.timezone);
+            if (now.cmp(creation) == .gt) {
+                std.log.info("deleting file: {s}", .{file_name});
+                try std.fs.deleteFileAbsolute(path);
+            }
+        }
+    }
 
     fn doTruncate(_: LogService) !void {}
 };

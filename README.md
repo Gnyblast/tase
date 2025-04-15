@@ -1,5 +1,6 @@
 > [!IMPORTANT]  
 > Tase is not working at the moment, being actively developed.
+> File system should support creation time in order for this to work properly.
 
 # Tase
 

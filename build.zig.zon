@@ -24,10 +24,10 @@
     // Once all dependencies are fetched, `zig build` no longer requires
     // internet connectivity.
     .dependencies = .{
-        .yaml = .{
-            .url = "git+https://github.com/kubkon/zig-yaml?ref=master#27f63d3d2d13ed228d8fc077635205e6c2a405c7",
-            .hash = "zig_yaml-0.1.0-C1161hVrAgDsyB2EZnq-Vp-QuZ9xJm2y0dECRXGG3UaP",
-        },
+        // .yaml = .{
+        //     .url = "git+https://github.com/kubkon/zig-yaml?ref=master#27f63d3d2d13ed228d8fc077635205e6c2a405c7",
+        //     .hash = "zig_yaml-0.1.0-C1161hVrAgDsyB2EZnq-Vp-QuZ9xJm2y0dECRXGG3UaP",
+        // },
         .datetime = .{
             .url = "git+https://github.com/frmdstryr/zig-datetime?ref=master#52d4fbe43a758589b74411ffec8ebcb1f12e2d13",
             .hash = "datetime-0.8.0-cJNXzNiMAQBz4RV6Gz7qUNeE-xLDNLs_jNU5_zIZ48as",
@@ -47,6 +47,10 @@
         .libregex = .{
             .url = "git+https://github.com/gnyblast/libregex-z#1b9afe8565803a0208d7cfc92c50099d869e1aa5",
             .hash = "libregex-0.1.0-RTzUhRlYAACnCAUq7kW7B6HSwsqTt9K04aWtarpH9m6B",
+        },
+        .yaml = .{
+            .url = "git+https://github.com/gnyblast/zig-yaml?ref=master#0af02355db6baab01f3cd2f2f6bc3f9f39e00167",
+            .hash = "zig_yaml-0.1.0-C1161qaIAgAHORq4XMCDiwYV1l3d_lOZ2vQT2aGVQd4t",
         },
     },
     .paths = .{

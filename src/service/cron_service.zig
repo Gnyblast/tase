@@ -57,8 +57,8 @@ pub const CronService = struct {
                     };
                     defer agents.deinit();
 
+                    std.log.scoped(.cron).info("Running for {d} agent(s)", .{agents.items.len});
                     for (agents.items) |agent| {
-
                         //TODO deal with local hostname
                         const tcp_client = clientFactory.getClient(allocator, self.server_type, agent.hostname, agent.port, agent.secret) catch |err| {
                             const err_msg = errorFactory.getLogMessageByErr(allocator, err);

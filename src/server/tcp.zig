@@ -8,6 +8,7 @@ const Allocator = std.mem.Allocator;
 
 const serverFactory = @import("../factory/server_factory.zig");
 const configs = @import("../app/config.zig");
+const LogsService = @import("../service/logs_service.zig").LogService;
 
 pub const MasterClaims = struct {
     agent_hostname: ?[]const u8,
@@ -87,7 +88,7 @@ pub const TCPServer = struct {
             const socket = posix.accept(listener, &client_address.any, &client_address_len, 0) catch |err| {
                 // Rare that this happens, but in later parts we'll
                 // see examples where it does.
-                std.log.scoped(.server).debug("error accept: {}", .{err});
+                std.log.scoped(.server).err("error accept: {}", .{err});
                 continue;
             };
             defer posix.close(socket);
@@ -127,6 +128,16 @@ pub const TCPServer = struct {
             }
 
             //TODO start action in threads here
+            const logsService = LogsService.init(
+                decoded.claims.timezone,
+                decoded.claims.job.logs_dir,
+                decoded.claims.job.log_files_regexp,
+                decoded.claims.job.action,
+            );
+
+            logsService.run() catch |err| {
+                std.log.scoped(.server).err("Error running logs service: {}", .{err});
+            };
         }
     }
 

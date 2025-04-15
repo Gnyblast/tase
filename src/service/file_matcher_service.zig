@@ -7,7 +7,7 @@ const Allocator = std.mem.Allocator;
 ///         continue;
 ///     };
 /// defer files_to_process.deinit();
-fn findRegexMatchesInDir(allocator: Allocator, dir: []const u8, regexp: []const u8) !std.ArrayList([]const u8) {
+pub fn findRegexMatchesInDir(allocator: Allocator, dir: []const u8, regexp: []const u8) !std.ArrayList([]const u8) {
     var files = try std.fs.openDirAbsolute(dir, .{ .iterate = true, .access_sub_paths = false });
     defer files.close();
 
@@ -24,7 +24,8 @@ fn findRegexMatchesInDir(allocator: Allocator, dir: []const u8, regexp: []const 
         };
 
         if (matched) {
-            try matchedFiles.append(file.name);
+            const name_copy = try allocator.dupe(u8, file.name);
+            try matchedFiles.append(name_copy);
         }
     }
 

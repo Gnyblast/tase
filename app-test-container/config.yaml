@@ -1,0 +1,23 @@
+---
+configs:
+  ##?? DELETE
+  - app_name: "delete_app"
+    logs_dir: "/var/log/nginx"
+    log_files_regexp: "access_[0-9].log"
+    cron_expression: "49 15 * * *"
+    run_agent_name:
+      - "dev"
+    action:
+      strategy: delete
+      delete_older_than_days: 3
+
+agents:
+  - name: dev
+    hostname: "127.0.0.1"
+    port: 7424
+    secret: b9d36fa4b6cd3d8a2f5527c792143bfc
+
+server:
+  host: "127.0.0.1"
+  port: 7423
+  type: tcp
