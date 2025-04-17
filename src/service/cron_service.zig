@@ -25,9 +25,13 @@ pub const CronService = struct {
     }
 
     pub fn start(self: CronService) void {
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-        defer _ = gpa.deinit();
-        const allocator = gpa.allocator();
+        var da: std.heap.DebugAllocator(.{}) = .init;
+        defer {
+            const leaks = da.deinit();
+            std.debug.assert(leaks == .ok);
+        }
+
+        const allocator = da.allocator();
 
         sleepUntilNewMinute();
         while (true) {

@@ -24,9 +24,13 @@ pub const LogService = struct {
 
     pub fn run(self: LogService) !void {
         try self.log_action.checkActionValidity();
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-        defer _ = gpa.deinit();
-        const allocator = gpa.allocator();
+        var da: std.heap.DebugAllocator(.{}) = .init;
+        defer {
+            const leaks = da.deinit();
+            std.debug.assert(leaks == .ok);
+        }
+
+        const allocator = da.allocator();
 
         std.log.scoped(.logs).info("Starting clean up for {s}", .{self.directory});
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.log_action.strategy) orelse return error.InvalidStrategy) {

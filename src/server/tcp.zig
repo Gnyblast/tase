@@ -79,8 +79,11 @@ pub const TCPServer = struct {
         const listener = try self.createTCPServer();
         defer posix.close(listener);
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-        defer _ = gpa.deinit();
+        var da: std.heap.DebugAllocator(.{}) = .init;
+        defer {
+            const leaks = da.deinit();
+            std.debug.assert(leaks == .ok);
+        }
 
         while (true) {
             var client_address: net.Address = undefined;
@@ -109,7 +112,7 @@ pub const TCPServer = struct {
                 continue;
             }
 
-            var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+            var arena = std.heap.ArenaAllocator.init(da.allocator());
             defer arena.deinit();
 
             var decoded = jwt.decode(arena.allocator(), AgentClaims, buf[0..read], .{ .secret = self.secret }, .{}) catch |err| {
@@ -146,9 +149,13 @@ pub const TCPServer = struct {
         const listener = try self.createTCPServer();
         defer posix.close(listener);
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-        defer _ = gpa.deinit();
-        const allocator = gpa.allocator();
+        var da: std.heap.DebugAllocator(.{}) = .init;
+        defer {
+            const leaks = da.deinit();
+            std.debug.assert(leaks == .ok);
+        }
+
+        const allocator = da.allocator();
 
         var pool: std.Thread.Pool = undefined;
         try std.Thread.Pool.init(&pool, .{ .allocator = allocator, .n_jobs = 4 });

@@ -41,10 +41,13 @@ fn logFn(
 }
 
 pub fn main() void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da: std.heap.DebugAllocator(.{}) = .init;
+    defer {
+        const leaks = da.deinit();
+        std.debug.assert(leaks == .ok);
+    }
 
-    const allocator = gpa.allocator();
+    const allocator = da.allocator();
     const cli_args = parseCLIOrExit(allocator);
     defer cli_args.deinit();
 
