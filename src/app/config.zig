@@ -82,12 +82,12 @@ pub const LogAction = struct {
     from: ?[]const u8 = null,
     by: ?[]const u8 = null,
     size: ?u32 = null,
-    delete_older_than_days: ?u32 = 7,
+    delete_older_than_days: ?i32 = 7,
     compress: ?bool = false,
     compression_type: ?[]const u8 = "gzip",
     compression_level: ?u8 = 0,
 
-    fn checkActionValidity(self: LogAction) !void {
+    pub fn checkActionValidity(self: LogAction) !void {
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.strategy) orelse return error.InvalidStrategy) {
             enums.ActionStrategy.delete => {
                 return self.checkMandatoryFieldsForDelete();
@@ -102,7 +102,7 @@ pub const LogAction = struct {
     }
 
     fn checkMandatoryFieldsForDelete(self: LogAction) !void {
-        if (self.delete_older_than_days == null or self.delete_older_than_days.? < 1)
+        if (self.delete_older_than_days == null or self.delete_older_than_days.? < 0)
             return error.NDaysOldRequired;
 
         return;

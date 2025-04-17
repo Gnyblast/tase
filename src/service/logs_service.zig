@@ -23,6 +23,7 @@ pub const LogService = struct {
     }
 
     pub fn run(self: LogService) !void {
+        try self.log_action.checkActionValidity();
         var gpa = std.heap.GeneralPurposeAllocator(.{}){};
         defer _ = gpa.deinit();
         const allocator = gpa.allocator();
@@ -74,7 +75,7 @@ pub const LogService = struct {
             const createion_ms: i64 = @as(i64, @intCast(@divFloor(creation_ts, std.time.ns_per_ms)));
 
             const creation = datetime.Datetime.fromTimestamp(createion_ms).shiftTimezone(&self.timezone);
-            const now = datetime.Datetime.now().shiftTimezone(&self.timezone);
+            const now = datetime.Datetime.now().shiftTimezone(&self.timezone).shiftDays(-self.log_action.delete_older_than_days.?);
             if (now.cmp(creation) == .gt) {
                 std.log.info("deleting file: {s}", .{file_name});
                 try std.fs.deleteFileAbsolute(path);

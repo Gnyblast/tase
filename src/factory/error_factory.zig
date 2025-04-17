@@ -75,7 +75,7 @@ pub const errors = [_]TaseError{
     },
     .{
         .err = error.NDaysOldRequired,
-        .message = "delete config required \"delete_older_than_days\" field to set to a number",
+        .message = "delete config required \"delete_older_than_days\" field should be set to 0 or above",
     },
     .{
         .err = error.CompressionTypeMandatory,
