@@ -4,7 +4,7 @@ configs:
   - app_name: "delete_app"
     logs_dir: "/var/log/nginx"
     log_files_regexp: '[access|error]_[0-9].log'
-    cron_expression: "35 07 * * *"
+    cron_expression: "43 12 * * *"
     run_agent_name:
       - "dev"
     action:
@@ -14,7 +14,7 @@ configs:
   - app_name: "delete_app"
     logs_dir: "/var/log/php"
     log_files_regexp: 'laravel\.log\..*'
-    cron_expression: "35 07 * * *"
+    cron_expression: "43 12 * * *"
     run_agent_name:
       - "dev"
     action:
@@ -24,7 +24,7 @@ configs:
   - app_name: "delete_app"
     logs_dir: "/var/log/postgres"
     log_files_regexp: 'postgresql-\w+\.log'
-    cron_expression: "35 07 * * *"
+    cron_expression: "43 12 * * *"
     run_agent_name:
       - "dev"
     action:

@@ -28,6 +28,7 @@ pub const Tase = struct {
         const yaml_cfg: *configs.YamlCfgContainer = try allocator.create(configs.YamlCfgContainer);
 
         if (cli_args.master) {
+            //TODO: fix arena to get deinit and dupe the yamlpaser result before
             yaml_cfg.* = try YamlParser.parse(arena, cli_args.config);
             server_host = yaml_cfg.server.host;
             server_port = yaml_cfg.server.port;
