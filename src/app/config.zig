@@ -129,8 +129,15 @@ pub const LogAction = struct {
             if (self.compression_level == null or self.compression_level.? < 0)
                 return error.CompressionLevelMandatory;
 
+            //TODO: test behaviour
             switch (std.meta.stringToEnum(enums.CompressType, self.compression_type.?) orelse return error.InvalidCompressioType) {
-                enums.CompressType.gzip, enums.CompressType.xz, enums.CompressType.zstd => {
+                enums.CompressType.gzip,
+                enums.CompressType.xz,
+                enums.CompressType.zstd,
+                enums.CompressType.lzma,
+                enums.CompressType.lzma2,
+                enums.CompressType.zlib,
+                => {
                     return;
                 },
             }

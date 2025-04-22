@@ -19,7 +19,7 @@ pub const Tase = struct {
     server: serverFactory.Server,
     allocator: Allocator,
 
-    pub fn init(allocator: Allocator, arena: Allocator, cli_args: *const configs.argOpts) !Tase {
+    pub fn init(allocator: Allocator, cli_args: *const configs.argOpts) !Tase {
         var server_host = cli_args.host;
         var server_port = cli_args.port;
         var server_type = cli_args.@"server-type";
@@ -28,8 +28,7 @@ pub const Tase = struct {
         const yaml_cfg: *configs.YamlCfgContainer = try allocator.create(configs.YamlCfgContainer);
 
         if (cli_args.master) {
-            //TODO: fix arena to get deinit and dupe the yamlpaser result before
-            yaml_cfg.* = try YamlParser.parse(arena, cli_args.config);
+            yaml_cfg.* = try YamlParser.parse(allocator, cli_args.config);
             server_host = yaml_cfg.server.host;
             server_port = yaml_cfg.server.port;
             server_type = yaml_cfg.server.type;

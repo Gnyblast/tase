@@ -1,7 +1,6 @@
 const std = @import("std");
 const datetime = @import("datetime").datetime;
 const cron = @import("cron-time").Cron;
-const Regex = @import("libregex").Regex;
 const Allocator = std.mem.Allocator;
 
 const configs = @import("../app/config.zig");

@@ -51,10 +51,7 @@ pub fn main() void {
     const cli_args = parseCLIOrExit(allocator);
     defer cli_args.deinit();
 
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    defer arena.deinit();
-
-    var tase = app.Tase.init(allocator, arena.allocator(), &cli_args.options) catch |err| {
+    var tase = app.Tase.init(allocator, &cli_args.options) catch |err| {
         const err_msg = errorFactory.getLogMessageByErr(allocator, err);
         defer if (err_msg.allocated) allocator.free(err_msg.message);
         std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-dir"});

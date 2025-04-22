@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk add --no-cache bash coreutils
+RUN apk add --no-cache bash coreutils libfaketime
 
 COPY ./create-logs.sh /usr/local/bin
 COPY ./live-logging.sh /usr/local/bin/

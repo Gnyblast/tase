@@ -1,9 +1,9 @@
 const std = @import("std");
 const datetime = @import("datetime").datetime;
+const Regex = @import("libregex").Regex;
 
 const configs = @import("../app/config.zig");
 const enums = @import("../enum/config_enum.zig");
-const fileMatcher = @import("./file_matcher_service.zig");
 
 const Allocator = std.mem.Allocator;
 
@@ -35,18 +35,24 @@ pub const LogService = struct {
         std.log.scoped(.logs).info("Starting clean up for {s}", .{self.directory});
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.log_action.strategy) orelse return error.InvalidStrategy) {
             enums.ActionStrategy.delete => return self.doDelete(allocator),
-            enums.ActionStrategy.rotate => return self.doRotate(),
+            enums.ActionStrategy.rotate => return self.doRotate(allocator),
             enums.ActionStrategy.truncate => return self.doTruncate(),
         }
     }
 
-    fn doRotate(_: LogService) !void {}
+    fn doRotate(self: LogService, allocator: Allocator) !void {
+        std.log.info("Processing file rotations for path: {s}", .{self.directory});
+        var arena = std.heap.ArenaAllocator.init(allocator);
+        defer arena.deinit();
+        const files = try findRegexMatchesInDir(arena.allocator(), self.directory, self.matcher);
+        for (files.items) |_| {}
+    }
 
     fn doDelete(self: LogService, allocator: Allocator) !void {
         std.log.info("Processing file deletions for path: {s}", .{self.directory});
         var arena = std.heap.ArenaAllocator.init(allocator);
-        const files = try fileMatcher.findRegexMatchesInDir(arena.allocator(), self.directory, self.matcher);
         defer arena.deinit();
+        const files = try findRegexMatchesInDir(arena.allocator(), self.directory, self.matcher);
 
         for (files.items) |file_name| {
             var paths = [_][]const u8{ self.directory, file_name };
@@ -82,3 +88,28 @@ pub const LogService = struct {
 
     fn doTruncate(_: LogService) !void {}
 };
+
+pub fn findRegexMatchesInDir(arena: Allocator, dir: []const u8, regexp: []const u8) !std.ArrayList([]const u8) {
+    var files = try std.fs.openDirAbsolute(dir, .{ .iterate = true, .access_sub_paths = false });
+    defer files.close();
+
+    var matchedFiles = std.ArrayList([]const u8).init(arena);
+
+    var f_it = files.iterate();
+    while (try f_it.next()) |file| {
+        const regex = try Regex.init(arena, regexp, "x");
+        defer regex.deinit();
+
+        const matched = regex.matches(file.name) catch |err| {
+            std.log.scoped(.cron).err("error matching file {s}: {}", .{ file.name, err });
+            continue;
+        };
+
+        if (matched) {
+            const name_copy = try arena.dupe(u8, file.name);
+            try matchedFiles.append(name_copy);
+        }
+    }
+
+    return matchedFiles;
+}

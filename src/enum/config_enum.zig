@@ -48,11 +48,17 @@ pub const CompressType = enum {
     gzip,
     zstd,
     xz,
+    lzma,
+    lzma2,
+    zlib,
 
     pub const CompressTypeName = [@typeInfo(CompressType).@"enum".fields.len][:0]const u8{
         "gzip",
         "zstd",
         "xz",
+        "lzma",
+        "lzma2",
+        "zlib",
     };
 
     pub fn str(self: CompressType) [:0]const u8 {
