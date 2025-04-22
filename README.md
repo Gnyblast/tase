@@ -1,4 +1,6 @@
-<center><img src="./trans_bg_wo_wm.png" alt="drawing" width="200"/><center>
+<p align="center">
+<img src="./trans_bg_wo_wm.png" alt="drawing" width="200"/>
+<p>
 
 > [!IMPORTANT]  
 > Tase is not working at the moment, being actively developed.
