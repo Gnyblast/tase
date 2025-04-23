@@ -36,7 +36,7 @@ pub const CronService = struct {
         while (true) {
             for (self.confs) |cfg| {
                 std.log.scoped(.cron).debug("processing cron {s}: {s}", .{ cfg.app_name, cfg.cron_expression });
-                const date = datetime.Datetime.now().shiftTimezone(&self.tz);
+                const date = datetime.Datetime.now().shiftTimezone(self.tz);
                 var c = cron.init();
                 c.parse(cfg.cron_expression) catch |err| {
                     std.log.scoped(.cron).err("error parsing cron {s}: {}", .{ cfg.cron_expression, err });

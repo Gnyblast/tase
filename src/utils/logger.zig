@@ -11,7 +11,7 @@ pub fn log(
     log_file_dir: []const u8,
     is_agent: bool,
     args: anytype,
-    tz: *datetime.datetime.Timezone,
+    tz: datetime.datetime.Timezone,
     log_level: std.log.Level,
 ) void {
     //? These are to ignore yaml parser logs
@@ -107,7 +107,7 @@ fn openOrCreateLogFile(path: []const u8) !std.fs.File {
     return file;
 }
 
-fn getTimeStamp(alloc: std.mem.Allocator, timestamp: i64, timezone: *datetime.datetime.Timezone, log_level: std.log.Level) ![]const u8 {
+fn getTimeStamp(alloc: std.mem.Allocator, timestamp: i64, timezone: datetime.datetime.Timezone, log_level: std.log.Level) ![]const u8 {
     const instant = datetime.datetime.Datetime.fromSeconds(@as(f64, @floatFromInt(timestamp)));
     const now_here = instant.shiftTimezone(timezone);
     if (log_level == .debug)

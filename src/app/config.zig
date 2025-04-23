@@ -85,7 +85,7 @@ pub const LogAction = struct {
     delete_older_than_days: ?i32 = 7,
     compress: ?bool = false,
     compression_type: ?[]const u8 = "gzip",
-    compression_level: ?u8 = 0,
+    compression_level: ?u8 = 4,
 
     pub fn checkActionValidity(self: LogAction) !void {
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.strategy) orelse return error.InvalidStrategy) {
@@ -126,17 +126,16 @@ pub const LogAction = struct {
             if (self.compression_type == null)
                 return error.CompressionTypeMandatory;
 
-            if (self.compression_level == null or self.compression_level.? < 0)
+            if (self.compression_level == null)
                 return error.CompressionLevelMandatory;
+
+            if (self.compression_level.? < 4) {
+                return error.CompressionLevelInvalid;
+            }
 
             //TODO: test behaviour
             switch (std.meta.stringToEnum(enums.CompressType, self.compression_type.?) orelse return error.InvalidCompressioType) {
-                enums.CompressType.gzip,
-                enums.CompressType.xz,
-                enums.CompressType.zstd,
-                enums.CompressType.lzma,
-                enums.CompressType.lzma2,
-                enums.CompressType.zlib,
+                .gzip,
                 => {
                     return;
                 },

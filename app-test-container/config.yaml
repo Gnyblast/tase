@@ -1,16 +1,24 @@
 ---
 configs:
-  ##?? DELETE
-  - app_name: "delete_app"
+  ##?? ROTATE
+  - app_name: "rotate_app"
     logs_dir: "/var/log/nginx"
-    log_files_regexp: '[access|error]_[0-9].log'
-    cron_expression: "43 12 * * *"
+    log_files_regexp: 'access.log'
+    cron_expression: "27 13 * * *"
     run_agent_name:
       - "dev"
     action:
-      strategy: delete
-      delete_older_than_days: 0
+      strategy: rotate
+      by: megabytes
+      size: 4096
+      delete_older_than_days: 7
+      compress: true
+      ##?? gzip
+      compression_type: gzip
+      ##?? Between 4-9
+      compression_level: 5
 
+  ##?? DELETE
   - app_name: "delete_app"
     logs_dir: "/var/log/php"
     log_files_regexp: 'laravel\.log\..*'

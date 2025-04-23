@@ -129,4 +129,8 @@ pub const errors = [_]TaseError{
         .err = error.compile,
         .message = "Some of the regex is not valid and cannot be compiled",
     },
+    .{
+        .err = error.CompressionLevelInvalid,
+        .message = "Compression levels are starting from 4 goes up to 9",
+    },
 };

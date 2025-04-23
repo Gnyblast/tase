@@ -26,7 +26,7 @@ fn logFn(
     args: anytype,
 ) void {
     if (@intFromEnum(message_level) <= @intFromEnum(log_level)) {
-        var tz = timezones.getByName(timezone) catch timezones.UTC;
+        const tz = timezones.getByName(timezone) catch timezones.UTC;
         logger.log(
             message_level,
             scope,
@@ -34,7 +34,7 @@ fn logFn(
             log_path,
             is_agent,
             args,
-            &tz,
+            tz,
             log_level,
         );
     }

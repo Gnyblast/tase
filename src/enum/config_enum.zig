@@ -46,22 +46,20 @@ pub const ActionBy = enum {
 
 pub const CompressType = enum {
     gzip,
-    zstd,
-    xz,
-    lzma,
-    lzma2,
-    zlib,
 
     pub const CompressTypeName = [@typeInfo(CompressType).@"enum".fields.len][:0]const u8{
         "gzip",
-        "zstd",
-        "xz",
-        "lzma",
-        "lzma2",
-        "zlib",
     };
 
     pub fn str(self: CompressType) [:0]const u8 {
         return CompressTypeName[@intFromEnum(self)];
+    }
+
+    pub fn getCompressionExtension(self: CompressType) []const u8 {
+        switch (self) {
+            .gzip => {
+                return "gz";
+            },
+        }
     }
 };

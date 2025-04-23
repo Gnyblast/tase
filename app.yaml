@@ -56,8 +56,9 @@ configs:
       size: 4096
       delete_older_than_days: 7
       compress: true
-      ##gzip - xz - zstd - zlib - lzma - lzma2 (default gzip)
+      ##?? gzip
       compression_type: gzip
+      ##?? Between 4-9
       compression_level: 5
 
   ##?? ROTATE NO DELETE
