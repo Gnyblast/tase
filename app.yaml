@@ -37,9 +37,11 @@ configs:
       - "dev"
     action:
       strategy: rotate
-      by: days
-      size: 3
-      delete_older_than_days: 7
+      if:
+        condition: days
+        operator: '>'
+        operand: 3
+      delete_archives_older_than_days: 7
       compress: false
 
   ##?? ROTATE WITH COMPRESS
@@ -54,7 +56,7 @@ configs:
       strategy: rotate
       by: megabytes
       size: 4096
-      delete_older_than_days: 7
+      delete_archives_older_than_days: 7
       compress: true
       ##?? gzip
       compression_type: gzip
@@ -87,7 +89,11 @@ configs:
       - "dev"
     action:
       strategy: delete
-      delete_older_than_days: 3
+      if:
+        ##?? days - size (size in mb)
+        condition: days
+        operator: '>'
+        operand: 3
 
 agents:
   - name: dev

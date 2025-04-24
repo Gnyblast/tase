@@ -82,30 +82,25 @@ pub const LogAction = struct {
     from: ?[]const u8 = null,
     by: ?[]const u8 = null,
     size: ?u32 = null,
-    delete_older_than_days: ?i32 = 7,
+    @"if": IfOperation,
+    delete_archives_older_than_days: ?i32 = 7,
     compress: ?bool = false,
     compression_type: ?[]const u8 = "gzip",
     compression_level: ?u8 = 4,
 
     pub fn checkActionValidity(self: LogAction) !void {
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.strategy) orelse return error.InvalidStrategy) {
-            enums.ActionStrategy.delete => {
-                return self.checkMandatoryFieldsForDelete();
+            .delete => {
+                //? nothing to check yet
+                return;
             },
-            enums.ActionStrategy.rotate => {
+            .rotate => {
                 return self.checkMandatoryFieldsForRotate();
             },
-            enums.ActionStrategy.truncate => {
+            .truncate => {
                 return self.checkMandatoryFieldsForTruncate();
             },
         }
-    }
-
-    fn checkMandatoryFieldsForDelete(self: LogAction) !void {
-        if (self.delete_older_than_days == null or self.delete_older_than_days.? < 0)
-            return error.NDaysOldRequired;
-
-        return;
     }
 
     fn checkMandatoryFieldsForRotate(self: LogAction) !void {
@@ -114,7 +109,9 @@ pub const LogAction = struct {
         }
 
         switch (std.meta.stringToEnum(enums.ActionBy, self.by.?) orelse return error.InvalidRotateBy) {
-            enums.ActionBy.days, enums.ActionBy.megabytes => {},
+            .days,
+            .size,
+            => {},
             else => return error.InvalidRotateBy,
         }
 
@@ -149,7 +146,9 @@ pub const LogAction = struct {
         }
 
         switch (std.meta.stringToEnum(enums.ActionBy, self.by.?) orelse return error.InvalidTruncateBy) {
-            enums.ActionBy.lines, enums.ActionBy.megabytes => {},
+            .lines,
+            .size,
+            => {},
             else => return error.InvalidTruncateBy,
         }
 
@@ -163,6 +162,12 @@ pub const LogAction = struct {
 
         _ = std.meta.stringToEnum(enums.ActionFrom, self.from.?) orelse return error.InvalidFromFieldValue;
     }
+};
+
+pub const IfOperation = struct {
+    condition: []const u8,
+    operator: []const u8,
+    operand: i16,
 };
 
 const MasterServerConf = struct {

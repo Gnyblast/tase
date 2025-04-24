@@ -30,18 +30,24 @@ pub const ActionFrom = enum {
 
 pub const ActionBy = enum {
     lines,
-    megabytes,
+    size,
     days,
 
     pub const ActionByName = [@typeInfo(ActionBy).@"enum".fields.len][:0]const u8{
         "lines",
-        "megabytes",
+        "size",
         "days",
     };
 
     pub fn str(self: ActionBy) [:0]const u8 {
         return ActionByName[@intFromEnum(self)];
     }
+};
+
+pub const Operators = enum {
+    @">",
+    @"<",
+    @"=",
 };
 
 pub const CompressType = enum {

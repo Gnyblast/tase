@@ -74,10 +74,6 @@ pub const errors = [_]TaseError{
         .message = "cron expression cannot be undefined for a config",
     },
     .{
-        .err = error.NDaysOldRequired,
-        .message = "delete config required \"delete_older_than_days\" field should be set to 0 or above",
-    },
-    .{
         .err = error.CompressionTypeMandatory,
         .message = "compression type is mandatory for rotate",
     },

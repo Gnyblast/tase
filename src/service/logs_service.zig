@@ -111,24 +111,7 @@ pub const LogService = struct {
             };
             defer allocator.free(path);
 
-            const file = std.fs.openFileAbsolute(path, .{ .mode = .read_write }) catch |err| {
-                std.log.scoped(.logs).err("error opening file: {s} {}", .{ path, err });
-                continue;
-            };
-            defer file.close();
-
-            const file_stats = file.metadata() catch |err| {
-                std.log.scoped(.logs).err("error retrieving file metadata: {s} {}", .{ path, err });
-                continue;
-            };
-
-            const mtime_ns = file_stats.modified();
-
-            const mtime_ms: i64 = @as(i64, @intCast(@divFloor(mtime_ns, std.time.ns_per_ms)));
-
-            const modification = datetime.Datetime.fromTimestamp(mtime_ms).shiftTimezone(self.timezone);
-            const now = datetime.Datetime.now().shiftTimezone(self.timezone).shiftDays(-self.log_action.delete_older_than_days.?);
-            if (now.cmp(modification) == .gt) {
+            if (shouldDelete(self.log_action.@"if", path, self.timezone)) {
                 std.log.scoped(.logs).info("deleting file: {s}", .{file_name});
                 try std.fs.deleteFileAbsolute(path);
             }
@@ -137,6 +120,65 @@ pub const LogService = struct {
 
     fn doTruncate(_: LogService) !void {}
 };
+
+fn shouldDelete(ifOpr: configs.IfOperation, path: []u8, timezone: datetime.Timezone) bool {
+    const file = std.fs.openFileAbsolute(path, .{ .mode = .read_write }) catch |err| {
+        std.log.scoped(.logs).err("error opening file: {s} {}", .{ path, err });
+        return false;
+    };
+    defer file.close();
+
+    const file_stats = file.metadata() catch |err| {
+        std.log.scoped(.logs).err("error retrieving file metadata: {s} {}", .{ path, err });
+        return false;
+    };
+
+    switch (std.meta.stringToEnum(enums.ActionBy, ifOpr.condition) orelse return false) {
+        .days => {
+            return shouldDeleteByDays(ifOpr, file_stats, timezone);
+        },
+        .size => {
+            return shouldDeleteBySize(ifOpr, file_stats);
+        },
+        else => {
+            return false;
+        },
+    }
+}
+
+fn shouldDeleteByDays(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata, timezone: datetime.Timezone) bool {
+    const mtime_ns = file_stats.modified();
+
+    const mtime_ms: i64 = @as(i64, @intCast(@divFloor(mtime_ns, std.time.ns_per_ms)));
+
+    const modification = datetime.Datetime.fromTimestamp(mtime_ms).shiftTimezone(timezone);
+    const now = datetime.Datetime.now().shiftTimezone(timezone).shiftDays(-ifOpr.operand);
+    switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator) orelse return false) {
+        .@">" => {
+            return now.cmp(modification) == .gt;
+        },
+        .@"<" => {
+            return now.cmp(modification) == .lt;
+        },
+        .@"=" => {
+            return now.cmp(modification) == .eq;
+        },
+    }
+}
+
+fn shouldDeleteBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata) bool {
+    switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator) orelse return false) {
+        .@">" => {
+            return file_stats.size() > ifOpr.operand;
+        },
+        .@"<" => {
+            return file_stats.size() < ifOpr.operand;
+        },
+        .@"=" => {
+            return file_stats.size() == ifOpr.operand;
+        },
+    }
+}
 
 pub fn findRegexMatchesInDir(arena: Allocator, dir: []const u8, regexp: []const u8) !std.ArrayList([]const u8) {
     var files = try std.fs.openDirAbsolute(dir, .{ .iterate = true, .access_sub_paths = false });
