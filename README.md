@@ -132,9 +132,9 @@ configs:
       compression_level: 5
 
 agents:
-  - name: local
-    hostname: "127.0.0.1"
-    port: 7424
+  - name: agent_1
+    hostname: "192.xxx.xxx.xxx"
+    port: 7423
     secret: "your-secret-key"
 
 server:
