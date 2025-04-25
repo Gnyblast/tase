@@ -54,7 +54,7 @@ pub const LogService = struct {
             };
             defer allocator.free(path);
 
-            if (shouldProcess(self.log_action.@"if", path, self.timezone)) {
+            if (shouldProcess(self.log_action.@"if".?, path, self.timezone)) {
                 const rotation_path = std.fmt.allocPrint(allocator, "{s}-{d}", .{ path, datetime.Datetime.now().toTimestamp() }) catch |err| {
                     std.log.scoped(.logs).err("error generating file name for {s}: {}", .{ path, err });
                     continue;
@@ -86,7 +86,7 @@ pub const LogService = struct {
             };
             defer allocator.free(path);
 
-            if (shouldProcess(self.log_action.@"if", path, self.timezone)) {
+            if (shouldProcess(self.log_action.@"if".?, path, self.timezone)) {
                 std.fs.deleteFileAbsolute(path) catch |err| {
                     std.log.scoped(.log).err("unable to delete file {s}: {}", .{ path, err });
                     continue;
@@ -111,15 +111,12 @@ fn shouldProcess(ifOpr: configs.IfOperation, path: []u8, timezone: datetime.Time
         return false;
     };
 
-    switch (std.meta.stringToEnum(enums.ActionBy, ifOpr.condition) orelse return false) {
+    switch (std.meta.stringToEnum(enums.IfConditions, ifOpr.condition.?) orelse return false) {
         .days => {
             return compareByAge(ifOpr, file_stats, timezone);
         },
         .size => {
             return compareBySize(ifOpr, file_stats);
-        },
-        else => {
-            return false;
         },
     }
 }
@@ -130,8 +127,8 @@ fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata, ti
     const mtime_ms: i64 = @as(i64, @intCast(@divFloor(mtime_ns, std.time.ns_per_ms)));
 
     const modification = datetime.Datetime.fromTimestamp(mtime_ms).shiftTimezone(timezone);
-    const now = datetime.Datetime.now().shiftTimezone(timezone).shiftDays(-ifOpr.operand);
-    switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator) orelse return false) {
+    const now = datetime.Datetime.now().shiftTimezone(timezone).shiftDays(-ifOpr.operand.?);
+    switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator.?) orelse return false) {
         .@">" => {
             return now.cmp(modification) == .gt;
         },
@@ -145,15 +142,15 @@ fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata, ti
 }
 
 fn compareBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata) bool {
-    switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator) orelse return false) {
+    switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator.?) orelse return false) {
         .@">" => {
-            return file_stats.size() > ifOpr.operand;
+            return file_stats.size() > ifOpr.operand.?;
         },
         .@"<" => {
-            return file_stats.size() < ifOpr.operand;
+            return file_stats.size() < ifOpr.operand.?;
         },
         .@"=" => {
-            return file_stats.size() == ifOpr.operand;
+            return file_stats.size() == ifOpr.operand.?;
         },
     }
 }

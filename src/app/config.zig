@@ -42,7 +42,7 @@ pub const YamlCfgContainer = struct {
 
             for (c.run_agent_names) |a| {
                 const agent_name_lower = try utils.toLowerCaseAlloc(arena.allocator(), a);
-                if (std.mem.eql(u8, agent_name_lower, LOCAL))
+                if (std.ascii.eqlIgnoreCase(agent_name_lower, LOCAL))
                     continue;
 
                 if (!utils.arrayContains(u8, agent_names.items, agent_name_lower)) {
@@ -88,15 +88,26 @@ pub const LogConf = struct {
 pub const LogAction = struct {
     strategy: []const u8,
     from: ?[]const u8 = null,
-    by: ?[]const u8 = null,
-    size: ?u32 = null,
-    @"if": IfOperation,
+    size: ?u64 = null,
+    lines: ?u64 = null,
+    @"if": ?IfOperation = null,
     delete_archives_older_than_days: ?i32 = 7,
     compress: ?bool = false,
     compression_type: ?[]const u8 = "gzip",
     compression_level: ?u8 = 4,
 
     pub fn checkActionValidity(self: LogAction) !void {
+        if (self.@"if" == null)
+            return error.IfIsEmpty;
+        if (self.@"if".?.condition == null) {
+            return error.MissingIfCondition;
+        }
+        if (self.@"if".?.operand == null) {
+            return error.MissingIfOperand;
+        }
+        if (self.@"if".?.operator == null) {
+            return error.MissingIfOperator;
+        }
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.strategy) orelse return error.InvalidStrategy) {
             .delete => {
                 //? nothing to check yet
@@ -112,12 +123,7 @@ pub const LogAction = struct {
     }
 
     fn checkMandatoryFieldsForRotate(self: LogAction) !void {
-        switch (std.meta.stringToEnum(enums.ActionBy, self.@"if".condition) orelse return error.InvalidRotateIfCondition) {
-            .days,
-            .size,
-            => {},
-            else => return error.InvalidRotateIfCondition,
-        }
+        _ = std.meta.stringToEnum(enums.IfConditions, self.@"if".?.condition.?) orelse return error.InvalidRotateIfCondition;
 
         if (self.compress != null and self.compress.?) {
             if (self.compression_type == null)
@@ -141,16 +147,8 @@ pub const LogAction = struct {
     }
 
     fn checkMandatoryFieldsForTruncate(self: LogAction) !void {
-        if (self.by == null or self.by.?.len < 1) {
-            return error.TruncateRequiresByField;
-        }
-
-        switch (std.meta.stringToEnum(enums.ActionBy, self.@"if".condition) orelse return error.InvalidTruncateIfCondition) {
-            .lines,
-            .size,
-            => {},
-            else => return error.InvalidTruncateIfCondition,
-        }
+        if (self.lines == null and self.size == null)
+            return error.lineOrSizeError;
 
         if (self.from == null or self.from.?.len < 1) {
             return error.TruncateRequiresFromField;
@@ -161,9 +159,9 @@ pub const LogAction = struct {
 };
 
 pub const IfOperation = struct {
-    condition: []const u8,
-    operator: []const u8,
-    operand: i16,
+    condition: ?[]const u8 = null,
+    operator: ?[]const u8 = null,
+    operand: ?i16 = null,
 };
 
 const MasterServerConf = struct {

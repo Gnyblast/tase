@@ -6,6 +6,7 @@ const Allocator = std.mem.Allocator;
 const configs = @import("../app/config.zig");
 const clientFactory = @import("../factory/client_factory.zig");
 const errorFactory = @import("../factory/error_factory.zig");
+const utils = @import("../utils/helper.zig");
 
 pub const CronService = struct {
     confs: []configs.LogConf,
@@ -63,6 +64,7 @@ pub const CronService = struct {
                     std.log.scoped(.cron).info("Running for {d} agent(s)", .{agents.items.len});
                     for (agents.items) |agent| {
                         //TODO deal with local hostname
+                        //TODO check is localhost is resolving in TCP
                         const tcp_client = clientFactory.getClient(allocator, self.server_type, agent.hostname, agent.port, agent.secret) catch |err| {
                             const err_msg = errorFactory.getLogMessageByErr(allocator, err);
                             defer if (err_msg.allocated) allocator.free(err_msg.message);
@@ -90,7 +92,7 @@ pub const CronService = struct {
         var agents = std.ArrayList(configs.Agents).init(allocator);
         for (agent_names) |name| {
             for (self.agents.?) |agent| {
-                if (std.mem.eql(u8, agent.name, name)) {
+                if (std.ascii.eqlIgnoreCase(agent.name, name)) {
                     try agents.append(agent);
                 }
             }

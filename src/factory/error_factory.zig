@@ -90,6 +90,10 @@ pub const errors = [_]TaseError{
         .message = "truncate strategy requires \"by\" field to set",
     },
     .{
+        .err = error.lineOrSizeError,
+        .message = "Either \"line\" or \"size\" should be defined for truncate",
+    },
+    .{
         .err = error.TruncateRequiresFromField,
         .message = "truncate strategy requires \"from\" field to set",
     },
@@ -132,5 +136,21 @@ pub const errors = [_]TaseError{
     .{
         .err = error.LocalAgentNameIsResered,
         .message = "\"local\" as agent name is reserved for master served itself",
+    },
+    .{
+        .err = error.IfIsEmpty,
+        .message = "If condition must be set for each log action",
+    },
+    .{
+        .err = error.MissingIfCondition,
+        .message = "\"condition\" is in config file for if check",
+    },
+    .{
+        .err = error.MissingIfOperand,
+        .message = "\"operand\" is in config file for if check",
+    },
+    .{
+        .err = error.MissingIfOperator,
+        .message = "\"operator\" is in config file for if check",
     },
 };

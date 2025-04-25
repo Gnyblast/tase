@@ -28,19 +28,17 @@ pub const ActionFrom = enum {
     }
 };
 
-pub const ActionBy = enum {
-    lines,
+pub const IfConditions = enum {
     size,
     days,
 
-    pub const ActionByName = [@typeInfo(ActionBy).@"enum".fields.len][:0]const u8{
-        "lines",
+    pub const IfConditionName = [@typeInfo(IfConditions).@"enum".fields.len][:0]const u8{
         "size",
         "days",
     };
 
-    pub fn str(self: ActionBy) [:0]const u8 {
-        return ActionByName[@intFromEnum(self)];
+    pub fn str(self: IfConditions) [:0]const u8 {
+        return IfConditionName[@intFromEnum(self)];
     }
 };
 
