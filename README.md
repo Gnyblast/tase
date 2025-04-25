@@ -49,14 +49,14 @@ The application uses a YAML configuration file with the following main sections:
 
 Each config defines a log management task with the following properties:
 
-| Property           | Type     | Description                               | Default | Required |
-| ------------------ | -------- | ----------------------------------------- | ------- | -------- |
-| `app_name`         | string   | Name of the application                   | -       | Yes      |
-| `logs_dir`         | string   | Directory containing log files            | -       | Yes      |
-| `log_files_regexp` | string   | Regular expression to match log files     | -       | Yes      |
-| `cron_expression`  | string   | Cron schedule for the log management task | -       | Yes      |
-| `run_agent_names`  | string[] | List of agents to run this task           | -       | Yes      |
-| `action`           | object   | Log management strategy details           | -       | Yes      |
+| Property           | Type     | Description                                                                           | Default | Required |
+| ------------------ | -------- | ------------------------------------------------------------------------------------- | ------- | -------- |
+| `app_name`         | string   | Name of the application                                                               | -       | Yes      |
+| `logs_dir`         | string   | Directory containing log files                                                        | -       | Yes      |
+| `log_files_regexp` | string   | Regular expression to match log files                                                 | -       | Yes      |
+| `cron_expression`  | string   | Cron schedule for the log management task                                             | -       | Yes      |
+| `run_agent_names`  | string[] | List of agents to run this task ("local" is a reserved word for master server itself) | -       | Yes      |
+| `action`           | object   | Log management strategy details                                                       | -       | Yes      |
 
 #### 2. Action Strategies
 
@@ -96,12 +96,12 @@ The `action` object supports three strategies:
 
 #### 3. Agents Configuration
 
-| Property   | Type   | Description           | Default |
-| ---------- | ------ | --------------------- | ------- |
-| `name`     | string | Agent name            | -       |
-| `hostname` | string | Agent hostname        | -       |
-| `port`     | number | Agent port            | -       |
-| `secret`   | string | Authentication secret | -       |
+| Property   | Type   | Description                                     | Default |
+| ---------- | ------ | ----------------------------------------------- | ------- |
+| `name`     | string | Agent name ("local" is reserved cannot be used) | -       |
+| `hostname` | string | Agent hostname                                  | -       |
+| `port`     | number | Agent port                                      | -       |
+| `secret`   | string | Authentication secret                           | -       |
 
 #### 4. Server Configuration
 
@@ -120,7 +120,7 @@ configs:
     logs_dir: "/var/log/myapp"
     log_files_regexp: ".*\\.log"
     cron_expression: "0 0 * * *"
-    run_agent_names: ["local"]
+    run_agent_names: ["agent_1"]
     action:
       strategy: rotate
       if:
