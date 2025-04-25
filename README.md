@@ -35,7 +35,7 @@ zig build
 # Run the master daemon
 zig-out/bin/tase -m master -c /path/to/config.yml
 
-# Run the agent daemon
+# Run the agent daemon on other servers that can communicate with master server
 zig-out/bin/tase --agent --secret <a-generated-secret-that-matches-to-config> --port 7423 --master-host localhost --master-port 7423
 ```
 
