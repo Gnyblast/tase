@@ -121,7 +121,7 @@ pub const TCPServer = struct {
             };
             defer decoded.deinit();
 
-            std.log.info("{any}", .{decoded.claims});
+            // std.log.info("{any}", .{decoded.claims});
             const write = posix.write(socket, "Accepted!") catch |err| {
                 std.log.scoped(.server).err("Error sending response back to master: {}", .{err});
                 continue;

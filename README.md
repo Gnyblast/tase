@@ -7,7 +7,26 @@
 
 # Tase
 
-## Log Management Application
+## Table of Contents
+
+- [What is Tase?](#log-management-application)
+- [Features](#features)
+- [Installation](#installation)
+- [Configuration Reference](#configuration-reference)
+  - [Configuration File Structure](#configuration-file-structure)
+    - [1. Configs (configs)](#1-configs-configs)
+    - [2. Action Strategies](#2-action-strategies)
+      - [Truncate Strategy](#truncate-strategy)
+      - [Rotate Strategy](#rotate-strategy)
+      - [Delete Strategy](#delete-strategy)
+    - [3. Agents Configuration](#3-agents-configuration)
+    - [4. Server Configuration](#4-server-configuration)
+- [Example Configuration](#example-configuration)
+- [License](#license)
+- [Contributing](#contributing)
+- [Author](#author)
+
+## What is Tase?
 
 Tase is a lightweight log management system written in Zig. It consists of a daemon running on a master server and lightweight agents deployed across multiple servers. With a single config.yaml, Tase allows centralized control over log file management, including deletion, rotation, and truncation.
 

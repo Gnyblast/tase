@@ -19,11 +19,13 @@ pub const YamlCfgContainer = struct {
 
         if (self.agents != null) {
             for (self.agents.?) |a| {
-                const agent_name_lower = utils.toLowerCase(a.name);
+                const agent_name_lower = try utils.toLowerCaseAlloc(arena.allocator(), a.name);
                 if (utils.arrayContains(u8, agent_names.items, agent_name_lower)) {
                     return error.DuplicateAgentName;
                 }
-                if (utils.arrayContains(u8, agent_host_names.items, utils.toLowerCase(a.hostname))) {
+
+                const hostname_lower = try utils.toLowerCaseAlloc(arena.allocator(), a.hostname);
+                if (utils.arrayContains(u8, agent_host_names.items, hostname_lower)) {
                     return error.DuplicateAgentHostName;
                 }
 
@@ -31,7 +33,7 @@ pub const YamlCfgContainer = struct {
                     return error.LocalAgentNameIsResered;
                 }
                 try agent_names.append(agent_name_lower);
-                try agent_host_names.append(utils.toLowerCase(a.hostname));
+                try agent_host_names.append(hostname_lower);
             }
         }
 
@@ -39,10 +41,11 @@ pub const YamlCfgContainer = struct {
             try c.isConfigValid(allocator);
 
             for (c.run_agent_names) |a| {
-                if (std.mem.eql(u8, utils.toLowerCase(a), LOCAL))
+                const agent_name_lower = try utils.toLowerCaseAlloc(arena.allocator(), a);
+                if (std.mem.eql(u8, agent_name_lower, LOCAL))
                     continue;
 
-                if (!utils.arrayContains(u8, agent_names.items, utils.toLowerCase(a))) {
+                if (!utils.arrayContains(u8, agent_names.items, agent_name_lower)) {
                     return error.UndefinedAgent;
                 }
             }
@@ -109,19 +112,11 @@ pub const LogAction = struct {
     }
 
     fn checkMandatoryFieldsForRotate(self: LogAction) !void {
-        if (self.by == null or self.by.?.len < 1) {
-            return error.RotateRequiresByField;
-        }
-
-        switch (std.meta.stringToEnum(enums.ActionBy, self.by.?) orelse return error.InvalidRotateBy) {
+        switch (std.meta.stringToEnum(enums.ActionBy, self.@"if".condition) orelse return error.InvalidRotateIfCondition) {
             .days,
             .size,
             => {},
-            else => return error.InvalidRotateBy,
-        }
-
-        if (self.size == null or self.size.? < 1) {
-            return error.SizeIsRequiredForRotate;
+            else => return error.InvalidRotateIfCondition,
         }
 
         if (self.compress != null and self.compress.?) {
@@ -150,15 +145,11 @@ pub const LogAction = struct {
             return error.TruncateRequiresByField;
         }
 
-        switch (std.meta.stringToEnum(enums.ActionBy, self.by.?) orelse return error.InvalidTruncateBy) {
+        switch (std.meta.stringToEnum(enums.ActionBy, self.@"if".condition) orelse return error.InvalidTruncateIfCondition) {
             .lines,
             .size,
             => {},
-            else => return error.InvalidTruncateBy,
-        }
-
-        if (self.size == null or self.size.? < 1) {
-            return error.SizeIsRequiredForTruncate;
+            else => return error.InvalidTruncateIfCondition,
         }
 
         if (self.from == null or self.from.?.len < 1) {

@@ -47,52 +47,27 @@ pub const LogService = struct {
         defer arena.deinit();
         const files = try findRegexMatchesInDir(arena.allocator(), self.directory, self.matcher);
         for (files.items) |file_name| {
-            //TODO check rotation conditions, by and size
-            if (self.log_action.compress.?) {
-                var paths = [_][]const u8{ self.directory, file_name };
-                const path = std.fs.path.join(allocator, &paths) catch |err| {
-                    std.log.scoped(.logs).err("error joining paths: {s}/{s}, {}", .{ self.directory, file_name, err });
-                    continue;
-                };
-                defer allocator.free(path);
+            var paths = [_][]const u8{ self.directory, file_name };
+            const path = std.fs.path.join(allocator, &paths) catch |err| {
+                std.log.scoped(.logs).err("error joining paths: {s}/{s}, {}", .{ self.directory, file_name, err });
+                continue;
+            };
+            defer allocator.free(path);
 
-                const compress_type = std.meta.stringToEnum(enums.CompressType, self.log_action.compression_type.?) orelse {
-                    std.log.scoped(.logs).err("error getting compression type", .{});
-                    continue;
-                };
-
-                var writer = std.ArrayList(u8).init(allocator);
-                defer writer.deinit();
-                var reader = std.fs.openFileAbsolute(path, .{ .mode = .read_only }) catch |err| {
-                    std.log.scoped(.logs).err("error getting file reader for {s}: {}", .{ path, err });
-                    continue;
-                };
-                defer reader.close();
-
-                const compressor = compressionFactory.getCompressor(compress_type);
-                compressor.compress(reader.reader(), writer.writer(), .{ .level = @enumFromInt(self.log_action.compression_level.?) }) catch |err| {
-                    std.log.scoped(.logs).err("error compressing file {s}: {}", .{ path, err });
-                    continue;
-                };
-
-                //TODO: Make timestamp
-                const compress_path = std.fmt.allocPrint(allocator, "{s}.{s}", .{ path, compress_type.getCompressionExtension() }) catch |err| {
+            if (shouldProcess(self.log_action.@"if", path, self.timezone)) {
+                const rotation_path = std.fmt.allocPrint(allocator, "{s}-{d}", .{ path, datetime.Datetime.now().toTimestamp() }) catch |err| {
                     std.log.scoped(.logs).err("error generating file name for {s}: {}", .{ path, err });
                     continue;
                 };
-                defer allocator.free(compress_path);
+                defer allocator.free(rotation_path);
+                std.fs.renameAbsolute(path, rotation_path) catch |err| {
+                    std.log.scoped(.log).err("unable to rotate file {s}: {}", .{ path, err });
+                    continue;
+                };
+                std.log.scoped(.logs).info("file rotated from {s} to {s}", .{ path, rotation_path });
 
-                const compressed_file = std.fs.createFileAbsolute(compress_path, .{ .mode = 0o666 }) catch |err| {
-                    std.log.scoped(.logs).err("unable to create compressed file {s}: {}", .{ compress_path, err });
-                    continue;
-                };
-                defer compressed_file.close();
-                _ = compressed_file.write(writer.items) catch |err| {
-                    std.log.scoped(.logs).err("unable to write compressed file {s}: {}", .{ path, err });
-                    continue;
-                };
-                // if (write_size < 0) {
-                // }
+                if (self.log_action.compress.?)
+                    return compressAndRotate(allocator, self.log_action, rotation_path);
             }
         }
     }
@@ -111,9 +86,12 @@ pub const LogService = struct {
             };
             defer allocator.free(path);
 
-            if (shouldDelete(self.log_action.@"if", path, self.timezone)) {
-                std.log.scoped(.logs).info("deleting file: {s}", .{file_name});
-                try std.fs.deleteFileAbsolute(path);
+            if (shouldProcess(self.log_action.@"if", path, self.timezone)) {
+                std.fs.deleteFileAbsolute(path) catch |err| {
+                    std.log.scoped(.log).err("unable to delete file {s}: {}", .{ path, err });
+                    continue;
+                };
+                std.log.scoped(.logs).info("deleted file: {s}", .{file_name});
             }
         }
     }
@@ -121,7 +99,7 @@ pub const LogService = struct {
     fn doTruncate(_: LogService) !void {}
 };
 
-fn shouldDelete(ifOpr: configs.IfOperation, path: []u8, timezone: datetime.Timezone) bool {
+fn shouldProcess(ifOpr: configs.IfOperation, path: []u8, timezone: datetime.Timezone) bool {
     const file = std.fs.openFileAbsolute(path, .{ .mode = .read_write }) catch |err| {
         std.log.scoped(.logs).err("error opening file: {s} {}", .{ path, err });
         return false;
@@ -135,10 +113,10 @@ fn shouldDelete(ifOpr: configs.IfOperation, path: []u8, timezone: datetime.Timez
 
     switch (std.meta.stringToEnum(enums.ActionBy, ifOpr.condition) orelse return false) {
         .days => {
-            return shouldDeleteByDays(ifOpr, file_stats, timezone);
+            return compareByAge(ifOpr, file_stats, timezone);
         },
         .size => {
-            return shouldDeleteBySize(ifOpr, file_stats);
+            return compareBySize(ifOpr, file_stats);
         },
         else => {
             return false;
@@ -146,7 +124,7 @@ fn shouldDelete(ifOpr: configs.IfOperation, path: []u8, timezone: datetime.Timez
     }
 }
 
-fn shouldDeleteByDays(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata, timezone: datetime.Timezone) bool {
+fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata, timezone: datetime.Timezone) bool {
     const mtime_ns = file_stats.modified();
 
     const mtime_ms: i64 = @as(i64, @intCast(@divFloor(mtime_ns, std.time.ns_per_ms)));
@@ -166,7 +144,7 @@ fn shouldDeleteByDays(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metada
     }
 }
 
-fn shouldDeleteBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata) bool {
+fn compareBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata) bool {
     switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator) orelse return false) {
         .@">" => {
             return file_stats.size() > ifOpr.operand;
@@ -178,6 +156,48 @@ fn shouldDeleteBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metada
             return file_stats.size() == ifOpr.operand;
         },
     }
+}
+
+fn compressAndRotate(allocator: Allocator, log_action: configs.LogAction, path: []const u8) void {
+    const compress_type = std.meta.stringToEnum(enums.CompressType, log_action.compression_type.?) orelse {
+        std.log.scoped(.logs).err("error getting compression type", .{});
+        return;
+    };
+
+    const rotation_path = std.fmt.allocPrint(allocator, "{s}.{s}", .{ path, compress_type.getCompressionExtension() }) catch |err| {
+        std.log.scoped(.logs).err("error generating file name for {s}: {}", .{ path, err });
+        return;
+    };
+    defer allocator.free(rotation_path);
+
+    var writer = std.ArrayList(u8).init(allocator);
+    defer writer.deinit();
+    var reader = std.fs.openFileAbsolute(path, .{ .mode = .read_only }) catch |err| {
+        std.log.scoped(.logs).err("error getting file reader for {s}: {}", .{ path, err });
+        return;
+    };
+    defer reader.close();
+
+    const compressor = compressionFactory.getCompressor(compress_type);
+    compressor.compress(reader.reader(), writer.writer(), .{ .level = @enumFromInt(log_action.compression_level.?) }) catch |err| {
+        std.log.scoped(.logs).err("error compressing file {s}: {}", .{ path, err });
+        return;
+    };
+    const rotated_file = std.fs.createFileAbsolute(rotation_path, .{ .mode = 0o666 }) catch |err| {
+        std.log.scoped(.logs).err("unable to create compressed file {s}: {}", .{ rotation_path, err });
+        return;
+    };
+
+    defer rotated_file.close();
+    _ = rotated_file.write(writer.items) catch |err| {
+        std.log.scoped(.logs).err("unable to write compressed file {s}: {}", .{ path, err });
+        return;
+    };
+    std.fs.deleteFileAbsolute(path) catch |err| {
+        std.log.scoped(.logs).err("unable to delete file after compression {s}: {}", .{ path, err });
+        return;
+    };
+    std.log.scoped(.logs).info("file rotated from {s} with compress to {s}", .{ path, rotation_path });
 }
 
 pub fn findRegexMatchesInDir(arena: Allocator, dir: []const u8, regexp: []const u8) !std.ArrayList([]const u8) {

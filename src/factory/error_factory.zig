@@ -114,12 +114,12 @@ pub const errors = [_]TaseError{
         .message = "rotate strategy requires \"by\" field to set",
     },
     .{
-        .err = error.InvalidRotateBy,
-        .message = "value for \"by\" field in rotate is invalid",
+        .err = error.InvalidRotateIfCondition,
+        .message = "value for \"if condition\" field in rotate is invalid",
     },
     .{
-        .err = error.InvalidTruncateBy,
-        .message = "value for \"by\" field in truncate is invalid",
+        .err = error.InvalidTruncateIfCondition,
+        .message = "value for \"if conditipn\" field in truncate is invalid",
     },
     .{
         .err = error.compile,

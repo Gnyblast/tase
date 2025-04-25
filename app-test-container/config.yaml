@@ -1,10 +1,10 @@
 ---
 configs:
   ##?? ROTATE
-  - app_name: "rotate_app"
+  - app_name: "rotate_app_compress"
     logs_dir: "/var/log/nginx"
     log_files_regexp: "access.log"
-    cron_expression: "27 13 * * *"
+    cron_expression: "25 13 * * *"
     run_agent_names:
       - "dev"
     action:
@@ -12,12 +12,27 @@ configs:
       if:
         condition: days
         operator: ">"
-        operand: 3
+        operand: 0
       compress: true
       ##?? gzip
       compression_type: gzip
       ##?? Between 4-9
       compression_level: 5
+
+  ##?? ROTATE
+  - app_name: "rorate_app_no_compress"
+    logs_dir: "/var/log/php"
+    log_files_regexp: "symphony.log"
+    cron_expression: "25 13 * * *"
+    run_agent_names:
+      - "dev"
+    action:
+      strategy: rotate
+      if:
+        ##?? days - size (size in mb)
+        condition: days
+        operator: ">"
+        operand: 0
 
   ##?? DELETE
   - app_name: "delete_app"

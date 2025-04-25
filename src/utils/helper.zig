@@ -4,21 +4,29 @@ const Allocator = std.mem.Allocator;
 pub fn toUpperCase(comptime string: []const u8) []u8 {
     var u_string: [string.len]u8 = std.mem.zeroes([string.len]u8);
     for (string, 0..) |s, i| {
-        const u_s = std.ascii.toUpper(s);
-        u_string[i] = u_s;
+        const l_s = std.ascii.toUpper(s);
+        u_string[i] = l_s;
     }
 
     return &u_string;
 }
 
 pub fn toLowerCase(comptime string: []const u8) []u8 {
-    var u_string: [string.len]u8 = std.mem.zeroes([string.len]u8);
+    var l_string: [string.len]u8 = std.mem.zeroes([string.len]u8);
     for (string, 0..) |s, i| {
-        const u_s = std.ascii.toLower(s);
-        u_string[i] = u_s;
+        const l_s = std.ascii.toLower(s);
+        l_string[i] = l_s;
     }
 
-    return &u_string;
+    return &l_string;
+}
+
+pub fn toLowerCaseAlloc(allocator: Allocator, input: []const u8) ![]u8 {
+    const result = try allocator.alloc(u8, input.len);
+    for (input, 0..) |ch, i| {
+        result[i] = std.ascii.toUpper(ch);
+    }
+    return result;
 }
 
 pub fn concatString(allocator: Allocator, a: []const u8, b: []const u8) ![]const u8 {
