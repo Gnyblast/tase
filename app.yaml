@@ -5,41 +5,45 @@ configs:
     logs_dir: "/var/log/cups"
     log_files_regexp: "access_log.*"
     cron_expression: "11 18 * * *"
-    run_agent_name:
+    run_agent_names:
       - "local"
       - "dev"
     action:
       strategy: truncate
       from: top
-      by: megabytes
-      size: 2048
+      if:
+        condition: days
+        operator: ">"
+        operand: 3
 
   ##?? TRUNCATE
   - app_name: "truncate_app"
     logs_dir: "/var/log/truncate_app"
     log_files_regexp: ".*"
     cron_expression: "35 17 * * *"
-    run_agent_name:
+    run_agent_names:
       - "local"
     action:
       strategy: truncate
       from: top
-      by: megabytes
-      size: 2048
+      if:
+        condition: size
+        operator: ">"
+        operand: 2048
 
   ##?? ROTATE WITHOUT COMPRESS
   - app_name: "rotate_app_no_compress"
     logs_dir: "/var/log/rotate_app_no_compress"
     log_files_regexp: ".*"
     cron_expression: "30 11 * * *"
-    run_agent_name:
+    run_agent_names:
       - "local"
       - "dev"
     action:
       strategy: rotate
       if:
         condition: days
-        operator: '>'
+        operator: ">"
         operand: 3
       delete_archives_older_than_days: 7
       compress: false
@@ -49,13 +53,15 @@ configs:
     logs_dir: "/var/log/rotate_app_compress"
     log_files_regexp: ".*"
     cron_expression: "25 10 * * *"
-    run_agent_name:
+    run_agent_names:
       - "local"
       - "dev"
     action:
       strategy: rotate
-      by: megabytes
-      size: 4096
+      if:
+        condition: size
+        operator: ">"
+        operand: 4096
       delete_archives_older_than_days: 7
       compress: true
       ##?? gzip
@@ -68,13 +74,15 @@ configs:
     logs_dir: "/var/log/rotate_app_compress"
     log_files_regexp: ".*"
     cron_expression: "0 11 * * *"
-    run_agent_name:
+    run_agent_names:
       - "local"
       - "dev"
     action:
       strategy: rotate
-      by: megabytes
-      size: 4096
+      if:
+        condition: size
+        operator: ">"
+        operand: 4096
       compress: true
       compression_type: gzip
       compression_level: 7
@@ -84,7 +92,7 @@ configs:
     logs_dir: "/var/log/delete_app"
     log_files_regexp: ".*"
     cron_expression: "25 10 * * *"
-    run_agent_name:
+    run_agent_names:
       - "local"
       - "dev"
     action:
@@ -92,7 +100,7 @@ configs:
       if:
         ##?? days - size (size in mb)
         condition: days
-        operator: '>'
+        operator: ">"
         operand: 3
 
 agents:

@@ -3,15 +3,15 @@ configs:
   ##?? ROTATE
   - app_name: "rotate_app"
     logs_dir: "/var/log/nginx"
-    log_files_regexp: 'access.log'
+    log_files_regexp: "access.log"
     cron_expression: "27 13 * * *"
-    run_agent_name:
+    run_agent_names:
       - "dev"
     action:
       strategy: rotate
       if:
         condition: days
-        operator: '>'
+        operator: ">"
         operand: 3
       compress: true
       ##?? gzip
@@ -24,28 +24,28 @@ configs:
     logs_dir: "/var/log/php"
     log_files_regexp: 'laravel\.log\..*'
     cron_expression: "43 12 * * *"
-    run_agent_name:
+    run_agent_names:
       - "dev"
     action:
       strategy: delete
       if:
         ##?? days - size (size in mb)
         condition: days
-        operator: '>'
+        operator: ">"
         operand: 3
-  
+
   - app_name: "delete_app"
     logs_dir: "/var/log/postgres"
     log_files_regexp: 'postgresql-\w+\.log'
     cron_expression: "43 12 * * *"
-    run_agent_name:
+    run_agent_names:
       - "dev"
     action:
       strategy: delete
       if:
         ##?? days - size (size in mb)
         condition: days
-        operator: '>'
+        operator: ">"
         operand: 3
 
 agents:

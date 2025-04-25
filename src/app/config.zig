@@ -33,7 +33,7 @@ pub const YamlCfgContainer = struct {
         for (self.configs) |c| {
             try c.isConfigValid(allocator);
 
-            for (c.run_agent_name) |a| {
+            for (c.run_agent_names) |a| {
                 if (std.mem.eql(u8, a, LOCAL))
                     continue;
 
@@ -59,7 +59,7 @@ pub const LogConf = struct {
     logs_dir: []const u8,
     log_files_regexp: []const u8,
     cron_expression: []const u8,
-    run_agent_name: [][]const u8,
+    run_agent_names: [][]const u8,
     action: LogAction,
 
     pub fn isConfigValid(self: LogConf, allocator: Allocator) !void {

@@ -52,7 +52,7 @@ pub const CronService = struct {
                     std.log.scoped(.cron).info("Running logs processing for {s} with cron: {s}", .{ cfg.app_name, cfg.cron_expression });
                     std.debug.print("Running now\n", .{});
 
-                    const agents = self.getAgentsByName(allocator, cfg.run_agent_name) catch |err| {
+                    const agents = self.getAgentsByName(allocator, cfg.run_agent_names) catch |err| {
                         const err_msg = errorFactory.getLogMessageByErr(allocator, err);
                         defer if (err_msg.allocated) allocator.free(err_msg.message);
                         std.log.scoped(.cron).err("problem getting agents: {s}", .{err_msg.message});
