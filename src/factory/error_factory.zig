@@ -129,4 +129,8 @@ pub const errors = [_]TaseError{
         .err = error.CompressionLevelInvalid,
         .message = "Compression levels are starting from 4 goes up to 9",
     },
+    .{
+        .err = error.LocalAgentNameIsResered,
+        .message = "\"local\" as agent name is reserved for master served itself",
+    },
 };

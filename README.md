@@ -64,53 +64,53 @@ The `action` object supports three strategies:
 
 ##### Truncate Strategy
 
-| Property       | Type   | Description                               | Default | Constraints |
-| -------------- | ------ | ----------------------------------------- | ------- | ----------- |
-| `strategy`     | string | Must be `"truncate"`                      | -       | Required    |
-| `from`         | string | Where to truncate (`"top"` or `"bottom"`) | -       | Required    |
-| `if.condition` | string | Condition type (`"days"` or `"size"`)     | -       | Required    |
-| `if.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`) | -       | Required    |
-| `if.operand`   | number | Threshold value                           | -       | Required    |
+| Property       | Type   | Description                               | Default | Required |
+| -------------- | ------ | ----------------------------------------- | ------- | -------- |
+| `strategy`     | string | Must be `"truncate"`                      | -       | Yes      |
+| `from`         | string | Where to truncate (`"top"` or `"bottom"`) | -       | Yes      |
+| `if.condition` | string | Condition type (`"days"` or `"size"`)     | -       | Yes      |
+| `if.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`) | -       | Yes      |
+| `if.operand`   | number | Threshold value                           | -       | Yes      |
 
 ##### Rotate Strategy
 
-| Property                          | Type    | Description                           | Default  | Optional                    |
-| --------------------------------- | ------- | ------------------------------------- | -------- | --------------------------- |
-| `strategy`                        | string  | Must be `"rotate"`                    | -        | Required                    |
-| `if.condition`                    | string  | Condition type (`"days"` or `"size"`) | -        | Required                    |
-| `if.operator`                     | string  | Comparison operator                   | -        | Required                    |
-| `if.operand`                      | number  | Threshold value                       | -        | Required                    |
-| `delete_archives_older_than_days` | number  | Days to keep archives                 | 7        | Yes                         |
-| `compress`                        | boolean | Enable compression                    | `false`  | Yes                         |
-| `compression_type`                | string  | Compression algorithm (`"gzip"`)      | `"gzip"` | Optional if `compress=true` |
-| `compression_level`               | number  | Compression level (4-9)               | 4        | Optional if `compress=true` |
+| Property                          | Type    | Description                               | Default  | Required              |
+| --------------------------------- | ------- | ----------------------------------------- | -------- | --------------------- |
+| `strategy`                        | string  | Must be `"rotate"`                        | -        | Yes                   |
+| `if.condition`                    | string  | Condition type (`"days"` or `"size"`)     | -        | Yes                   |
+| `if.operator`                     | string  | Comparison operator (`">"`, `"<"`, `"="`) | -        | Yes                   |
+| `if.operand`                      | number  | Threshold value                           | -        | Yes                   |
+| `delete_archives_older_than_days` | number  | Days to keep archives                     | 7        | No                    |
+| `compress`                        | boolean | Enable compression                        | `false`  | No                    |
+| `compression_type`                | string  | Compression algorithm (`"gzip"`)          | `"gzip"` | No if `compress=true` |
+| `compression_level`               | number  | Compression level (4-9)                   | 4        | No if `compress=true` |
 
 ##### Delete Strategy
 
-| Property       | Type   | Description                           | Default | Constraints |
-| -------------- | ------ | ------------------------------------- | ------- | ----------- |
-| `strategy`     | string | Must be `"delete"`                    | -       | Required    |
-| `if.condition` | string | Condition type (`"days"` or `"size"`) | -       | Required    |
-| `if.operator`  | string | Comparison operator                   | -       | Required    |
-| `if.operand`   | number | Threshold value                       | -       | Required    |
+| Property       | Type   | Description                               | Default | Required |
+| -------------- | ------ | ----------------------------------------- | ------- | -------- |
+| `strategy`     | string | Must be `"delete"`                        | -       | Yes      |
+| `if.condition` | string | Condition type (`"days"` or `"size"`)     | -       | Yes      |
+| `if.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`) | -       | Yes      |
+| `if.operand`   | number | Threshold value                           | -       | Yes      |
 
 #### 3. Agents Configuration
 
-| Property   | Type   | Description                                     | Default |
-| ---------- | ------ | ----------------------------------------------- | ------- |
-| `name`     | string | Agent name ("local" is reserved cannot be used) | -       |
-| `hostname` | string | Agent hostname                                  | -       |
-| `port`     | number | Agent port                                      | -       |
-| `secret`   | string | Authentication secret                           | -       |
+| Property   | Type   | Description                                     | Default | Required |
+| ---------- | ------ | ----------------------------------------------- | ------- | -------- |
+| `name`     | string | Agent name ("local" is reserved cannot be used) | -       | Yes      |
+| `hostname` | string | Agent hostname                                  | -       | Yes      |
+| `port`     | number | Agent port                                      | -       | Yes      |
+| `secret`   | string | Authentication secret                           | -       | Yes      |
 
 #### 4. Server Configuration
 
-| Property    | Type   | Description      | Default       |
-| ----------- | ------ | ---------------- | ------------- |
-| `host`      | string | Server hostname  | `"127.0.0.1"` |
-| `port`      | number | Server port      | `7423`        |
-| `type`      | string | Server type      | `"tcp"`       |
-| `time_zone` | string | Server time zone | `"UTC"`       |
+| Property    | Type   | Description      | Default       | Required |
+| ----------- | ------ | ---------------- | ------------- | -------- |
+| `host`      | string | Server hostname  | `"127.0.0.1"` | No       |
+| `port`      | number | Server port      | `7423`        | No       |
+| `type`      | string | Server type      | `"tcp"`       | No       |
+| `time_zone` | string | Server time zone | `"UTC"`       | No       |
 
 ## Example Configuration
 

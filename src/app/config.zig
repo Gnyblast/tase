@@ -19,14 +19,19 @@ pub const YamlCfgContainer = struct {
 
         if (self.agents != null) {
             for (self.agents.?) |a| {
-                if (utils.arrayContains(u8, agent_names.items, a.name)) {
+                const agent_name_lower = utils.toLowerCase(a.name);
+                if (utils.arrayContains(u8, agent_names.items, agent_name_lower)) {
                     return error.DuplicateAgentName;
                 }
-                if (utils.arrayContains(u8, agent_host_names.items, a.hostname)) {
+                if (utils.arrayContains(u8, agent_host_names.items, utils.toLowerCase(a.hostname))) {
                     return error.DuplicateAgentHostName;
                 }
-                try agent_names.append(a.name);
-                try agent_host_names.append(a.hostname);
+
+                if (std.mem.eql(u8, LOCAL, agent_name_lower)) {
+                    return error.LocalAgentNameIsResered;
+                }
+                try agent_names.append(agent_name_lower);
+                try agent_host_names.append(utils.toLowerCase(a.hostname));
             }
         }
 
@@ -34,10 +39,10 @@ pub const YamlCfgContainer = struct {
             try c.isConfigValid(allocator);
 
             for (c.run_agent_names) |a| {
-                if (std.mem.eql(u8, a, LOCAL))
+                if (std.mem.eql(u8, utils.toLowerCase(a), LOCAL))
                     continue;
 
-                if (!utils.arrayContains(u8, agent_names.items, a)) {
+                if (!utils.arrayContains(u8, agent_names.items, utils.toLowerCase(a))) {
                     return error.UndefinedAgent;
                 }
             }
