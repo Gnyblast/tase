@@ -7,7 +7,7 @@ const Allocator = std.mem.Allocator;
 const LOCAL = "local";
 
 pub const YamlCfgContainer = struct {
-    configs: []LogConf,
+    configs: []*LogConf,
     agents: ?[]Agents,
     server: MasterServerConf,
 
@@ -70,7 +70,7 @@ pub const LogConf = struct {
     run_agent_names: [][]const u8,
     action: LogAction,
 
-    pub fn isConfigValid(self: LogConf, allocator: Allocator) !void {
+    pub fn isConfigValid(self: *LogConf, allocator: Allocator) !void {
         if (self.cron_expression.len < 1) {
             return error.CronCannotBeUndefined;
         }
@@ -81,17 +81,23 @@ pub const LogConf = struct {
         };
         defer regex.deinit();
 
+        if (std.mem.eql(u8, self.action.strategy, enums.ActionStrategy.rotate.str()) and self.action.rotate_archives_dir == null) {
+            self.*.action.rotate_archives_dir.? = self.logs_dir;
+        }
+
         return try self.action.checkActionValidity();
     }
 };
 
 pub const LogAction = struct {
     strategy: []const u8,
+    rotate_archives_dir: ?[]const u8 = null,
     from: ?[]const u8 = null,
     size: ?u64 = null,
     lines: ?u64 = null,
     @"if": ?IfOperation = null,
-    delete_archives_older_than_days: ?i32 = 7,
+    keep_size: ?i16 = 7,
+    keep_condition: ?[]const u8 = "days",
     compress: ?bool = false,
     compression_type: ?[]const u8 = "gzip",
     compression_level: ?u8 = 4,

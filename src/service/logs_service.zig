@@ -23,7 +23,7 @@ pub const LogService = struct {
         };
     }
 
-    pub fn run(self: LogService) !void {
+    pub fn run(self: LogService) anyerror!void {
         try self.log_action.checkActionValidity();
         var da: std.heap.DebugAllocator(.{}) = .init;
         defer {
@@ -67,7 +67,17 @@ pub const LogService = struct {
                 std.log.scoped(.logs).info("file rotated from {s} to {s}", .{ path, rotation_path });
 
                 if (self.log_action.compress.?)
-                    return compressAndRotate(allocator, self.log_action, rotation_path);
+                    compressAndRotate(allocator, self.log_action, rotation_path) catch |err| {
+                        std.log.scoped(.logs).err("Error compression file {s}: {}", .{ rotation_path, err });
+                        continue;
+                    };
+
+                const pruner = self.getPruner();
+
+                pruner.run() catch |err| {
+                    std.log.scoped(.log).err("error pruning archives in {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
+                    continue;
+                };
             }
         }
     }
@@ -97,6 +107,29 @@ pub const LogService = struct {
     }
 
     fn doTruncate(_: LogService) !void {}
+
+    fn getPruner(self: LogService) LogService {
+        var matcher = self.matcher;
+
+        if (self.log_action.compress.?) {
+            //TODO calculate matcher
+            matcher = matcher ++ ".gz";
+        }
+
+        return LogService.init(
+            self.timezone,
+            self.log_action.rotate_archives_dir.?,
+            matcher,
+            configs.LogAction{
+                .strategy = enums.ActionStrategy.delete.str(),
+                .@"if" = configs.IfOperation{
+                    .condition = self.log_action.keep_condition.?,
+                    .operator = ">",
+                    .operand = self.log_action.keep_size.?,
+                },
+            },
+        );
+    }
 };
 
 fn shouldProcess(ifOpr: configs.IfOperation, path: []u8, timezone: datetime.Timezone) bool {
@@ -155,45 +188,24 @@ fn compareBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata) b
     }
 }
 
-fn compressAndRotate(allocator: Allocator, log_action: configs.LogAction, path: []const u8) void {
-    const compress_type = std.meta.stringToEnum(enums.CompressType, log_action.compression_type.?) orelse {
-        std.log.scoped(.logs).err("error getting compression type", .{});
-        return;
-    };
+fn compressAndRotate(allocator: Allocator, log_action: configs.LogAction, path: []const u8) !void {
+    const compress_type = std.meta.stringToEnum(enums.CompressType, log_action.compression_type.?) orelse return error.CompressionTypeError;
 
-    const rotation_path = std.fmt.allocPrint(allocator, "{s}.{s}", .{ path, compress_type.getCompressionExtension() }) catch |err| {
-        std.log.scoped(.logs).err("error generating file name for {s}: {}", .{ path, err });
-        return;
-    };
+    const rotation_path = try std.fmt.allocPrint(allocator, "{s}.{s}", .{ path, compress_type.getCompressionExtension() });
     defer allocator.free(rotation_path);
 
     var writer = std.ArrayList(u8).init(allocator);
     defer writer.deinit();
-    var reader = std.fs.openFileAbsolute(path, .{ .mode = .read_only }) catch |err| {
-        std.log.scoped(.logs).err("error getting file reader for {s}: {}", .{ path, err });
-        return;
-    };
+    var reader = try std.fs.openFileAbsolute(path, .{ .mode = .read_only });
     defer reader.close();
 
     const compressor = compressionFactory.getCompressor(compress_type);
-    compressor.compress(reader.reader(), writer.writer(), .{ .level = @enumFromInt(log_action.compression_level.?) }) catch |err| {
-        std.log.scoped(.logs).err("error compressing file {s}: {}", .{ path, err });
-        return;
-    };
-    const rotated_file = std.fs.createFileAbsolute(rotation_path, .{ .mode = 0o666 }) catch |err| {
-        std.log.scoped(.logs).err("unable to create compressed file {s}: {}", .{ rotation_path, err });
-        return;
-    };
+    try compressor.compress(reader.reader(), writer.writer(), .{ .level = @enumFromInt(log_action.compression_level.?) });
+    const rotated_file = try std.fs.createFileAbsolute(rotation_path, .{ .mode = 0o666 });
 
     defer rotated_file.close();
-    _ = rotated_file.write(writer.items) catch |err| {
-        std.log.scoped(.logs).err("unable to write compressed file {s}: {}", .{ path, err });
-        return;
-    };
-    std.fs.deleteFileAbsolute(path) catch |err| {
-        std.log.scoped(.logs).err("unable to delete file after compression {s}: {}", .{ path, err });
-        return;
-    };
+    _ = try rotated_file.write(writer.items);
+    try std.fs.deleteFileAbsolute(path);
     std.log.scoped(.logs).info("file rotated from {s} with compress to {s}", .{ path, rotation_path });
 }
 

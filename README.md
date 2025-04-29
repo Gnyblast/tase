@@ -93,16 +93,18 @@ The `action` object supports three strategies:
 
 ##### Rotate Strategy
 
-| Property                          | Type    | Description                               | Default  | Required              |
-| --------------------------------- | ------- | ----------------------------------------- | -------- | --------------------- |
-| `strategy`                        | string  | Must be `"rotate"`                        | -        | Yes                   |
-| `if.condition`                    | string  | Condition type (`"days"` or `"size"`)     | -        | Yes                   |
-| `if.operator`                     | string  | Comparison operator (`">"`, `"<"`, `"="`) | -        | Yes                   |
-| `if.operand`                      | number  | Threshold value                           | -        | Yes                   |
-| `delete_archives_older_than_days` | number  | Days to keep archives                     | 7        | No                    |
-| `compress`                        | boolean | Enable compression                        | `false`  | No                    |
-| `compression_type`                | string  | Compression algorithm (`"gzip"`)          | `"gzip"` | No if `compress=true` |
-| `compression_level`               | number  | Compression level (4-9)                   | 4        | No if `compress=true` |
+| Property              | Type    | Description                                    | Default                      | Required              |
+| --------------------- | ------- | ---------------------------------------------- | ---------------------------- | --------------------- |
+| `strategy`            | string  | Must be `"rotate"`                             | -                            | Yes                   |
+| `rotate_archives_dir` | string  | Directory for archiving rotated files          | same directory with log file | No                    |
+| `if.condition`        | string  | Condition type (`"days"` or `"size"`)          | -                            | Yes                   |
+| `if.operator`         | string  | Comparison operator (`">"`, `"<"`, `"="`)      | -                            | Yes                   |
+| `if.operand`          | number  | Threshold value                                | -                            | Yes                   |
+| `keep_size`           | number  | Keep archives lower than `keep_condition`      | 7                            | No                    |
+| `keep_condition`      | string  | Keep archives condition (`"days"` or `"size"`) | `"days"`                     | No                    |
+| `compress`            | boolean | Enable compression                             | `false`                      | No                    |
+| `compression_type`    | string  | Compression algorithm (`"gzip"`)               | `"gzip"`                     | No if `compress=true` |
+| `compression_level`   | number  | Compression level (4-9)                        | 4                            | No if `compress=true` |
 
 ##### Delete Strategy
 

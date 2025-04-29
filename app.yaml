@@ -41,11 +41,13 @@ configs:
       - "dev"
     action:
       strategy: rotate
+      rotate_archives_dir: "/var/log/rotate_app_no_compress/archives"
       if:
         condition: days
         operator: ">"
         operand: 3
-      delete_archives_older_than_days: 7
+      keep_size: 7
+      keep_condition: days
       compress: false
 
   ##?? ROTATE WITH COMPRESS
@@ -58,11 +60,13 @@ configs:
       - "dev"
     action:
       strategy: rotate
+      rotate_archives_dir: "/var/log/rotate_app_compress/archives"
       if:
         condition: size
         operator: ">"
         operand: 4096
-      delete_archives_older_than_days: 7
+      keep_size: 7
+      keep_condition: days
       compress: true
       ##?? gzip
       compression_type: gzip

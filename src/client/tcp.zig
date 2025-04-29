@@ -34,12 +34,12 @@ pub const TCPClient = struct {
         allocator.destroy(self);
     }
 
-    fn sendLogConf(ptr: *anyopaque, allocator: Allocator, cfg: configs.LogConf, timezone: datetime.Timezone) !void {
+    fn sendLogConf(ptr: *anyopaque, allocator: Allocator, cfg: *configs.LogConf, timezone: datetime.Timezone) !void {
         const self: *TCPClient = @ptrCast(@alignCast(ptr));
 
         const clientMsg = AgentClaims{
             .agent_hostname = "",
-            .job = &cfg,
+            .job = cfg,
             .timezone = timezone,
             .exp = std.time.timestamp() + 60, //? one minute expiration added top of it
         };
