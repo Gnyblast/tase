@@ -9,12 +9,12 @@ const errorFactory = @import("../factory/error_factory.zig");
 const utils = @import("../utils/helper.zig");
 
 pub const CronService = struct {
-    confs: []*configs.LogConf,
+    confs: []configs.LogConf,
     tz: datetime.Timezone,
     agents: ?[]configs.Agents,
     server_type: []const u8,
 
-    pub fn init(cfgs: []*configs.LogConf, agents: ?[]configs.Agents, server_type: []const u8, timezone: datetime.Timezone) !CronService {
+    pub fn init(cfgs: []configs.LogConf, agents: ?[]configs.Agents, server_type: []const u8, timezone: datetime.Timezone) !CronService {
         try validateCronExpression(cfgs);
         return .{
             .confs = cfgs,
@@ -105,7 +105,7 @@ pub const CronService = struct {
         return error.NoAgentsFound;
     }
 
-    fn validateCronExpression(confs: []*configs.LogConf) !void {
+    fn validateCronExpression(confs: []configs.LogConf) !void {
         for (confs) |cfg| {
             var c = cron.init();
             try c.parse(cfg.cron_expression);

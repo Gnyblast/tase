@@ -22,10 +22,10 @@ pub fn getClient(allocator: Allocator, server: []const u8, host: []const u8, por
 
 pub const Client = struct {
     ptr: *anyopaque,
-    sendLogConfFn: *const fn (ptr: *anyopaque, allocator: Allocator, cfg: *configs.LogConf, timezone: datetime.Timezone) anyerror!void,
+    sendLogConfFn: *const fn (ptr: *anyopaque, allocator: Allocator, cfg: configs.LogConf, timezone: datetime.Timezone) anyerror!void,
     destroyFn: *const fn (ptr: *anyopaque, allocator: Allocator) void,
 
-    pub fn sendLogConf(self: Client, allocator: Allocator, cfg: *configs.LogConf, timezone: datetime.Timezone) !void {
+    pub fn sendLogConf(self: Client, allocator: Allocator, cfg: configs.LogConf, timezone: datetime.Timezone) !void {
         return self.sendLogConfFn(self.ptr, allocator, cfg, timezone);
     }
 

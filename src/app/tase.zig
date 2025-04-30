@@ -4,6 +4,7 @@ const timezones = @import("datetime").timezones;
 const Allocator = std.mem.Allocator;
 
 const configs = @import("./config.zig");
+const enums = @import("../enum/config_enum.zig");
 const helpers = @import("../utils/helper.zig");
 const serverFactory = @import("../factory/server_factory.zig");
 const clientFactory = @import("../factory/client_factory.zig");
@@ -32,6 +33,11 @@ pub const Tase = struct {
             server_host = yaml_cfg.server.host;
             server_port = yaml_cfg.server.port;
             server_type = yaml_cfg.server.type;
+            for (0..yaml_cfg.*.configs.len) |i| {
+                if (std.mem.eql(u8, yaml_cfg.*.configs[i].action.strategy, enums.ActionStrategy.rotate.str()) and yaml_cfg.*.configs[i].action.rotate_archives_dir == null) {
+                    yaml_cfg.*.configs[i].action.rotate_archives_dir.? = yaml_cfg.*.configs[i].logs_dir;
+                }
+            }
         }
 
         const server = try serverFactory.getServer(allocator, server_type, server_host, server_port, secret);

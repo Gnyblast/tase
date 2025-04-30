@@ -9,22 +9,24 @@
 
 ## Table of Contents
 
-- [What is Tase?](#log-management-application)
-- [Features](#features)
-- [Installation](#installation)
-- [Configuration Reference](#configuration-reference)
-  - [Configuration File Structure](#configuration-file-structure)
-    - [1. Configs (configs)](#1-configs-configs)
-    - [2. Action Strategies](#2-action-strategies)
-      - [Truncate Strategy](#truncate-strategy)
-      - [Rotate Strategy](#rotate-strategy)
-      - [Delete Strategy](#delete-strategy)
-    - [3. Agents Configuration](#3-agents-configuration)
-    - [4. Server Configuration](#4-server-configuration)
-- [Example Configuration](#example-configuration)
-- [License](#license)
-- [Contributing](#contributing)
-- [Author](#author)
+- [Tase](#tase)
+  - [Table of Contents](#table-of-contents)
+  - [What is Tase?](#what-is-tase)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Configuration Reference](#configuration-reference)
+    - [Configuration File Structure](#configuration-file-structure)
+      - [1. Configs (`configs`)](#1-configs-configs)
+      - [2. Action Strategies](#2-action-strategies)
+        - [Truncate Strategy](#truncate-strategy)
+        - [Rotate Strategy](#rotate-strategy)
+        - [Delete Strategy](#delete-strategy)
+      - [3. Agents Configuration](#3-agents-configuration)
+      - [4. Server Configuration](#4-server-configuration)
+  - [Example Configuration](#example-configuration)
+  - [License](#license)
+  - [Contributing](#contributing)
+  - [Author](#author)
 
 ## What is Tase?
 
@@ -83,37 +85,37 @@ The `action` object supports three strategies:
 
 ##### Truncate Strategy
 
-| Property       | Type   | Description                               | Default | Required |
-| -------------- | ------ | ----------------------------------------- | ------- | -------- |
-| `strategy`     | string | Must be `"truncate"`                      | -       | Yes      |
-| `from`         | string | Where to truncate (`"top"` or `"bottom"`) | -       | Yes      |
-| `if.condition` | string | Condition type (`"days"` or `"size"`)     | -       | Yes      |
-| `if.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`) | -       | Yes      |
-| `if.operand`   | number | Threshold value                           | -       | Yes      |
+| Property       | Type   | Description                                 | Default | Required |
+| -------------- | ------ | ------------------------------------------- | ------- | -------- |
+| `strategy`     | string | Must be `"truncate"`                        | -       | Yes      |
+| `from`         | string | Where to truncate (`"top"` or `"bottom"`)   | -       | Yes      |
+| `if.condition` | string | Condition type (`"days"` or `"size" in MB`) | -       | Yes      |
+| `if.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`)   | -       | Yes      |
+| `if.operand`   | number | Threshold value                             | -       | Yes      |
 
 ##### Rotate Strategy
 
-| Property              | Type    | Description                                    | Default                      | Required              |
-| --------------------- | ------- | ---------------------------------------------- | ---------------------------- | --------------------- |
-| `strategy`            | string  | Must be `"rotate"`                             | -                            | Yes                   |
-| `rotate_archives_dir` | string  | Directory for archiving rotated files          | same directory with log file | No                    |
-| `if.condition`        | string  | Condition type (`"days"` or `"size"`)          | -                            | Yes                   |
-| `if.operator`         | string  | Comparison operator (`">"`, `"<"`, `"="`)      | -                            | Yes                   |
-| `if.operand`          | number  | Threshold value                                | -                            | Yes                   |
-| `keep_size`           | number  | Keep archives lower than `keep_condition`      | 7                            | No                    |
-| `keep_condition`      | string  | Keep archives condition (`"days"` or `"size"`) | `"days"`                     | No                    |
-| `compress`            | boolean | Enable compression                             | `false`                      | No                    |
-| `compression_type`    | string  | Compression algorithm (`"gzip"`)               | `"gzip"`                     | No if `compress=true` |
-| `compression_level`   | number  | Compression level (4-9)                        | 4                            | No if `compress=true` |
+| Property                 | Type    | Description                                    | Default                      | Required              |
+| ------------------------ | ------- | ---------------------------------------------- | ---------------------------- | --------------------- |
+| `strategy`               | string  | Must be `"rotate"`                             | -                            | Yes                   |
+| `rotate_archives_dir`    | string  | Directory for archiving rotated files          | same directory with log file | No                    |
+| `if.condition`           | string  | Condition type (`"days"` or `"size" in MB`)    | -                            | Yes                   |
+| `if.operator`            | string  | Comparison operator (`">"`, `"<"`, `"="`)      | -                            | Yes                   |
+| `if.operand`             | number  | Threshold value                                | -                            | Yes                   |
+| `keep_archive_size`      | number  | Keep archives lower than `keep_condition`      | 7                            | No                    |
+| `keep_archive_condition` | string  | Keep archives condition (`"days"` or `"size"`) | `"days"`                     | No                    |
+| `compress`               | boolean | Enable compression                             | `false`                      | No                    |
+| `compression_type`       | string  | Compression algorithm (`"gzip"`)               | `"gzip"`                     | No if `compress=true` |
+| `compression_level`      | number  | Compression level (4-9)                        | 4                            | No if `compress=true` |
 
 ##### Delete Strategy
 
-| Property       | Type   | Description                               | Default | Required |
-| -------------- | ------ | ----------------------------------------- | ------- | -------- |
-| `strategy`     | string | Must be `"delete"`                        | -       | Yes      |
-| `if.condition` | string | Condition type (`"days"` or `"size"`)     | -       | Yes      |
-| `if.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`) | -       | Yes      |
-| `if.operand`   | number | Threshold value                           | -       | Yes      |
+| Property       | Type   | Description                                 | Default | Required |
+| -------------- | ------ | ------------------------------------------- | ------- | -------- |
+| `strategy`     | string | Must be `"delete"`                          | -       | Yes      |
+| `if.condition` | string | Condition type (`"days"` or `"size" in MB`) | -       | Yes      |
+| `if.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`)   | -       | Yes      |
+| `if.operand`   | number | Threshold value                             | -       | Yes      |
 
 #### 3. Agents Configuration
 

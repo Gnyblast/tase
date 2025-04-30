@@ -68,8 +68,20 @@ pub const LogService = struct {
                 };
                 defer allocator.free(rotation_path);
 
+                _ = std.fs.openDirAbsolute(self.log_action.rotate_archives_dir.?, .{}) catch |err| {
+                    if (err == std.fs.Dir.OpenError.FileNotFound) {
+                        std.fs.makeDirAbsolute(self.log_action.rotate_archives_dir.?) catch {
+                            std.log.scoped(.log).err("unable to create rotate directory {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
+                            continue;
+                        };
+                    } else {
+                        std.log.scoped(.log).err("unable to create rotate directory {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
+                        continue;
+                    }
+                };
+
                 std.fs.renameAbsolute(path, rotation_path) catch |err| {
-                    std.log.scoped(.log).err("unable to rotate file {s}: {}", .{ path, err });
+                    std.log.scoped(.log).err("unable to rotate file {s} -> {s}: {}", .{ path, rotation_path, err });
                     continue;
                 };
                 std.log.scoped(.logs).info("file rotated from {s} to {s}", .{ path, rotation_path });
@@ -97,7 +109,9 @@ pub const LogService = struct {
         std.log.info("Processing file deletions for path: {s}", .{self.directory});
         var arena = std.heap.ArenaAllocator.init(allocator);
         defer arena.deinit();
+        std.log.debug("Matcher is: {s}", .{self.matcher});
         const files = try findRegexMatchesInDir(arena.allocator(), self.directory, self.matcher);
+        std.log.debug("Matched files are: {any}", .{files.items});
 
         for (files.items) |file_name| {
             var paths = [_][]const u8{ self.directory, file_name };
@@ -121,10 +135,10 @@ pub const LogService = struct {
 
     fn getPruner(self: LogService, allocator: Allocator) !LogService {
         const compress_type = std.meta.stringToEnum(enums.CompressType, self.log_action.compression_type.?) orelse return error.CompressionTypeError;
-        var matcher = try std.fmt.allocPrint(allocator, "{s}-{s}", .{ self.matcher, "\\W+" });
+        var matcher = try std.fmt.allocPrint(allocator, "{s}-{s}", .{ self.matcher, "[0-9]+" });
 
         if (self.log_action.compress.?) {
-            matcher = try std.fmt.allocPrint(allocator, "{s}-{s}\\.{s}", .{ self.matcher, "\\W+", compress_type.getCompressionExtension() });
+            matcher = try std.fmt.allocPrint(allocator, "{s}-{s}\\.{s}", .{ self.matcher, "[0-9]+", compress_type.getCompressionExtension() });
         }
 
         return LogService.init(
@@ -134,9 +148,9 @@ pub const LogService = struct {
             configs.LogAction{
                 .strategy = enums.ActionStrategy.delete.str(),
                 .@"if" = configs.IfOperation{
-                    .condition = self.log_action.keep_condition.?,
+                    .condition = self.log_action.keep_archive_condition.?,
                     .operator = ">",
-                    .operand = self.log_action.keep_size.?,
+                    .operand = self.log_action.keep_archive_size.?,
                 },
             },
         );

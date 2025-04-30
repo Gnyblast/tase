@@ -4,11 +4,14 @@ configs:
   - app_name: "rotate_app_compress"
     logs_dir: "/var/log/nginx"
     log_files_regexp: "access.log"
-    cron_expression: "25 13 * * *"
+    cron_expression: "55 13 * * *"
     run_agent_names:
       - "dev"
     action:
       strategy: rotate
+      rotate_archives_dir: "/var/log/nginx/archives"
+      keep_archive_size: 3
+      keep_archive_condition: days
       if:
         condition: days
         operator: ">"
@@ -23,11 +26,14 @@ configs:
   - app_name: "rorate_app_no_compress"
     logs_dir: "/var/log/php"
     log_files_regexp: "symphony.log"
-    cron_expression: "25 13 * * *"
+    cron_expression: "55 13 * * *"
     run_agent_names:
       - "dev"
     action:
       strategy: rotate
+      rotate_archives_dir: "/var/log/php/archives"
+      keep_archive_size: 1
+      keep_archive_condition: days
       if:
         ##?? days - size (size in mb)
         condition: days

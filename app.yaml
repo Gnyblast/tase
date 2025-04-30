@@ -46,8 +46,8 @@ configs:
         condition: days
         operator: ">"
         operand: 3
-      keep_size: 7
-      keep_condition: days
+      keep_archive_size: 7
+      keep_archive_condition: "days"
       compress: false
 
   ##?? ROTATE WITH COMPRESS
@@ -65,8 +65,8 @@ configs:
         condition: size
         operator: ">"
         operand: 4096
-      keep_size: 7
-      keep_condition: days
+      keep_archive_size: 7
+      keep_archive_condition: "days"
       compress: true
       ##?? gzip
       compression_type: gzip
