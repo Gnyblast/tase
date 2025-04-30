@@ -55,11 +55,19 @@ pub const LogService = struct {
             defer allocator.free(path);
 
             if (shouldProcess(self.log_action.@"if".?, path, self.timezone)) {
-                const rotation_path = std.fmt.allocPrint(allocator, "{s}-{d}", .{ path, datetime.Datetime.now().toTimestamp() }) catch |err| {
+                const rotation_file = std.fmt.allocPrint(allocator, "{s}-{d}", .{ file_name, datetime.Datetime.now().toTimestamp() }) catch |err| {
                     std.log.scoped(.logs).err("error generating file name for {s}: {}", .{ path, err });
                     continue;
                 };
+                defer allocator.free(rotation_file);
+
+                var rotation_paths = [_][]const u8{ self.log_action.rotate_archives_dir.?, rotation_file };
+                const rotation_path = std.fs.path.join(allocator, &rotation_paths) catch |err| {
+                    std.log.scoped(.logs).err("error joining paths: {s}/{s}, {}", .{ self.log_action.rotate_archives_dir.?, rotation_file, err });
+                    continue;
+                };
                 defer allocator.free(rotation_path);
+
                 std.fs.renameAbsolute(path, rotation_path) catch |err| {
                     std.log.scoped(.log).err("unable to rotate file {s}: {}", .{ path, err });
                     continue;
@@ -72,10 +80,13 @@ pub const LogService = struct {
                         continue;
                     };
 
-                const pruner = self.getPruner();
+                const pruner = self.getPruner(arena.allocator()) catch |err| {
+                    std.log.scoped(.log).err("unable to create a pruner for archive file in {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
+                    continue;
+                };
 
                 pruner.run() catch |err| {
-                    std.log.scoped(.log).err("error pruning archives in {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
+                    std.log.scoped(.log).err("error pruning archive files in {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
                     continue;
                 };
             }
@@ -108,12 +119,12 @@ pub const LogService = struct {
 
     fn doTruncate(_: LogService) !void {}
 
-    fn getPruner(self: LogService) LogService {
-        var matcher = self.matcher;
+    fn getPruner(self: LogService, allocator: Allocator) !LogService {
+        const compress_type = std.meta.stringToEnum(enums.CompressType, self.log_action.compression_type.?) orelse return error.CompressionTypeError;
+        var matcher = try std.fmt.allocPrint(allocator, "{s}-{s}", .{ self.matcher, "\\W+" });
 
         if (self.log_action.compress.?) {
-            //TODO calculate matcher
-            matcher = matcher ++ ".gz";
+            matcher = try std.fmt.allocPrint(allocator, "{s}-{s}\\.{s}", .{ self.matcher, "\\W+", compress_type.getCompressionExtension() });
         }
 
         return LogService.init(
