@@ -47,12 +47,13 @@ pub const TCPClient = struct {
         const encoded = try jwt.encode(allocator, .{ .alg = .HS256 }, clientMsg, .{ .secret = self.secret });
         defer allocator.free(encoded);
 
-        const address = try net.Address.parseIp(self.host, self.port);
+        const address = try net.getAddressList(allocator, self.host, self.port);
+        defer address.deinit();
         const tpe: u32 = posix.SOCK.STREAM;
         const protocol = posix.IPPROTO.TCP;
-        const socket = try posix.socket(address.any.family, tpe, protocol);
+        const socket = try posix.socket(address.addrs[0].any.family, tpe, protocol);
         defer posix.close(socket);
-        try posix.connect(socket, &address.any, address.getOsSockLen());
+        try posix.connect(socket, &address.addrs[0].any, address.addrs[0].getOsSockLen());
 
         //TODO check success
         _ = try posix.write(socket, encoded);

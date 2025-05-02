@@ -1,0 +1,15 @@
+FROM alpine
+
+RUN apk add --no-cache bash coreutils libfaketime wget tar xz tini
+
+RUN wget https://ziglang.org/builds/zig-linux-x86_64-0.15.0-dev.441+c1649d586.tar.xz -O /tmp/zig-install.tar
+RUN mkdir -p /tmp/zig /usr/local/zig
+RUN tar -xf /tmp/zig-install.tar -C /tmp/zig
+RUN cp -R /tmp/zig/zig*/lib /usr/local/zig/
+RUN cp /tmp/zig/zig*/zig /usr/local/zig/
+
+RUN echo "export PATH=\$PATH:/usr/local/zig" >> /etc/profile
+
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/bin/bash", "-c", ". /etc/profile; cd /root/tase/ && zig build -p /tmp; faketime '2012-12-20 23:59:50' /tmp/bin/tase --master --config /root/tase/app-test-container/master/config.yaml & sleep 3; tail -f /var/log/tase/tase-master.log"]

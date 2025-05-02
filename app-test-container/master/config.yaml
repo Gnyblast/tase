@@ -1,0 +1,149 @@
+---
+configs:
+  ##?? ROTATE BY DAYS
+  - app_name: "rotate_by_days_no_compress"
+    logs_dir: "/var/log/rotate-by-days-no-compress"
+    log_files_regexp: "test.log"
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_rotate_agent"
+    action:
+      strategy: rotate
+      rotate_archives_dir: "/var/log/rotate-by-days-no-compress/archives"
+      if:
+        condition: days
+        operator: "<"
+        operand: 1
+
+  ##?? ROTATE BY DAYS COMPRESS
+  - app_name: "rotate_by_days_compress"
+    logs_dir: "/var/log/rotate-by-days-compress"
+    log_files_regexp: "test.log"
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_rotate_agent"
+    action:
+      strategy: rotate
+      rotate_archives_dir: "/var/log/rotate-by-days-compress/archives"
+      if:
+        condition: days
+        operator: "<"
+        operand: 1
+      compress: true
+      compression_type: gzip
+      compression_level: 5
+
+  ##?? ROTATE BY DAYS COMPRESS PRUNE
+  - app_name: "rotate_by_days_compress-prune"
+    logs_dir: "/var/log/rotate-by-days-compress-prune"
+    log_files_regexp: "test.log"
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_rotate_agent"
+    action:
+      strategy: rotate
+      rotate_archives_dir: "/var/log/rotate-by-days-compress-prune/archives"
+      clean_archive: true
+      keep_archive_size: 3
+      keep_archive_condition: days
+      if:
+        condition: days
+        operator: "<"
+        operand: 1
+      compress: true
+      compression_type: gzip
+      compression_level: 6
+
+  ##?? ROTATE BY SIZE
+  - app_name: "rotate_by_size_no_compress"
+    logs_dir: "/var/log/rotate-by-size-no-compress"
+    log_files_regexp: "test.log"
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_rotate_agent"
+    action:
+      strategy: rotate
+      rotate_archives_dir: "/var/log/rotate-by-size-no-compress/archives"
+      if:
+        condition: size
+        operator: ">"
+        operand: 12
+
+  ##?? ROTATE BY SIZE COMPRESS
+  - app_name: "rotate_by_size_compress"
+    logs_dir: "/var/log/rotate-by-size-compress"
+    log_files_regexp: "test.log"
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_rotate_agent"
+    action:
+      strategy: rotate
+      rotate_archives_dir: "/var/log/rotate-by-size-compress/archives"
+      if:
+        condition: size
+        operator: ">"
+        operand: 14
+      compress: true
+      compression_type: gzip
+      compression_level: 5
+
+  ##?? ROTATE BY SIZE NO COMPRESS PRUNE
+  - app_name: "rotate_by_size_compress-prune"
+    logs_dir: "/var/log/rotate-by-size-no-compress-prune"
+    log_files_regexp: "test.log"
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_rotate_agent"
+    action:
+      strategy: rotate
+      rotate_archives_dir: "/var/log/rotate-by-size-no-compress-prune/archives"
+      clean_archive: true
+      keep_archive_size: 14
+      keep_archive_condition: size
+      if:
+        condition: size
+        operator: ">"
+        operand: 12
+
+  ##?? DELETE
+  - app_name: "delete_by_size"
+    logs_dir: "/var/log/delete-by-size"
+    log_files_regexp: 'test\.log\..*'
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_delete_agent"
+    action:
+      strategy: delete
+      if:
+        condition: size
+        operator: ">"
+        operand: 12
+
+  - app_name: "delete_by_days"
+    logs_dir: "/var/log/delete-by-days"
+    log_files_regexp: 'test-\w+\.log'
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_delete_agent"
+    action:
+      strategy: delete
+      if:
+        condition: days
+        operator: ">"
+        operand: 2
+
+agents:
+  - name: tase_delete_agent
+    hostname: "tase_delete_agent"
+    port: 7424
+    secret: b9d36fa4b6cd3d8a2f5527c792143bfc
+
+  - name: tase_rotate_agent
+    hostname: "tase_rotate_agent"
+    port: 7425
+    secret: 6fd01c09e3a82eb3d2b7cafb5804c8e7
+
+server:
+  host: "127.0.0.1"
+  port: 7423
+  type: tcp

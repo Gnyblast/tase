@@ -1,0 +1,20 @@
+FROM alpine
+
+RUN apk add --no-cache bash coreutils libfaketime wget tar xz tini
+
+RUN wget https://ziglang.org/builds/zig-linux-x86_64-0.15.0-dev.441+c1649d586.tar.xz -O /tmp/zig-install.tar
+RUN mkdir -p /tmp/zig /usr/local/zig
+RUN tar -xf /tmp/zig-install.tar -C /tmp/zig
+RUN cp -R /tmp/zig/zig*/lib /usr/local/zig/
+RUN cp /tmp/zig/zig*/zig /usr/local/zig/
+
+RUN echo "export PATH=\$PATH:/usr/local/zig" >> /etc/profile
+
+COPY ./create-logs.sh /usr/local/bin
+COPY ./live-logging.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/*.sh
+
+RUN create-logs.sh
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/bin/bash", "-c", ". /etc/profile; cd /root/tase/ && zig build -p /tmp; faketime '2012-12-20 23:59:50' /tmp/bin/tase --agent --secret b9d36fa4b6cd3d8a2f5527c792143bfc --host 0.0.0.0 --port 7424 --master-host localhost --master-port 7423 & touch /var/signal/delete-agent.rdy; faketime '2012-12-20 23:59:50' live-logging.sh > /tmp/live-log.log & sleep 3; tail -f /var/log/tase/tase-agent.log"]

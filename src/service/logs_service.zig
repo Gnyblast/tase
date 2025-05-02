@@ -3,6 +3,7 @@ const datetime = @import("datetime").datetime;
 const Regex = @import("libregex").Regex;
 
 const configs = @import("../app/config.zig");
+const utils = @import("../utils/helper.zig");
 const enums = @import("../enum/config_enum.zig");
 const compressionFactory = @import("../factory/compression_factory.zig");
 
@@ -33,7 +34,6 @@ pub const LogService = struct {
 
         const allocator = da.allocator();
 
-        std.log.scoped(.logs).info("Starting clean up for {s}", .{self.directory});
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.log_action.strategy) orelse return error.InvalidStrategy) {
             enums.ActionStrategy.delete => return self.doDelete(allocator),
             enums.ActionStrategy.rotate => return self.doRotate(allocator),
@@ -42,7 +42,7 @@ pub const LogService = struct {
     }
 
     fn doRotate(self: LogService, allocator: Allocator) !void {
-        std.log.info("Processing file rotations for path: {s}", .{self.directory});
+        std.log.scoped(.logs).info("Processing file rotations for path: {s}", .{self.directory});
         var arena = std.heap.ArenaAllocator.init(allocator);
         defer arena.deinit();
         const files = try findRegexMatchesInDir(arena.allocator(), self.directory, self.matcher);
@@ -92,24 +92,26 @@ pub const LogService = struct {
                         continue;
                     };
 
-                const pruner = self.getPruner(arena.allocator()) catch |err| {
-                    std.log.scoped(.log).err("unable to create a pruner for archive file in {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
-                    continue;
-                };
+                if (self.log_action.clean_archive.?) {
+                    const pruner = self.getPruner(arena.allocator()) catch |err| {
+                        std.log.scoped(.log).err("unable to create a pruner for archive file in {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
+                        continue;
+                    };
 
-                pruner.run() catch |err| {
-                    std.log.scoped(.log).err("error pruning archive files in {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
-                    continue;
-                };
+                    pruner.run() catch |err| {
+                        std.log.scoped(.log).err("error pruning archive files in {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
+                        continue;
+                    };
+                }
             }
         }
     }
 
     fn doDelete(self: LogService, allocator: Allocator) !void {
-        std.log.info("Processing file deletions for path: {s}", .{self.directory});
+        std.log.scoped(.logs).info("Processing file deletions for path: {s}", .{self.directory});
         var arena = std.heap.ArenaAllocator.init(allocator);
         defer arena.deinit();
-        std.log.debug("Matcher is: {s}", .{self.matcher});
+
         const files = try findRegexMatchesInDir(arena.allocator(), self.directory, self.matcher);
         std.log.debug("Matched files are: {any}", .{files.items});
 
@@ -140,6 +142,8 @@ pub const LogService = struct {
         if (self.log_action.compress.?) {
             matcher = try std.fmt.allocPrint(allocator, "{s}-{s}\\.{s}", .{ self.matcher, "[0-9]+", compress_type.getCompressionExtension() });
         }
+
+        std.log.scoped(.debug).info("===> {s}", .{matcher});
 
         return LogService.init(
             self.timezone,
@@ -202,13 +206,13 @@ fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata, ti
 fn compareBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata) bool {
     switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator.?) orelse return false) {
         .@">" => {
-            return file_stats.size() > ifOpr.operand.?;
+            return utils.bytesToMegabytes(file_stats.size()) > @as(f64, @floatFromInt(ifOpr.operand.?));
         },
         .@"<" => {
-            return file_stats.size() < ifOpr.operand.?;
+            return utils.bytesToMegabytes(file_stats.size()) < @as(f64, @floatFromInt(ifOpr.operand.?));
         },
         .@"=" => {
-            return file_stats.size() == ifOpr.operand.?;
+            return utils.bytesToMegabytes(file_stats.size()) == @as(f64, @floatFromInt(ifOpr.operand.?));
         },
     }
 }
@@ -231,7 +235,7 @@ fn compressAndRotate(allocator: Allocator, log_action: configs.LogAction, path: 
     defer rotated_file.close();
     _ = try rotated_file.write(writer.items);
     try std.fs.deleteFileAbsolute(path);
-    std.log.scoped(.logs).info("file rotated from {s} with compress to {s}", .{ path, rotation_path });
+    std.log.scoped(.logs).info("file compressed from {s} to {s}", .{ path, rotation_path });
 }
 
 pub fn findRegexMatchesInDir(arena: Allocator, dir: []const u8, regexp: []const u8) !std.ArrayList([]const u8) {

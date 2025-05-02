@@ -46,6 +46,11 @@ pub fn arrayContains(comptime T: type, haystack: []const []const T, needle: []co
     return false;
 }
 
+pub fn bytesToMegabytes(bytes: u64) f64 {
+    const bytes_f: f64 = @floatFromInt(bytes);
+    return bytes_f / 1_048_576.0;
+}
+
 pub fn printApplicationInfo(run_type: []const u8, version: []const u8, host: []const u8, port: u16) void {
     const ascii =
         \\==================================

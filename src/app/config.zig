@@ -92,6 +92,7 @@ pub const LogAction = struct {
     size: ?u64 = null,
     lines: ?u64 = null,
     @"if": ?IfOperation = null,
+    clean_archive: ?bool = false,
     keep_archive_size: ?i32 = 7,
     keep_archive_condition: ?[]const u8 = "days",
     compress: ?bool = false,

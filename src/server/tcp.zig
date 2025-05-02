@@ -60,14 +60,15 @@ pub const TCPServer = struct {
         allocator.destroy(self);
     }
 
-    fn createTCPServer(self: TCPServer) !posix.socket_t {
-        const address = try net.Address.parseIp(self.host, self.port);
+    fn createTCPServer(self: TCPServer, allocator: Allocator) !posix.socket_t {
+        const address = try net.getAddressList(allocator, self.host, self.port);
+        defer address.deinit();
         const tpe: u32 = posix.SOCK.STREAM;
         const protocol = posix.IPPROTO.TCP;
-        const listener = try posix.socket(address.any.family, tpe, protocol);
+        const listener = try posix.socket(address.addrs[0].any.family, tpe, protocol);
 
         try posix.setsockopt(listener, posix.SOL.SOCKET, posix.SO.REUSEADDR, &std.mem.toBytes(@as(c_int, 1)));
-        try posix.bind(listener, &address.any, address.getOsSockLen());
+        try posix.bind(listener, &address.addrs[0].any, address.addrs[0].getOsSockLen());
         try posix.listen(listener, 128);
 
         return listener;
@@ -76,14 +77,14 @@ pub const TCPServer = struct {
     fn startAgentServer(ptr: *anyopaque) !void {
         const self: *TCPServer = @ptrCast(@alignCast(ptr));
 
-        const listener = try self.createTCPServer();
-        defer posix.close(listener);
-
         var da: std.heap.DebugAllocator(.{}) = .init;
         defer {
             const leaks = da.deinit();
             std.debug.assert(leaks == .ok);
         }
+
+        const listener = try self.createTCPServer(da.allocator());
+        defer posix.close(listener);
 
         while (true) {
             var client_address: net.Address = undefined;
@@ -146,14 +147,15 @@ pub const TCPServer = struct {
 
     fn startMasterServer(ptr: *anyopaque) !void {
         const self: *TCPServer = @ptrCast(@alignCast(ptr));
-        const listener = try self.createTCPServer();
-        defer posix.close(listener);
 
         var da: std.heap.DebugAllocator(.{}) = .init;
         defer {
             const leaks = da.deinit();
             std.debug.assert(leaks == .ok);
         }
+
+        const listener = try self.createTCPServer(da.allocator());
+        defer posix.close(listener);
 
         const allocator = da.allocator();
 
