@@ -45,7 +45,9 @@ pub const LogService = struct {
         std.log.scoped(.logs).info("Processing file rotations for path: {s}", .{self.directory});
         var arena = std.heap.ArenaAllocator.init(allocator);
         defer arena.deinit();
+        std.log.debug("Matcher is: {s}", .{self.matcher});
         const files = try findRegexMatchesInDir(arena.allocator(), self.directory, self.matcher);
+        std.log.debug("Matched files are: {any}", .{files.items});
         for (files.items) |file_name| {
             var paths = [_][]const u8{ self.directory, file_name };
             const path = std.fs.path.join(allocator, &paths) catch |err| {
@@ -92,7 +94,7 @@ pub const LogService = struct {
                         continue;
                     };
 
-                if (self.log_action.clean_archive.?) {
+                if (self.log_action.keep_archive != null) {
                     const pruner = self.getPruner(arena.allocator()) catch |err| {
                         std.log.scoped(.log).err("unable to create a pruner for archive file in {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
                         continue;
@@ -111,7 +113,7 @@ pub const LogService = struct {
         std.log.scoped(.logs).info("Processing file deletions for path: {s}", .{self.directory});
         var arena = std.heap.ArenaAllocator.init(allocator);
         defer arena.deinit();
-
+        std.log.debug("Matcher is: {s}", .{self.matcher});
         const files = try findRegexMatchesInDir(arena.allocator(), self.directory, self.matcher);
         std.log.debug("Matched files are: {any}", .{files.items});
 
@@ -143,8 +145,6 @@ pub const LogService = struct {
             matcher = try std.fmt.allocPrint(allocator, "{s}-{s}\\.{s}", .{ self.matcher, "[0-9]+", compress_type.getCompressionExtension() });
         }
 
-        std.log.scoped(.debug).info("===> {s}", .{matcher});
-
         return LogService.init(
             self.timezone,
             self.log_action.rotate_archives_dir.?,
@@ -152,9 +152,9 @@ pub const LogService = struct {
             configs.LogAction{
                 .strategy = enums.ActionStrategy.delete.str(),
                 .@"if" = configs.IfOperation{
-                    .condition = self.log_action.keep_archive_condition.?,
-                    .operator = ">",
-                    .operand = self.log_action.keep_archive_size.?,
+                    .condition = self.log_action.keep_archive.?.condition,
+                    .operator = self.log_action.keep_archive.?.operator,
+                    .operand = self.log_action.keep_archive.?.operand,
                 },
             },
         );

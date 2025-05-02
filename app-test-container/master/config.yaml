@@ -44,8 +44,10 @@ configs:
       strategy: rotate
       rotate_archives_dir: "/var/log/rotate-by-days-compress-prune/archives"
       clean_archive: true
-      keep_archive_size: 3
-      keep_archive_condition: days
+      keep_archive:
+        condition: days
+        operator: "<"
+        operand: 3
       if:
         condition: days
         operator: "<"
@@ -98,8 +100,10 @@ configs:
       strategy: rotate
       rotate_archives_dir: "/var/log/rotate-by-size-no-compress-prune/archives"
       clean_archive: true
-      keep_archive_size: 14
-      keep_archive_condition: size
+      keep_archive:
+        condition: size
+        operator: ">"
+        operand: 14
       if:
         condition: size
         operator: ">"

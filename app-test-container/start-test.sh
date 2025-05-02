@@ -19,17 +19,19 @@ podman network rm "${NETWORK}"
 
 podman network create "${NETWORK}"
 
-rm -rf /tmp/tase-signal
-mkdir -p /tmp/tase-signal
-podman run -d -v "${SCRIPT_PATH}/../:/root/tase" -v /tmp/tase-signal:/var/signal -p 7424 --network "${NETWORK}" --name "${DELETION_CONTAINER}" "${DELETION_AGENT_IMAGE}"
-podman run -d -v "${SCRIPT_PATH}/../:/root/tase" -v /tmp/tase-signal:/var/signal -p 7425 --network "${NETWORK}" --name "${ROTATION_CONTAINER}" "${ROTATION_AGENT_IMAGE}"
+SIGNAL_DIR="/tmp/tase-signal"
+rm -rf "${SIGNAL_DIR}"
+mkdir -p "${SIGNAL_DIR}"
 
-for i in {1..20}; do
+podman run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7424 --network "${NETWORK}" --name "${DELETION_CONTAINER}" "${DELETION_AGENT_IMAGE}"
+podman run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7425 --network "${NETWORK}" --name "${ROTATION_CONTAINER}" "${ROTATION_AGENT_IMAGE}"
+
+for i in {1..30}; do
     echo "Waiting agents to come up: ${i}. try!"
     if [ -f "/tmp/tase-signal/rotate-agent.rdy" ] && [ -f "/tmp/tase-signal/delete-agent.rdy" ]; then
         break
     fi
-    if [ "$i" -gt 19 ]; then
+    if [ "$i" -gt 29 ]; then
         exit 1
     fi
     sleep 1
