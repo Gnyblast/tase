@@ -10,6 +10,8 @@ RUN cp /tmp/zig/zig*/zig /usr/local/zig/
 
 RUN echo "export PATH=\$PATH:/usr/local/zig" >> /etc/profile
 
+ENV TASE_AGENT_SECRET="6fd01c09e3a82eb3d2b7cafb5804c8e7"
+
 COPY ./create-logs.sh /usr/local/bin
 COPY ./live-logging.sh /usr/local/bin/
 COPY ./entrypoint.sh /usr/local/bin/

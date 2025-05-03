@@ -27,7 +27,7 @@ pub fn getLogMessageByErr(alloc: std.mem.Allocator, erro: anyerror) ErrorMessage
 pub const errors = [_]TaseError{
     .{
         .err = error.SecretIsMandatory,
-        .message = "--secret is mandatory for agent type runs",
+        .message = "--secret cli arg or TASE_AGENT_SECRET env var is mandatory for agent type runs",
     },
     .{
         .err = error.MasterOrAgent,

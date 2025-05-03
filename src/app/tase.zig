@@ -19,12 +19,24 @@ pub const Tase = struct {
     comptime version: []const u8 = version,
     server: serverFactory.Server,
     allocator: Allocator,
+    secret: []const u8,
 
     pub fn init(allocator: Allocator, cli_args: *const configs.argOpts) !Tase {
         var server_host = cli_args.host;
         var server_port = cli_args.port;
         var server_type = cli_args.@"server-type";
-        const secret = cli_args.secret orelse if (cli_args.agent) return error.SecretIsMandatory else "";
+
+        var secret = cli_args.secret orelse "";
+        var secret_dupe = try allocator.dupe(u8, secret);
+        if (std.mem.eql(u8, secret, "") and cli_args.agent) {
+            const env_secret = std.process.getEnvVarOwned(allocator, "TASE_AGENT_SECRET") catch {
+                return error.SecretIsMandatory;
+            };
+            defer allocator.free(env_secret);
+            secret = env_secret;
+            allocator.free(secret_dupe);
+            secret_dupe = try allocator.dupe(u8, secret);
+        }
 
         const yaml_cfg: *configs.YamlCfgContainer = try allocator.create(configs.YamlCfgContainer);
 
@@ -40,19 +52,21 @@ pub const Tase = struct {
             }
         }
 
-        const server = try serverFactory.getServer(allocator, server_type, server_host, server_port, secret);
+        const server = try serverFactory.getServer(allocator, server_type, server_host, server_port, secret_dupe);
 
         return Tase{
             .allocator = allocator,
             .cli_args = cli_args,
             .yaml_cfg = yaml_cfg,
             .server = server,
+            .secret = secret_dupe,
         };
     }
 
     pub fn deinit(self: *Tase) void {
         self.server.destroy(self.allocator);
         self.allocator.destroy(self.yaml_cfg);
+        self.allocator.free(self.secret);
     }
 
     pub fn run(self: Tase) !void {
@@ -92,7 +106,7 @@ pub const Tase = struct {
             return error.OnlyMasterOrAgent;
         }
         if (self.cli_args.agent) {
-            if (self.cli_args.secret == null) {
+            if (std.mem.eql(u8, self.secret, "")) {
                 return error.SecretIsMandatory;
             }
             if (self.cli_args.@"master-host" == null or self.cli_args.@"master-host".?.len < 1) {
