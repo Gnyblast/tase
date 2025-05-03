@@ -4,7 +4,7 @@ const utils = @import("../utils/helper.zig");
 const Regex = @import("libregex").Regex;
 const Allocator = std.mem.Allocator;
 
-const LOCAL = "local";
+pub const LOCAL = "local";
 
 pub const YamlCfgContainer = struct {
     configs: []LogConf,

@@ -131,7 +131,6 @@ pub const TCPServer = struct {
                 continue;
             }
 
-            //TODO start action in threads here
             const logsService = LogsService.init(
                 decoded.claims.timezone,
                 decoded.claims.job.logs_dir,
@@ -139,6 +138,7 @@ pub const TCPServer = struct {
                 decoded.claims.job.action,
             );
 
+            //TODO do it on a different thread
             logsService.run() catch |err| {
                 std.log.scoped(.server).err("Error running logs service: {}", .{err});
             };

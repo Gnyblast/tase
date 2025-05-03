@@ -2,6 +2,7 @@ const std = @import("std");
 const datetime = @import("datetime").datetime;
 const cron = @import("cron-time").Cron;
 const Allocator = std.mem.Allocator;
+const LogsService = @import("../service/logs_service.zig").LogService;
 
 const configs = @import("../app/config.zig");
 const clientFactory = @import("../factory/client_factory.zig");
@@ -51,7 +52,6 @@ pub const CronService = struct {
 
                 if (duration.seconds < 59) {
                     std.log.scoped(.cron).info("Running logs processing for {s} with cron: {s}", .{ cfg.app_name, cfg.cron_expression });
-                    std.debug.print("Running now\n", .{});
 
                     const agents = self.getAgentsByName(allocator, cfg.run_agent_names) catch |err| {
                         const err_msg = errorFactory.getLogMessageByErr(allocator, err);
@@ -63,8 +63,22 @@ pub const CronService = struct {
 
                     std.log.scoped(.cron).info("Running for {d} agent(s)", .{agents.items.len});
                     for (agents.items) |agent| {
-                        //TODO deal with local hostname
-                        //TODO check is localhost is resolving in TCP
+                        if (std.ascii.eqlIgnoreCase(agent.name, configs.LOCAL)) {
+                            const logsService = LogsService.init(
+                                self.tz,
+                                cfg.logs_dir,
+                                cfg.log_files_regexp,
+                                cfg.action,
+                            );
+
+                            //TODO do it on a different thread
+                            logsService.run() catch |err| {
+                                std.log.scoped(.server).err("Error running logs service: {}", .{err});
+                                continue;
+                            };
+                            continue;
+                        }
+
                         const tcp_client = clientFactory.getClient(allocator, self.server_type, agent.hostname, agent.port, agent.secret) catch |err| {
                             const err_msg = errorFactory.getLogMessageByErr(allocator, err);
                             defer if (err_msg.allocated) allocator.free(err_msg.message);
@@ -80,6 +94,7 @@ pub const CronService = struct {
                         };
                     }
                 } else {
+                    //TODO remove this
                     std.debug.print("running in {d} seconds\n", .{duration.seconds});
                 }
             }
@@ -91,6 +106,16 @@ pub const CronService = struct {
     fn getAgentsByName(self: CronService, allocator: Allocator, agent_names: [][]const u8) !std.ArrayList(configs.Agents) {
         var agents = std.ArrayList(configs.Agents).init(allocator);
         for (agent_names) |name| {
+            if (std.ascii.eqlIgnoreCase(name, configs.LOCAL)) {
+                try agents.append(configs.Agents{
+                    .hostname = "localhost",
+                    .name = configs.LOCAL,
+                    .port = 0,
+                    .secret = "",
+                });
+                continue;
+            }
+
             for (self.agents.?) |agent| {
                 if (std.ascii.eqlIgnoreCase(agent.name, name)) {
                     try agents.append(agent);
@@ -118,6 +143,7 @@ pub const CronService = struct {
         const sleep_seconds = (59 - now.time.second);
         const sleep_nano_seconds = sleep_seconds * m;
 
+        //TODO remove this
         std.debug.print("Sleeping for {d} seconds\n", .{sleep_seconds});
         std.time.sleep(sleep_nano_seconds);
     }

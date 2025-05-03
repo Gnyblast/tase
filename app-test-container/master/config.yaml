@@ -129,6 +129,7 @@ configs:
     cron_expression: "00 00 * * *"
     run_agent_names:
       - "tase_delete_agent"
+      - "local"
     action:
       strategy: delete
       if:
