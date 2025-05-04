@@ -64,18 +64,21 @@ pub const CronService = struct {
                     std.log.scoped(.cron).info("Running for {d} agent(s)", .{agents.items.len});
                     for (agents.items) |agent| {
                         if (std.ascii.eqlIgnoreCase(agent.name, configs.LOCAL)) {
+                            var tz = self.tz;
+                            var action = cfg.action;
                             const logsService = LogsService.init(
-                                self.tz,
+                                null,
+                                &tz,
                                 cfg.logs_dir,
                                 cfg.log_files_regexp,
-                                cfg.action,
+                                &action,
                             );
 
-                            //TODO do it on a different thread
-                            logsService.run() catch |err| {
-                                std.log.scoped(.server).err("Error running logs service: {}", .{err});
+                            const thread = std.Thread.spawn(.{}, LogsService.run, .{logsService}) catch |err| {
+                                std.log.scoped(.cron).err("Error while running local task on a thread: {}", .{err});
                                 continue;
                             };
+                            thread.detach();
                             continue;
                         }
 

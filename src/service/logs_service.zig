@@ -8,15 +8,18 @@ const enums = @import("../enum/config_enum.zig");
 const compressionFactory = @import("../factory/compression_factory.zig");
 
 const Allocator = std.mem.Allocator;
+const Arena = std.heap.ArenaAllocator;
 
 pub const LogService = struct {
-    timezone: datetime.Timezone,
+    arena: ?Arena,
+    timezone: *datetime.Timezone,
     directory: []const u8,
     matcher: []const u8,
-    log_action: configs.LogAction,
+    log_action: *configs.LogAction,
 
-    pub fn init(timezone: datetime.Timezone, directory: []const u8, matcher: []const u8, log_action: configs.LogAction) LogService {
+    pub fn init(arena: ?Arena, timezone: *datetime.Timezone, directory: []const u8, matcher: []const u8, log_action: *configs.LogAction) LogService {
         return LogService{
+            .arena = arena,
             .timezone = timezone,
             .directory = directory,
             .matcher = matcher,
@@ -24,8 +27,38 @@ pub const LogService = struct {
         };
     }
 
-    pub fn run(self: LogService) anyerror!void {
-        try self.log_action.checkActionValidity();
+    pub fn create(allocator: Allocator, timezone: datetime.Timezone, directory: []const u8, matcher: []const u8, log_action: configs.LogAction) !*LogService {
+        var arena = Arena.init(allocator);
+        var aa = arena.allocator();
+
+        const log_service = try aa.create(LogService);
+        const tz: *datetime.Timezone = try aa.create(datetime.Timezone);
+        tz.* = timezone;
+
+        const action = try log_action.deepCopy(aa);
+
+        const dir = try aa.dupe(u8, directory);
+        const regexp = try aa.dupe(u8, matcher);
+        log_service.*.arena = arena;
+        log_service.*.directory = dir;
+        log_service.*.log_action = action;
+        log_service.*.matcher = regexp;
+        log_service.*.timezone = tz;
+        return log_service;
+    }
+
+    pub fn runAndDestroy(self: *LogService) void {
+        defer {
+            if (self.arena != null)
+                self.arena.?.deinit();
+        }
+        self.run();
+    }
+
+    pub fn run(self: LogService) void {
+        self.log_action.checkActionValidity() catch |err| {
+            std.log.scoped(.server).err("Error running logs service: {}", .{err});
+        };
         var da: std.heap.DebugAllocator(.{}) = .init;
         defer {
             const leaks = da.deinit();
@@ -34,10 +67,28 @@ pub const LogService = struct {
 
         const allocator = da.allocator();
 
-        switch (std.meta.stringToEnum(enums.ActionStrategy, self.log_action.strategy) orelse return error.InvalidStrategy) {
-            enums.ActionStrategy.delete => return self.doDelete(allocator),
-            enums.ActionStrategy.rotate => return self.doRotate(allocator),
-            enums.ActionStrategy.truncate => return self.doTruncate(),
+        switch (std.meta.stringToEnum(enums.ActionStrategy, self.log_action.strategy) orelse {
+            std.log.scoped(.server).err("Invalid Strategy {s}", .{self.log_action.strategy});
+            return;
+        }) {
+            enums.ActionStrategy.delete => {
+                return self.doDelete(allocator) catch |err| {
+                    std.log.scoped(.server).err("Error running logs service: {}", .{err});
+                    return;
+                };
+            },
+            enums.ActionStrategy.rotate => {
+                return self.doRotate(allocator) catch |err| {
+                    std.log.scoped(.server).err("Error running logs service: {}", .{err});
+                    return;
+                };
+            },
+            enums.ActionStrategy.truncate => {
+                return self.doTruncate() catch |err| {
+                    std.log.scoped(.server).err("Error running logs service: {}", .{err});
+                    return;
+                };
+            },
         }
     }
 
@@ -100,10 +151,7 @@ pub const LogService = struct {
                         continue;
                     };
 
-                    pruner.run() catch |err| {
-                        std.log.scoped(.log).err("error pruning archive files in {s}: {}", .{ self.log_action.rotate_archives_dir.?, err });
-                        continue;
-                    };
+                    pruner.runAndDestroy();
                 }
             }
         }
@@ -137,7 +185,7 @@ pub const LogService = struct {
 
     fn doTruncate(_: LogService) !void {}
 
-    fn getPruner(self: LogService, allocator: Allocator) !LogService {
+    fn getPruner(self: LogService, allocator: Allocator) !*LogService {
         const compress_type = std.meta.stringToEnum(enums.CompressType, self.log_action.compression_type.?) orelse return error.CompressionTypeError;
         var matcher = try std.fmt.allocPrint(allocator, "{s}-{s}", .{ self.matcher, "[0-9]+" });
 
@@ -145,23 +193,22 @@ pub const LogService = struct {
             matcher = try std.fmt.allocPrint(allocator, "{s}-{s}\\.{s}", .{ self.matcher, "[0-9]+", compress_type.getCompressionExtension() });
         }
 
-        return LogService.init(
-            self.timezone,
+        const log_action = configs.LogAction{
+            .strategy = enums.ActionStrategy.delete.str(),
+            .@"if" = self.log_action.keep_archive,
+        };
+
+        return LogService.create(
+            allocator,
+            self.timezone.*,
             self.log_action.rotate_archives_dir.?,
             matcher,
-            configs.LogAction{
-                .strategy = enums.ActionStrategy.delete.str(),
-                .@"if" = configs.IfOperation{
-                    .condition = self.log_action.keep_archive.?.condition,
-                    .operator = self.log_action.keep_archive.?.operator,
-                    .operand = self.log_action.keep_archive.?.operand,
-                },
-            },
+            log_action,
         );
     }
 };
 
-fn shouldProcess(ifOpr: configs.IfOperation, path: []u8, timezone: datetime.Timezone) bool {
+fn shouldProcess(ifOpr: configs.IfOperation, path: []u8, timezone: *datetime.Timezone) bool {
     const file = std.fs.openFileAbsolute(path, .{ .mode = .read_write }) catch |err| {
         std.log.scoped(.logs).err("error opening file: {s} {}", .{ path, err });
         return false;
@@ -183,13 +230,13 @@ fn shouldProcess(ifOpr: configs.IfOperation, path: []u8, timezone: datetime.Time
     }
 }
 
-fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata, timezone: datetime.Timezone) bool {
+fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata, timezone: *datetime.Timezone) bool {
     const mtime_ns = file_stats.modified();
 
     const mtime_ms: i64 = @as(i64, @intCast(@divFloor(mtime_ns, std.time.ns_per_ms)));
 
-    const modification = datetime.Datetime.fromTimestamp(mtime_ms).shiftTimezone(timezone);
-    const now = datetime.Datetime.now().shiftTimezone(timezone).shiftDays(-ifOpr.operand.?);
+    const modification = datetime.Datetime.fromTimestamp(mtime_ms).shiftTimezone(timezone.*);
+    const now = datetime.Datetime.now().shiftTimezone(timezone.*).shiftDays(-ifOpr.operand.?);
     switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator.?) orelse return false) {
         .@">" => {
             return now.cmp(modification) == .gt;
@@ -217,7 +264,7 @@ fn compareBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata) b
     }
 }
 
-fn compressAndRotate(allocator: Allocator, log_action: configs.LogAction, path: []const u8) !void {
+fn compressAndRotate(allocator: Allocator, log_action: *configs.LogAction, path: []const u8) !void {
     const compress_type = std.meta.stringToEnum(enums.CompressType, log_action.compression_type.?) orelse return error.CompressionTypeError;
 
     const rotation_path = try std.fmt.allocPrint(allocator, "{s}.{s}", .{ path, compress_type.getCompressionExtension() });

@@ -38,7 +38,7 @@ for i in {1..30}; do
 done
 podman run -d -v "${SCRIPT_PATH}/../:/root/tase" -p 7425 --network "${NETWORK}" --name "${MASTER_CONTAINER}" "${MASTER_IMAGE}"
 
-sleep 60
+sleep 30
 podman container stop "${DELETION_CONTAINER}"
 podman container stop "${ROTATION_CONTAINER}"
 podman container stop "${MASTER_CONTAINER}"

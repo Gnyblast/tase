@@ -97,7 +97,41 @@ pub const LogAction = struct {
     compression_type: ?[]const u8 = "gzip",
     compression_level: ?u8 = 4,
 
+    pub fn deepCopy(self: LogAction, allocator: Allocator) !*LogAction {
+        const action = try allocator.create(LogAction);
+        var if_operation: ?IfOperation = null;
+        if (self.@"if" != null) {
+            if_operation = IfOperation{
+                .condition = try utils.dupeOptString(allocator, self.@"if".?.condition),
+                .operator = try utils.dupeOptString(allocator, self.@"if".?.operator),
+                .operand = self.@"if".?.operand,
+            };
+        }
+
+        var keep_archive: ?IfOperation = null;
+        if (self.keep_archive != null) {
+            keep_archive = IfOperation{
+                .condition = try utils.dupeOptString(allocator, self.keep_archive.?.condition),
+                .operator = try utils.dupeOptString(allocator, self.keep_archive.?.operator),
+                .operand = self.keep_archive.?.operand,
+            };
+        }
+
+        action.strategy = try allocator.dupe(u8, self.strategy);
+        action.rotate_archives_dir = try utils.dupeOptString(allocator, self.rotate_archives_dir);
+        action.from = try utils.dupeOptString(allocator, self.from);
+        action.size = self.size;
+        action.lines = self.lines;
+        action.@"if" = if (self.@"if" != null) if_operation else null;
+        action.keep_archive = if (self.keep_archive != null) keep_archive else null;
+        action.compress = self.compress;
+        action.compression_type = try utils.dupeOptString(allocator, self.compression_type);
+        action.compression_level = self.compression_level;
+        return action;
+    }
+
     pub fn checkActionValidity(self: LogAction) !void {
+        //TODO do same for keep_archive
         if (self.@"if" == null)
             return error.IfIsEmpty;
         if (self.@"if".?.condition == null) {

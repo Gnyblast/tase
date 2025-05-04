@@ -8,7 +8,7 @@ const Allocator = std.mem.Allocator;
 
 const serverFactory = @import("../factory/server_factory.zig");
 const configs = @import("../app/config.zig");
-const LogsService = @import("../service/logs_service.zig").LogService;
+const LogService = @import("../service/logs_service.zig").LogService;
 
 pub const MasterClaims = struct {
     agent_hostname: ?[]const u8,
@@ -83,6 +83,8 @@ pub const TCPServer = struct {
             std.debug.assert(leaks == .ok);
         }
 
+        const logs_alloc = da.allocator();
+
         const listener = try self.createTCPServer(da.allocator());
         defer posix.close(listener);
 
@@ -131,17 +133,22 @@ pub const TCPServer = struct {
                 continue;
             }
 
-            const logsService = LogsService.init(
+            const logsService = LogService.create(
+                logs_alloc,
                 decoded.claims.timezone,
                 decoded.claims.job.logs_dir,
                 decoded.claims.job.log_files_regexp,
                 decoded.claims.job.action,
-            );
-
-            //TODO do it on a different thread
-            logsService.run() catch |err| {
-                std.log.scoped(.server).err("Error running logs service: {}", .{err});
+            ) catch |err| {
+                std.log.scoped(.server).err("error init logs service: {}", .{err});
+                continue;
             };
+
+            const thread = std.Thread.spawn(.{}, LogService.runAndDestroy, .{logsService}) catch |err| {
+                std.log.scoped(.cron).err("Error while running local task on a thread: {}", .{err});
+                continue;
+            };
+            thread.detach();
         }
     }
 

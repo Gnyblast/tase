@@ -51,6 +51,10 @@ pub fn bytesToMegabytes(bytes: u64) f64 {
     return bytes_f / 1_048_576.0;
 }
 
+pub fn dupeOptString(allocator: Allocator, value: ?[]const u8) !?[]const u8 {
+    return if (value) |v| try allocator.dupe(u8, v) else null;
+}
+
 pub fn printApplicationInfo(run_type: []const u8, version: []const u8, host: []const u8, port: u16) void {
     const ascii =
         \\==================================
