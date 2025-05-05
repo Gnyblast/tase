@@ -97,7 +97,8 @@ pub const LogAction = struct {
     compression_type: ?[]const u8 = "gzip",
     compression_level: ?u8 = 4,
 
-    pub fn deepCopy(self: LogAction, allocator: Allocator) !*LogAction {
+    /// Caller is resposible for freeing the memory
+    pub fn dupe(self: LogAction, allocator: Allocator) !*LogAction {
         const action = try allocator.create(LogAction);
         var if_operation: ?IfOperation = null;
         if (self.@"if" != null) {

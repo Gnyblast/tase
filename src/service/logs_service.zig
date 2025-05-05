@@ -27,6 +27,8 @@ pub const LogService = struct {
         };
     }
 
+    /// Using this method means you need to use runAndDestroy afterwards. Creates arena from the allocator and
+    /// free everything at the end of runAndDestroy
     pub fn create(allocator: Allocator, timezone: datetime.Timezone, directory: []const u8, matcher: []const u8, log_action: configs.LogAction) !*LogService {
         var arena = Arena.init(allocator);
         var aa = arena.allocator();
@@ -35,7 +37,7 @@ pub const LogService = struct {
         const tz: *datetime.Timezone = try aa.create(datetime.Timezone);
         tz.* = timezone;
 
-        const action = try log_action.deepCopy(aa);
+        const action = try log_action.dupe(aa);
 
         const dir = try aa.dupe(u8, directory);
         const regexp = try aa.dupe(u8, matcher);
