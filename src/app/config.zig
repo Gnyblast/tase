@@ -88,9 +88,7 @@ pub const LogConf = struct {
 pub const LogAction = struct {
     strategy: []const u8,
     rotate_archives_dir: ?[]const u8 = null,
-    from: ?[]const u8 = null,
-    size: ?u64 = null,
-    lines: ?u64 = null,
+    truncate_settings: ?TruncateSettings = null,
     @"if": ?IfOperation = null,
     keep_archive: ?IfOperation = null,
     compress: ?bool = false,
@@ -103,28 +101,35 @@ pub const LogAction = struct {
         var if_operation: ?IfOperation = null;
         if (self.@"if" != null) {
             if_operation = IfOperation{
-                .condition = try utils.dupeOptString(allocator, self.@"if".?.condition),
-                .operator = try utils.dupeOptString(allocator, self.@"if".?.operator),
-                .operand = self.@"if".?.operand,
+                .condition = try allocator.dupe(u8, self.@"if".?.condition.?),
+                .operator = try allocator.dupe(u8, self.@"if".?.operator.?),
+                .operand = self.@"if".?.operand.?,
             };
         }
 
         var keep_archive: ?IfOperation = null;
         if (self.keep_archive != null) {
             keep_archive = IfOperation{
-                .condition = try utils.dupeOptString(allocator, self.keep_archive.?.condition),
-                .operator = try utils.dupeOptString(allocator, self.keep_archive.?.operator),
-                .operand = self.keep_archive.?.operand,
+                .condition = try allocator.dupe(u8, self.keep_archive.?.condition.?),
+                .operator = try allocator.dupe(u8, self.keep_archive.?.operator.?),
+                .operand = self.keep_archive.?.operand.?,
+            };
+        }
+
+        var truncate_settings: ?TruncateSettings = null;
+        if (self.truncate_settings != null) {
+            truncate_settings = TruncateSettings{
+                .from = try allocator.dupe(u8, self.truncate_settings.?.from.?),
+                .by = try allocator.dupe(u8, self.truncate_settings.?.by.?),
+                .size = self.truncate_settings.?.size.?,
             };
         }
 
         action.strategy = try allocator.dupe(u8, self.strategy);
         action.rotate_archives_dir = try utils.dupeOptString(allocator, self.rotate_archives_dir);
-        action.from = try utils.dupeOptString(allocator, self.from);
-        action.size = self.size;
-        action.lines = self.lines;
         action.@"if" = if (self.@"if" != null) if_operation else null;
         action.keep_archive = if (self.keep_archive != null) keep_archive else null;
+        action.truncate_settings = if (self.truncate_settings != null) truncate_settings else null;
         action.compress = self.compress;
         action.compression_type = try utils.dupeOptString(allocator, self.compression_type);
         action.compression_level = self.compression_level;
@@ -132,18 +137,22 @@ pub const LogAction = struct {
     }
 
     pub fn checkActionValidity(self: LogAction) !void {
-        //TODO do same for keep_archive
         if (self.@"if" == null)
             return error.IfIsEmpty;
-        if (self.@"if".?.condition == null) {
+
+        if (self.@"if".?.condition == null)
             return error.MissingIfCondition;
-        }
-        if (self.@"if".?.operand == null) {
+
+        if (self.@"if".?.operand == null)
             return error.MissingIfOperand;
-        }
-        if (self.@"if".?.operator == null) {
+
+        if (self.@"if".?.operator == null)
             return error.MissingIfOperator;
-        }
+
+        _ = std.meta.stringToEnum(enums.IfConditions, self.@"if".?.condition.?) orelse return error.InvalidIfCondition;
+        _ = std.meta.stringToEnum(enums.Operators, self.@"if".?.operator.?) orelse return error.InvalidIfOperator;
+
+        //TODO strategy specific fields check like rotate -> keep_archive etc.
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.strategy) orelse return error.InvalidStrategy) {
             .delete => {
                 //? nothing to check yet
@@ -159,7 +168,20 @@ pub const LogAction = struct {
     }
 
     fn checkMandatoryFieldsForRotate(self: LogAction) !void {
-        _ = std.meta.stringToEnum(enums.IfConditions, self.@"if".?.condition.?) orelse return error.InvalidRotateIfCondition;
+        if (self.keep_archive != null) {
+            if (self.keep_archive.?.condition == null)
+                return error.MissingKeepArchiveCondition;
+
+            //TODO make it not below 1 and fix error message
+            if (self.keep_archive.?.operand == null)
+                return error.MissingKeepArchiveOperand;
+
+            if (self.keep_archive.?.operator == null)
+                return error.MissingKeepArchiveOperator;
+
+            _ = std.meta.stringToEnum(enums.IfConditions, self.keep_archive.?.condition.?) orelse return error.InvalidRotateKeepArchiveCondition;
+            _ = std.meta.stringToEnum(enums.Operators, self.keep_archive.?.operator.?) orelse return error.InvalidRotateKeepArchiveOperator;
+        }
 
         if (self.compress != null and self.compress.?) {
             if (self.compression_type == null)
@@ -172,7 +194,6 @@ pub const LogAction = struct {
                 return error.CompressionLevelInvalid;
             }
 
-            //TODO: test behaviour
             switch (std.meta.stringToEnum(enums.CompressType, self.compression_type.?) orelse return error.InvalidCompressioType) {
                 .gzip,
                 => {
@@ -183,15 +204,27 @@ pub const LogAction = struct {
     }
 
     fn checkMandatoryFieldsForTruncate(self: LogAction) !void {
-        if (self.lines == null and self.size == null)
-            return error.lineOrSizeError;
+        if (self.truncate_settings == null)
+            return error.TruncateRequiresSettings;
 
-        if (self.from == null or self.from.?.len < 1) {
-            return error.TruncateRequiresFromField;
-        }
+        if (self.truncate_settings.?.by == null)
+            return error.MissingTruncateBy;
 
-        _ = std.meta.stringToEnum(enums.ActionFrom, self.from.?) orelse return error.InvalidFromFieldValue;
+        if (self.truncate_settings.?.from == null)
+            return error.MissingTruncateFrom;
+
+        if (self.truncate_settings.?.size.? < 1)
+            return error.TruncateSizeError;
+
+        _ = std.meta.stringToEnum(enums.TruncateBy, self.truncate_settings.?.by.?) orelse return error.InvalidTruncateByFieldValue;
+        _ = std.meta.stringToEnum(enums.TruncateFrom, self.truncate_settings.?.from.?) orelse return error.InvalidTruncateFromFieldValue;
     }
+};
+
+pub const TruncateSettings = struct {
+    from: ?[]const u8 = null,
+    by: ?[]const u8 = null,
+    size: ?i32 = null,
 };
 
 pub const IfOperation = struct {

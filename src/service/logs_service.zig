@@ -49,6 +49,7 @@ pub const LogService = struct {
         return log_service;
     }
 
+    /// Runs the task and free the memory at the end
     pub fn runAndDestroy(self: *LogService) void {
         defer {
             if (self.arena != null)
@@ -185,7 +186,20 @@ pub const LogService = struct {
         }
     }
 
-    fn doTruncate(_: LogService) !void {}
+    fn doTruncate(self: LogService) !void {
+        switch (std.meta.stringToEnum(enums.TruncateFrom, self.log_action.truncate_settings.?.from.?) orelse return error.InvalidTruncateFromFieldValue) {
+            .bottom => {
+                return self.truncateFromBottom();
+            },
+            .top => {
+                return self.truncateFromTop();
+            },
+        }
+    }
+
+    fn truncateFromBottom(_: LogService) void {}
+
+    fn truncateFromTop(_: LogService) void {}
 
     fn getPruner(self: LogService, allocator: Allocator) !*LogService {
         const compress_type = std.meta.stringToEnum(enums.CompressType, self.log_action.compression_type.?) orelse return error.CompressionTypeError;

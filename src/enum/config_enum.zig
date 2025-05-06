@@ -14,17 +14,31 @@ pub const ActionStrategy = enum {
     }
 };
 
-pub const ActionFrom = enum {
+pub const TruncateBy = enum {
+    line,
+    size,
+
+    pub const TruncateByName = [@typeInfo(TruncateBy).@"enum".fields.len][:0]const u8{
+        "lines",
+        "size",
+    };
+
+    pub fn str(self: TruncateBy) [:0]const u8 {
+        return TruncateByName[@intFromEnum(self)];
+    }
+};
+
+pub const TruncateFrom = enum {
     bottom,
     top,
 
-    pub const ActionFromName = [@typeInfo(ActionFrom).@"enum".fields.len][:0]const u8{
+    pub const TruncateFromName = [@typeInfo(TruncateFrom).@"enum".fields.len][:0]const u8{
         "bottom",
         "top",
     };
 
-    pub fn str(self: ActionFrom) [:0]const u8 {
-        return ActionFromName[@intFromEnum(self)];
+    pub fn str(self: TruncateFrom) [:0]const u8 {
+        return TruncateFromName[@intFromEnum(self)];
     }
 };
 

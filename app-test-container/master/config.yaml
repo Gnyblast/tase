@@ -40,6 +40,7 @@ configs:
     cron_expression: "00 00 * * *"
     run_agent_names:
       - "tase_rotate_agent"
+      - "local"
     action:
       strategy: rotate
       rotate_archives_dir: "/var/log/rotate-by-days-compress-prune/archives"

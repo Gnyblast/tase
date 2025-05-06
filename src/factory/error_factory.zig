@@ -98,8 +98,20 @@ pub const errors = [_]TaseError{
         .message = "truncate strategy requires \"from\" field to set",
     },
     .{
-        .err = error.InvalidFromFieldValue,
-        .message = "\"from\" filed value is invalid",
+        .err = error.TruncateRequiresSettings,
+        .message = "\"truncate\" strategy requires \"truncate_settings\"",
+    },
+    .{
+        .err = error.InvalidTruncateFromFieldValue,
+        .message = "\"from\" filed value in \"truncate_settings\" is invalid",
+    },
+    .{
+        .err = error.InvalidTruncateByFieldValue,
+        .message = "\"by\" filed value in \"truncate_settings\" is invalid",
+    },
+    .{
+        .err = error.TruncateSizeError,
+        .message = "\"size\" in \"truncate_settings\" must be greater than 0",
     },
     .{
         .err = error.NotValidAgentHostname,
@@ -118,12 +130,20 @@ pub const errors = [_]TaseError{
         .message = "rotate strategy requires \"by\" field to set",
     },
     .{
-        .err = error.InvalidRotateIfCondition,
-        .message = "value for \"if condition\" field in rotate is invalid",
+        .err = error.InvalidIfCondition,
+        .message = "value for \"if.condition\" field in invalid",
     },
     .{
-        .err = error.InvalidTruncateIfCondition,
-        .message = "value for \"if conditipn\" field in truncate is invalid",
+        .err = error.InvalidIfOperator,
+        .message = "value for \"if.operator\" field is invalid",
+    },
+    .{
+        .err = error.InvalidRotateKeepArchiveCondition,
+        .message = "value for \"keep_archive.condition\" field in rotate is invalid",
+    },
+    .{
+        .err = error.InvalidRotateKeepArchiveOperator,
+        .message = "value for \"keep_archive.operator\" field in rotate is invalid",
     },
     .{
         .err = error.compile,
@@ -143,14 +163,34 @@ pub const errors = [_]TaseError{
     },
     .{
         .err = error.MissingIfCondition,
-        .message = "\"condition\" is in config file for if check",
+        .message = "Missing \"condition\" in \"if\"",
     },
     .{
         .err = error.MissingIfOperand,
-        .message = "\"operand\" is in config file for if check",
+        .message = "Missing \"operand\" in \"if\"",
     },
     .{
         .err = error.MissingIfOperator,
-        .message = "\"operator\" is in config file for if check",
+        .message = "Missing \"operator\" in \"if\"",
+    },
+    .{
+        .err = error.MissingTruncateBy,
+        .message = "Missing \"by\" in \"truncate_setting\"",
+    },
+    .{
+        .err = error.MissingTruncateFrom,
+        .message = "Missing \"from\" in \"truncate_setting\"",
+    },
+    .{
+        .err = error.MissingKeepArchiveCondition,
+        .message = "Missing \"condition\" in \"keep_archive\"",
+    },
+    .{
+        .err = error.MissingKeepArchiveOperand,
+        .message = "Missing \"operand\" in \"keep_archive\"",
+    },
+    .{
+        .err = error.MissingKeepArchiveOperator,
+        .message = "Missing \"operator\" in \"keep_archive\"",
     },
 };
