@@ -70,10 +70,6 @@ pub const errors = [_]TaseError{
         .message = "No matching agents found",
     },
     .{
-        .err = error.CronCannotBeUndefined,
-        .message = "cron expression cannot be undefined for a config",
-    },
-    .{
         .err = error.CompressionTypeMandatory,
         .message = "compression type is mandatory for rotate",
     },

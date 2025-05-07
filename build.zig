@@ -42,10 +42,7 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exe);
 
     // add that code after "b.installArtifact(exe)" line
-    const yaml = b.dependency("yaml", .{
-        .target = target,
-        .optimize = optimize,
-    });
+    const yaml = b.dependency("yaml", .{ .target = target, .optimize = optimize });
     exe.root_module.addImport("yaml", yaml.module("yaml"));
 
     const zig_args = b.dependency("args", .{ .target = target, .optimize = optimize });
@@ -93,21 +90,36 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    lib_unit_tests.root_module.addImport("yaml", yaml.module("yaml"));
+    lib_unit_tests.root_module.addImport("args", zig_args.module("args"));
+    lib_unit_tests.root_module.addImport("cron-time", cron.module("cron"));
+    lib_unit_tests.root_module.addImport("datetime", datetime.module("datetime"));
+    lib_unit_tests.root_module.addImport("libregex", regexLib.module("libregex"));
+    lib_unit_tests.root_module.addImport("jwt", jwt.module("jwt"));
 
     const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
-
-    const exe_unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
 
     // Similar to creating the run step earlier, this exposes a `test` step to
     // the `zig build --help` menu, providing a way for the user to request
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_lib_unit_tests.step);
-    test_step.dependOn(&run_exe_unit_tests.step);
+
+    const rm = b.addSystemCommand(&.{
+        "rm",
+        "-rf",
+        "zig-out/cover",
+    });
+
+    const run_cover = b.addSystemCommand(&.{
+        "kcov",
+        "--clean",
+        "--include-pattern=src/",
+        b.pathJoin(&.{ b.install_path, "cover" }),
+    });
+    run_cover.addArtifactArg(lib_unit_tests);
+
+    const cover_step = b.step("cover", "Generate test coverage report");
+    run_cover.step.dependOn(&rm.step);
+    cover_step.dependOn(&run_cover.step);
 }

@@ -1,4 +1,6 @@
 const std = @import("std");
+const testing = std.testing;
+const Cron = @import("cron-time").Cron;
 const enums = @import("../enum/config_enum.zig");
 const utils = @import("../utils/helper.zig");
 const Regex = @import("libregex").Regex;
@@ -71,9 +73,11 @@ pub const LogConf = struct {
     action: LogAction,
 
     pub fn isConfigValid(self: LogConf, allocator: Allocator) !void {
-        if (self.cron_expression.len < 1) {
-            return error.CronCannotBeUndefined;
-        }
+        var cron = Cron.init();
+        cron.parse(self.cron_expression) catch |err| {
+            std.log.err("cron expression \"{s}\" not valid", .{self.cron_expression});
+            return err;
+        };
 
         const regex = Regex.initWithoutComptimeFlags(allocator, self.log_files_regexp, "") catch |err| {
             std.log.err("regex \"{s}\" not valid", .{self.log_files_regexp});
@@ -84,6 +88,85 @@ pub const LogConf = struct {
         return try self.action.checkActionValidity();
     }
 };
+
+test "testLogConf" {
+    var a3: [3][]const u8 = .{ "Hello", "Foo", "Bar" };
+    const tcs = struct {
+        log_conf: LogConf,
+        should_error: bool,
+        result: anyerror,
+    };
+    var tc: [4]tcs = .{
+        .{
+            .log_conf = LogConf{
+                .app_name = "test",
+                .cron_expression = "0",
+                .log_files_regexp = "test.log",
+                .logs_dir = "/var/log/tase",
+                .run_agent_names = &a3,
+                .action = LogAction{
+                    .strategy = "truncate",
+                },
+            },
+            .should_error = true,
+            .result = error.InvalidLength,
+        },
+        .{
+            .log_conf = LogConf{
+                .app_name = "test",
+                .cron_expression = "5 4 * * *",
+                .log_files_regexp = "test.log",
+                .logs_dir = "/var/log/tase",
+                .run_agent_names = &a3,
+                .action = LogAction{
+                    .strategy = "truncate",
+                },
+            },
+            .should_error = true,
+            .result = error.IfIsEmpty,
+        },
+        .{
+            .log_conf = LogConf{
+                .app_name = "test",
+                .cron_expression = "5 4 * * *",
+                .log_files_regexp = "s([wD.log",
+                .logs_dir = "/var/log/tase",
+                .run_agent_names = &a3,
+                .action = LogAction{
+                    .strategy = "truncate",
+                },
+            },
+            .should_error = true,
+            .result = error.compile,
+        },
+        .{
+            .log_conf = LogConf{
+                .app_name = "test",
+                .cron_expression = "5 4 * * *",
+                .log_files_regexp = "test.log",
+                .logs_dir = "/var/log/tase",
+                .run_agent_names = &a3,
+                .action = LogAction{
+                    .strategy = "delete",
+                    .@"if" = IfOperation{
+                        .condition = "days",
+                        .operator = ">",
+                        .operand = 2,
+                    },
+                },
+            },
+            .should_error = false,
+            .result = error.compile,
+        },
+    };
+
+    for (&tc) |case| {
+        if (case.should_error)
+            try testing.expectError(case.result, case.log_conf.isConfigValid(testing.allocator))
+        else
+            try case.log_conf.isConfigValid(testing.allocator);
+    }
+}
 
 pub const LogAction = struct {
     strategy: []const u8,
