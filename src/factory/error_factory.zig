@@ -24,6 +24,7 @@ pub fn getLogMessageByErr(alloc: std.mem.Allocator, erro: anyerror) ErrorMessage
     return ErrorMessage{ .message = msg, .allocated = true };
 }
 
+//TODO: recheck errors
 pub const errors = [_]TaseError{
     .{
         .err = error.SecretIsMandatory,
@@ -150,7 +151,7 @@ pub const errors = [_]TaseError{
         .message = "Compression levels are starting from 4 goes up to 9",
     },
     .{
-        .err = error.LocalAgentNameIsResered,
+        .err = error.LocalAgentNameIsReserved,
         .message = "\"local\" as agent name is reserved for master served itself",
     },
     .{

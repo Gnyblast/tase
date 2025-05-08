@@ -24,7 +24,7 @@ pub fn toLowerCase(comptime string: []const u8) []u8 {
 pub fn toLowerCaseAlloc(allocator: Allocator, input: []const u8) ![]u8 {
     const result = try allocator.alloc(u8, input.len);
     for (input, 0..) |ch, i| {
-        result[i] = std.ascii.toUpper(ch);
+        result[i] = std.ascii.toLower(ch);
     }
     return result;
 }

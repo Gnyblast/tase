@@ -114,7 +114,7 @@ pub fn build(b: *std.Build) void {
     const run_cover = b.addSystemCommand(&.{
         "kcov",
         "--clean",
-        "--include-pattern=src/",
+        "--include-path=src/",
         b.pathJoin(&.{ b.install_path, "cover" }),
     });
     run_cover.addArtifactArg(lib_unit_tests);
