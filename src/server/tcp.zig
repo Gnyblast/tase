@@ -9,6 +9,7 @@ const Allocator = std.mem.Allocator;
 const serverFactory = @import("../factory/server_factory.zig");
 const configs = @import("../app/config.zig");
 const LogService = @import("../service/logs_service.zig").LogService;
+const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
 pub const MasterClaims = struct {
     agent_hostname: ?[]const u8,
@@ -222,6 +223,6 @@ pub const TCPServer = struct {
             }
         }
 
-        return error.NotValidAgentHostname;
+        return TaseNativeErrors.NotValidAgentHostname;
     }
 };

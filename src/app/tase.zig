@@ -10,6 +10,7 @@ const serverFactory = @import("../factory/server_factory.zig");
 const clientFactory = @import("../factory/client_factory.zig");
 const CronService = @import("../service/cron_service.zig").CronService;
 const YamlParser = @import("../utils/yaml_parser.zig").YamlParseService;
+const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
 pub const version = "0.0.2";
 
@@ -30,7 +31,7 @@ pub const Tase = struct {
         var secret_dupe = try allocator.dupe(u8, secret);
         if (std.mem.eql(u8, secret, "") and cli_args.agent) {
             const env_secret = std.process.getEnvVarOwned(allocator, "TASE_AGENT_SECRET") catch {
-                return error.SecretIsMandatory;
+                return TaseNativeErrors.SecretIsMandatory;
             };
             defer allocator.free(env_secret);
             secret = env_secret;
@@ -100,20 +101,20 @@ pub const Tase = struct {
         }
 
         if (!self.cli_args.master and !self.cli_args.agent) {
-            return error.MasterOrAgent;
+            return TaseNativeErrors.MasterOrAgent;
         }
         if (self.cli_args.master and self.cli_args.agent) {
-            return error.OnlyMasterOrAgent;
+            return TaseNativeErrors.OnlyMasterOrAgent;
         }
         if (self.cli_args.agent) {
             if (std.mem.eql(u8, self.secret, "")) {
-                return error.SecretIsMandatory;
+                return TaseNativeErrors.SecretIsMandatory;
             }
             if (self.cli_args.@"master-host" == null or self.cli_args.@"master-host".?.len < 1) {
-                return error.MasterHostRequired;
+                return TaseNativeErrors.MasterHostRequired;
             }
             if (self.cli_args.@"master-port" == null or self.cli_args.@"master-port".? < 1) {
-                return error.MasterPortRequired;
+                return TaseNativeErrors.MasterPortRequired;
             }
         }
     }

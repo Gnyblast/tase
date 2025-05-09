@@ -1,5 +1,43 @@
 const std = @import("std");
 
+pub const TaseNativeErrors = error{
+    DuplicateAgentName,
+    DuplicateAgentHostName,
+    LocalAgentNameIsReserved,
+    UndefinedAgent,
+    IfIsEmpty,
+    MissingIfCondition,
+    InvalidIfCondition,
+    MissingIfOperator,
+    InvalidIfOperator,
+    MissingIfOperand,
+    IfOperandSizeError,
+    InvalidStrategy,
+    MissingKeepArchiveCondition,
+    InvalidRotateKeepArchiveCondition,
+    MissingKeepArchiveOperator,
+    InvalidRotateKeepArchiveOperator,
+    MissingKeepArchiveOperand,
+    KeepArhiveOpenrandSizeError,
+    CompressionLevelInvalid,
+    InvalidCompressioType,
+    TruncateRequiresSettings,
+    MissingTruncateBy,
+    InvalidTruncateByFieldValue,
+    InvalidTruncateFromFieldValue,
+    MissingTruncateFrom,
+    MissingTruncateSize,
+    TruncateSizeError,
+    SecretIsMandatory,
+    MasterOrAgent,
+    OnlyMasterOrAgent,
+    MasterHostRequired,
+    MasterPortRequired,
+    InvalidServerType,
+    NotValidAgentHostname,
+    NoAgentsFound,
+};
+
 const TaseError = struct {
     err: anyerror,
     message: []const u8,
@@ -27,167 +65,143 @@ pub fn getLogMessageByErr(alloc: std.mem.Allocator, erro: anyerror) ErrorMessage
 //TODO: recheck errors
 pub const errors = [_]TaseError{
     .{
-        .err = error.SecretIsMandatory,
-        .message = "--secret cli arg or TASE_AGENT_SECRET env var is mandatory for agent type runs",
+        .err = TaseNativeErrors.DuplicateAgentName,
+        .message = "Duplicated agent name",
     },
     .{
-        .err = error.MasterOrAgent,
-        .message = "either --master or --agent should be passed",
+        .err = TaseNativeErrors.DuplicateAgentHostName,
+        .message = "Duplicated agent hostname",
     },
     .{
-        .err = error.OnlyMasterOrAgent,
-        .message = "both --master and --agent flag is not allowed together",
-    },
-    .{
-        .err = error.MasterHostRequired,
-        .message = "--master-host is mandatory for agents",
-    },
-    .{
-        .err = error.MasterPortRequired,
-        .message = "--master-port is mandatory for agents",
-    },
-    .{
-        .err = error.InvalidServerType,
-        .message = "server type is not valid",
-    },
-    .{
-        .err = error.InvalidStrategy,
-        .message = "strategy is invalid in the configs",
-    },
-    .{
-        .err = error.DuplicateAgentName,
-        .message = "duplicated agent name",
-    },
-    .{
-        .err = error.DuplicateAgentHostName,
-        .message = "duplicated agent hostname",
-    },
-    .{
-        .err = error.UndefinedAgent,
-        .message = "agent in configuration is not a valid agent",
-    },
-    .{
-        .err = error.NoAgentsFound,
-        .message = "No matching agents found",
-    },
-    .{
-        .err = error.CompressionTypeMandatory,
-        .message = "compression type is mandatory for rotate",
-    },
-    .{
-        .err = error.CompressionLevelMandatory,
-        .message = "compression level is mandatory for rotate",
-    },
-    .{
-        .err = error.InvalidCompressioType,
-        .message = "compression type is invalid",
-    },
-    .{
-        .err = error.TruncateRequiresByField,
-        .message = "truncate strategy requires \"by\" field to set",
-    },
-    .{
-        .err = error.lineOrSizeError,
-        .message = "Either \"line\" or \"size\" should be defined for truncate",
-    },
-    .{
-        .err = error.TruncateRequiresFromField,
-        .message = "truncate strategy requires \"from\" field to set",
-    },
-    .{
-        .err = error.TruncateRequiresSettings,
-        .message = "\"truncate\" strategy requires \"truncate_settings\"",
-    },
-    .{
-        .err = error.InvalidTruncateFromFieldValue,
-        .message = "\"from\" filed value in \"truncate_settings\" is invalid",
-    },
-    .{
-        .err = error.InvalidTruncateByFieldValue,
-        .message = "\"by\" filed value in \"truncate_settings\" is invalid",
-    },
-    .{
-        .err = error.TruncateSizeError,
-        .message = "\"size\" in \"truncate_settings\" must be greater than 0",
-    },
-    .{
-        .err = error.NotValidAgentHostname,
-        .message = "hostname is not valid for any agents",
-    },
-    .{
-        .err = error.SizeIsRequiredForRotate,
-        .message = "rotate strategy requires \"size\" field to set",
-    },
-    .{
-        .err = error.SizeIsRequiredForTruncate,
-        .message = "truncate strategy requires \"size\" field to set",
-    },
-    .{
-        .err = error.RotateRequiresByField,
-        .message = "rotate strategy requires \"by\" field to set",
-    },
-    .{
-        .err = error.InvalidIfCondition,
-        .message = "value for \"if.condition\" field in invalid",
-    },
-    .{
-        .err = error.InvalidIfOperator,
-        .message = "value for \"if.operator\" field is invalid",
-    },
-    .{
-        .err = error.InvalidRotateKeepArchiveCondition,
-        .message = "value for \"keep_archive.condition\" field in rotate is invalid",
-    },
-    .{
-        .err = error.InvalidRotateKeepArchiveOperator,
-        .message = "value for \"keep_archive.operator\" field in rotate is invalid",
-    },
-    .{
-        .err = error.compile,
-        .message = "Some of the regex is not valid and cannot be compiled",
-    },
-    .{
-        .err = error.CompressionLevelInvalid,
-        .message = "Compression levels are starting from 4 goes up to 9",
-    },
-    .{
-        .err = error.LocalAgentNameIsReserved,
+        .err = TaseNativeErrors.LocalAgentNameIsReserved,
         .message = "\"local\" as agent name is reserved for master served itself",
     },
     .{
-        .err = error.IfIsEmpty,
+        .err = TaseNativeErrors.UndefinedAgent,
+        .message = "Agent in configuration is not a valid agent",
+    },
+    .{
+        .err = TaseNativeErrors.IfIsEmpty,
         .message = "If condition must be set for each log action",
     },
     .{
-        .err = error.MissingIfCondition,
+        .err = TaseNativeErrors.MissingIfCondition,
         .message = "Missing \"condition\" in \"if\"",
     },
     .{
-        .err = error.MissingIfOperand,
-        .message = "Missing \"operand\" in \"if\"",
+        .err = TaseNativeErrors.InvalidIfCondition,
+        .message = "Value for \"if.condition\" field in invalid",
     },
     .{
-        .err = error.MissingIfOperator,
+        .err = TaseNativeErrors.MissingIfOperator,
         .message = "Missing \"operator\" in \"if\"",
     },
     .{
-        .err = error.MissingTruncateBy,
-        .message = "Missing \"by\" in \"truncate_setting\"",
+        .err = TaseNativeErrors.InvalidIfOperator,
+        .message = "Value for \"if.operator\" field is invalid",
     },
     .{
-        .err = error.MissingTruncateFrom,
-        .message = "Missing \"from\" in \"truncate_setting\"",
+        .err = TaseNativeErrors.MissingIfOperand,
+        .message = "Missing \"operand\" in \"if\"",
     },
     .{
-        .err = error.MissingKeepArchiveCondition,
+        .err = TaseNativeErrors.IfOperandSizeError,
+        .message = "Value for \"if.operand\" cannot be less than 0",
+    },
+    .{
+        .err = TaseNativeErrors.InvalidStrategy,
+        .message = "strategy is invalid in the configs",
+    },
+    .{
+        .err = TaseNativeErrors.MissingKeepArchiveCondition,
         .message = "Missing \"condition\" in \"keep_archive\"",
     },
     .{
-        .err = error.MissingKeepArchiveOperand,
+        .err = TaseNativeErrors.InvalidRotateKeepArchiveCondition,
+        .message = "Value for \"keep_archive.condition\" field in rotate is invalid",
+    },
+    .{
+        .err = TaseNativeErrors.MissingKeepArchiveOperator,
+        .message = "Missing \"operator\" in \"keep_archive\"",
+    },
+    .{
+        .err = TaseNativeErrors.InvalidRotateKeepArchiveOperator,
+        .message = "Value for \"keep_archive.operator\" field in rotate is invalid",
+    },
+    .{
+        .err = TaseNativeErrors.MissingKeepArchiveOperand,
         .message = "Missing \"operand\" in \"keep_archive\"",
     },
     .{
-        .err = error.MissingKeepArchiveOperator,
-        .message = "Missing \"operator\" in \"keep_archive\"",
+        .err = TaseNativeErrors.KeepArhiveOpenrandSizeError,
+        .message = "Value for \"keep_archive.operand\" cannot be less than 0",
+    },
+    .{
+        .err = TaseNativeErrors.CompressionLevelInvalid,
+        .message = "Compression levels are starting from 4 goes up to 9",
+    },
+    .{
+        .err = TaseNativeErrors.InvalidCompressioType,
+        .message = "compression type is invalid",
+    },
+    .{
+        .err = TaseNativeErrors.TruncateRequiresSettings,
+        .message = "\"truncate\" strategy requires \"truncate_settings\"",
+    },
+    .{
+        .err = TaseNativeErrors.MissingTruncateBy,
+        .message = "Missing \"by\" in \"truncate_setting\"",
+    },
+    .{
+        .err = TaseNativeErrors.InvalidTruncateByFieldValue,
+        .message = "\"by\" filed value in \"truncate_settings\" is invalid",
+    },
+    .{
+        .err = TaseNativeErrors.InvalidTruncateFromFieldValue,
+        .message = "\"from\" filed value in \"truncate_settings\" is invalid",
+    },
+    .{
+        .err = TaseNativeErrors.MissingTruncateFrom,
+        .message = "Missing \"from\" in \"truncate_setting\"",
+    },
+    .{
+        .err = TaseNativeErrors.MissingTruncateSize,
+        .message = "Value for \"truncata_settings.size\" cannot be less than 1",
+    },
+    .{
+        .err = TaseNativeErrors.TruncateSizeError,
+        .message = "\"size\" in \"truncate_settings\" must be greater than 0",
+    },
+    .{
+        .err = TaseNativeErrors.SecretIsMandatory,
+        .message = "--secret cli arg or TASE_AGENT_SECRET env var is mandatory for agent type runs",
+    },
+    .{
+        .err = TaseNativeErrors.MasterOrAgent,
+        .message = "either --master or --agent should be passed",
+    },
+    .{
+        .err = TaseNativeErrors.OnlyMasterOrAgent,
+        .message = "both --master and --agent flag is not allowed together",
+    },
+    .{
+        .err = TaseNativeErrors.MasterHostRequired,
+        .message = "--master-host is mandatory for agents",
+    },
+    .{
+        .err = TaseNativeErrors.MasterPortRequired,
+        .message = "--master-port is mandatory for agents",
+    },
+    .{
+        .err = TaseNativeErrors.InvalidServerType,
+        .message = "server type is not valid",
+    },
+    .{
+        .err = TaseNativeErrors.NotValidAgentHostname,
+        .message = "hostname is not valid for any agents",
+    },
+    .{
+        .err = TaseNativeErrors.NoAgentsFound,
+        .message = "No matching agents found",
     },
 };

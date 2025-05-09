@@ -3,6 +3,7 @@ const datetime = @import("datetime").datetime;
 const cron = @import("cron-time").Cron;
 const Allocator = std.mem.Allocator;
 const LogsService = @import("../service/logs_service.zig").LogService;
+const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
 const configs = @import("../app/config.zig");
 const clientFactory = @import("../factory/client_factory.zig");
@@ -130,7 +131,7 @@ pub const CronService = struct {
             return agents;
         }
 
-        return error.NoAgentsFound;
+        return TaseNativeErrors.NoAgentsFound;
     }
 
     fn validateCronExpression(confs: []configs.LogConf) !void {

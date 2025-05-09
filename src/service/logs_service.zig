@@ -6,9 +6,9 @@ const configs = @import("../app/config.zig");
 const utils = @import("../utils/helper.zig");
 const enums = @import("../enum/config_enum.zig");
 const compressionFactory = @import("../factory/compression_factory.zig");
-
 const Allocator = std.mem.Allocator;
 const Arena = std.heap.ArenaAllocator;
+const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
 pub const LogService = struct {
     arena: ?Arena,
@@ -187,7 +187,7 @@ pub const LogService = struct {
     }
 
     fn doTruncate(self: LogService) !void {
-        switch (std.meta.stringToEnum(enums.TruncateFrom, self.log_action.truncate_settings.?.from.?) orelse return error.InvalidTruncateFromFieldValue) {
+        switch (std.meta.stringToEnum(enums.TruncateFrom, self.log_action.truncate_settings.?.from.?) orelse return TaseNativeErrors.InvalidTruncateFromFieldValue) {
             .bottom => {
                 return self.truncateFromBottom();
             },
@@ -202,7 +202,7 @@ pub const LogService = struct {
     fn truncateFromTop(_: LogService) void {}
 
     fn getPruner(self: LogService, allocator: Allocator) !*LogService {
-        const compress_type = std.meta.stringToEnum(enums.CompressType, self.log_action.compression_type.?) orelse return error.CompressionTypeError;
+        const compress_type = std.meta.stringToEnum(enums.CompressType, self.log_action.compression_type.?) orelse return TaseNativeErrors.InvalidCompressioType;
         var matcher = try std.fmt.allocPrint(allocator, "{s}-{s}", .{ self.matcher, "[0-9]+" });
 
         if (self.log_action.compress.?) {
@@ -281,7 +281,7 @@ fn compareBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata) b
 }
 
 fn compressAndRotate(allocator: Allocator, log_action: *configs.LogAction, path: []const u8) !void {
-    const compress_type = std.meta.stringToEnum(enums.CompressType, log_action.compression_type.?) orelse return error.CompressionTypeError;
+    const compress_type = std.meta.stringToEnum(enums.CompressType, log_action.compression_type.?) orelse return TaseNativeErrors.InvalidCompressioType;
 
     const rotation_path = try std.fmt.allocPrint(allocator, "{s}.{s}", .{ path, compress_type.getCompressionExtension() });
     defer allocator.free(rotation_path);

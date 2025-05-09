@@ -4,19 +4,20 @@ const configs = @import("../app/config.zig");
 const datetime = @import("datetime").datetime;
 
 const Allocator = std.mem.Allocator;
+const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
 pub const ServerTypes = enum { tcp, tls };
 
 pub fn getClient(allocator: Allocator, server: []const u8, host: []const u8, port: u16, secret: []const u8) !Client {
     const server_type = std.meta.stringToEnum(ServerTypes, server) orelse {
-        return error.InvalidServerType;
+        return TaseNativeErrors.InvalidServerType;
     };
 
     switch (server_type) {
         .tcp => {
             return try tcp.TCPClient.create(allocator, host, port, secret);
         },
-        else => return error.InvalidServerType,
+        else => return TaseNativeErrors.InvalidServerType,
     }
 }
 

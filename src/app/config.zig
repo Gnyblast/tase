@@ -5,6 +5,7 @@ const enums = @import("../enum/config_enum.zig");
 const utils = @import("../utils/helper.zig");
 const Regex = @import("libregex").Regex;
 const Allocator = std.mem.Allocator;
+const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
 pub const LOCAL = "local";
 
@@ -23,16 +24,16 @@ pub const YamlCfgContainer = struct {
             for (self.agents.?) |a| {
                 const agent_name_lower = try utils.toLowerCaseAlloc(arena.allocator(), a.name);
                 if (utils.arrayContains(u8, agent_names.items, agent_name_lower)) {
-                    return error.DuplicateAgentName;
+                    return TaseNativeErrors.DuplicateAgentName;
                 }
 
                 const hostname_lower = try utils.toLowerCaseAlloc(arena.allocator(), a.hostname);
                 if (utils.arrayContains(u8, agent_host_names.items, hostname_lower)) {
-                    return error.DuplicateAgentHostName;
+                    return TaseNativeErrors.DuplicateAgentHostName;
                 }
 
                 if (std.mem.eql(u8, LOCAL, agent_name_lower)) {
-                    return error.LocalAgentNameIsReserved;
+                    return TaseNativeErrors.LocalAgentNameIsReserved;
                 }
                 try agent_names.append(agent_name_lower);
                 try agent_host_names.append(hostname_lower);
@@ -48,7 +49,7 @@ pub const YamlCfgContainer = struct {
                     continue;
 
                 if (!utils.arrayContains(u8, agent_names.items, agent_name_lower)) {
-                    return error.UndefinedAgent;
+                    return TaseNativeErrors.UndefinedAgent;
                 }
             }
         }
@@ -137,14 +138,14 @@ pub const LogAction = struct {
 
     pub fn checkActionValidity(self: LogAction) !void {
         if (self.@"if" == null)
-            return error.IfIsEmpty;
+            return TaseNativeErrors.IfIsEmpty;
 
-        _ = std.meta.stringToEnum(enums.IfConditions, self.@"if".?.condition orelse return error.MissingIfCondition) orelse return error.InvalidIfCondition;
-        _ = std.meta.stringToEnum(enums.Operators, self.@"if".?.operator orelse return error.MissingIfOperator) orelse return error.InvalidIfOperator;
-        if ((self.@"if".?.operand orelse return error.MissingIfOperand) < 0)
-            return error.IfOperandSizeError;
+        _ = std.meta.stringToEnum(enums.IfConditions, self.@"if".?.condition orelse return TaseNativeErrors.MissingIfCondition) orelse return TaseNativeErrors.InvalidIfCondition;
+        _ = std.meta.stringToEnum(enums.Operators, self.@"if".?.operator orelse return TaseNativeErrors.MissingIfOperator) orelse return TaseNativeErrors.InvalidIfOperator;
+        if ((self.@"if".?.operand orelse return TaseNativeErrors.MissingIfOperand) < 0)
+            return TaseNativeErrors.IfOperandSizeError;
 
-        const strategy = std.meta.stringToEnum(enums.ActionStrategy, self.strategy) orelse return error.InvalidStrategy;
+        const strategy = std.meta.stringToEnum(enums.ActionStrategy, self.strategy) orelse return TaseNativeErrors.InvalidStrategy;
         switch (strategy) {
             .delete => {
                 return;
@@ -160,17 +161,17 @@ pub const LogAction = struct {
 
     fn checkMandatoryFieldsForRotate(self: LogAction) !void {
         if (self.keep_archive != null) {
-            _ = std.meta.stringToEnum(enums.IfConditions, self.keep_archive.?.condition orelse return error.MissingKeepArchiveCondition) orelse return error.InvalidRotateKeepArchiveCondition;
-            _ = std.meta.stringToEnum(enums.Operators, self.keep_archive.?.operator orelse return error.MissingKeepArchiveOperator) orelse return error.InvalidRotateKeepArchiveOperator;
-            if ((self.keep_archive.?.operand orelse return error.MissingKeepArchiveOperand) < 0)
-                return error.KeepArhiveOpenrandSizeError;
+            _ = std.meta.stringToEnum(enums.IfConditions, self.keep_archive.?.condition orelse return TaseNativeErrors.MissingKeepArchiveCondition) orelse return TaseNativeErrors.InvalidRotateKeepArchiveCondition;
+            _ = std.meta.stringToEnum(enums.Operators, self.keep_archive.?.operator orelse return TaseNativeErrors.MissingKeepArchiveOperator) orelse return TaseNativeErrors.InvalidRotateKeepArchiveOperator;
+            if ((self.keep_archive.?.operand orelse return TaseNativeErrors.MissingKeepArchiveOperand) < 0)
+                return TaseNativeErrors.KeepArhiveOpenrandSizeError;
         }
 
         if (self.compress != null and self.compress.?) {
             if (self.compression_level.? < 4 or self.compression_level.? > 9)
-                return error.CompressionLevelInvalid;
+                return TaseNativeErrors.CompressionLevelInvalid;
 
-            switch (std.meta.stringToEnum(enums.CompressType, self.compression_type.?) orelse return error.InvalidCompressioType) {
+            switch (std.meta.stringToEnum(enums.CompressType, self.compression_type.?) orelse return TaseNativeErrors.InvalidCompressioType) {
                 .gzip,
                 => {
                     return;
@@ -180,12 +181,12 @@ pub const LogAction = struct {
     }
 
     fn checkMandatoryFieldsForTruncate(self: LogAction) !void {
-        _ = self.truncate_settings orelse return error.TruncateRequiresSettings;
-        _ = std.meta.stringToEnum(enums.TruncateBy, self.truncate_settings.?.by orelse return error.MissingTruncateBy) orelse return error.InvalidTruncateByFieldValue;
-        _ = std.meta.stringToEnum(enums.TruncateFrom, self.truncate_settings.?.from orelse return error.MissingTruncateFrom) orelse return error.InvalidTruncateFromFieldValue;
+        _ = self.truncate_settings orelse return TaseNativeErrors.TruncateRequiresSettings;
+        _ = std.meta.stringToEnum(enums.TruncateBy, self.truncate_settings.?.by orelse return TaseNativeErrors.MissingTruncateBy) orelse return TaseNativeErrors.InvalidTruncateByFieldValue;
+        _ = std.meta.stringToEnum(enums.TruncateFrom, self.truncate_settings.?.from orelse return TaseNativeErrors.MissingTruncateFrom) orelse return TaseNativeErrors.InvalidTruncateFromFieldValue;
 
-        if ((self.truncate_settings.?.size orelse return error.MissingTruncateSize) < 1)
-            return error.TruncateSizeError;
+        if ((self.truncate_settings.?.size orelse return TaseNativeErrors.MissingTruncateSize) < 1)
+            return TaseNativeErrors.TruncateSizeError;
     }
 };
 
@@ -240,9 +241,9 @@ pub const argOpts = struct {
     };
 };
 test "isValidYamlTest" {
-    var as: [2][]const u8 = .{ "test", "local" };
-    var as_undefined: [2][]const u8 = .{ "test", "test2" };
-    var agents: [1]Agents = .{
+    var as = [_][]const u8{ "test", "local" };
+    var as_undefined = [_][]const u8{ "test", "test2" };
+    var agents = [_]Agents{
         Agents{
             .hostname = "remotehost",
             .name = "test",
@@ -250,7 +251,7 @@ test "isValidYamlTest" {
             .secret = "78asd6n7a8sd6hsa8a978ns6md78as6d",
         },
     };
-    var agent_name_local: [2]Agents = .{
+    var agent_name_local = [_]Agents{
         Agents{
             .hostname = "remotehost",
             .name = "local",
@@ -264,7 +265,7 @@ test "isValidYamlTest" {
             .secret = "78asd6n7a8sd6hsa8a978ns6md78as6d",
         },
     };
-    var duplicate_agents_hostname: [2]Agents = .{
+    var duplicate_agents_hostname = [_]Agents{
         Agents{
             .hostname = "remotehost",
             .name = "test",
@@ -278,7 +279,7 @@ test "isValidYamlTest" {
             .secret = "98asj76d89as67d897sa67s",
         },
     };
-    var duplicate_agents_name: [2]Agents = .{
+    var duplicate_agents_name = [_]Agents{
         Agents{
             .hostname = "remotehost",
             .name = "test",
@@ -292,7 +293,7 @@ test "isValidYamlTest" {
             .secret = "98asj76d89as67d897sa67s",
         },
     };
-    var configs: [1]LogConf = .{
+    var configs = [_]LogConf{
         LogConf{
             .app_name = "test",
             .cron_expression = "5 4 * * *",
@@ -309,7 +310,7 @@ test "isValidYamlTest" {
             },
         },
     };
-    var configs_undefined_agent_name: [1]LogConf = .{
+    var configs_undefined_agent_name = [_]LogConf{
         LogConf{
             .app_name = "test",
             .cron_expression = "5 4 * * *",
@@ -331,7 +332,7 @@ test "isValidYamlTest" {
         should_error: bool,
         result: ?anyerror = null,
     };
-    var tcs: [5]TestCase = .{
+    var tcs = [_]TestCase{
         .{
             .yaml_cfg = YamlCfgContainer{
                 .agents = &agents,
@@ -357,7 +358,7 @@ test "isValidYamlTest" {
                 .configs = &configs_undefined_agent_name,
             },
             .should_error = true,
-            .result = error.UndefinedAgent,
+            .result = TaseNativeErrors.UndefinedAgent,
         },
         .{
             .yaml_cfg = YamlCfgContainer{
@@ -371,7 +372,7 @@ test "isValidYamlTest" {
                 .configs = &configs,
             },
             .should_error = true,
-            .result = error.DuplicateAgentHostName,
+            .result = TaseNativeErrors.DuplicateAgentHostName,
         },
         .{
             .yaml_cfg = YamlCfgContainer{
@@ -385,7 +386,7 @@ test "isValidYamlTest" {
                 .configs = &configs,
             },
             .should_error = true,
-            .result = error.DuplicateAgentName,
+            .result = TaseNativeErrors.DuplicateAgentName,
         },
         .{
             .yaml_cfg = YamlCfgContainer{
@@ -399,7 +400,7 @@ test "isValidYamlTest" {
                 .configs = &configs,
             },
             .should_error = true,
-            .result = error.LocalAgentNameIsReserved,
+            .result = TaseNativeErrors.LocalAgentNameIsReserved,
         },
     };
 
@@ -411,13 +412,13 @@ test "isValidYamlTest" {
     }
 }
 test "isConfigValidTest" {
-    var a3: [3][]const u8 = .{ "Hello", "Foo", "Bar" };
+    var a3 = [_][]const u8{ "Hello", "Foo", "Bar" };
     const TestCase = struct {
         log_conf: LogConf,
         should_error: bool,
         result: ?anyerror = null,
     };
-    var tcs: [4]TestCase = .{
+    var tcs = [_]TestCase{
         .{
             .log_conf = LogConf{
                 .app_name = "test",
@@ -444,7 +445,7 @@ test "isConfigValidTest" {
                 },
             },
             .should_error = true,
-            .result = error.IfIsEmpty,
+            .result = TaseNativeErrors.IfIsEmpty,
         },
         .{
             .log_conf = LogConf{
@@ -492,7 +493,7 @@ test "LogActionDupeTest" {
     const TestCase = struct {
         log_action: LogAction,
     };
-    var tcs: [2]TestCase = .{
+    var tcs = [_]TestCase{
         .{
             .log_action = LogAction{
                 .strategy = "non-valid-strategy",
@@ -533,7 +534,7 @@ test "checkActionValidityTest" {
         should_error: bool,
         result: ?anyerror = null,
     };
-    var tcs: [10]TestCase = .{
+    var tcs = [_]TestCase{
         .{
             .log_action = LogAction{
                 .strategy = "non-valid-strategy",
@@ -544,12 +545,12 @@ test "checkActionValidityTest" {
                 },
             },
             .should_error = true,
-            .result = error.InvalidStrategy,
+            .result = TaseNativeErrors.InvalidStrategy,
         },
         .{
             .log_action = LogAction{ .strategy = "delete" },
             .should_error = true,
-            .result = error.IfIsEmpty,
+            .result = TaseNativeErrors.IfIsEmpty,
         },
         .{
             .log_action = LogAction{
@@ -560,7 +561,7 @@ test "checkActionValidityTest" {
                 },
             },
             .should_error = true,
-            .result = error.MissingIfOperand,
+            .result = TaseNativeErrors.MissingIfOperand,
         },
         .{
             .log_action = LogAction{
@@ -568,7 +569,7 @@ test "checkActionValidityTest" {
                 .@"if" = IfOperation{ .condition = "size", .operator = ">", .operand = -1 },
             },
             .should_error = true,
-            .result = error.IfOperandSizeError,
+            .result = TaseNativeErrors.IfOperandSizeError,
         },
         .{
             .log_action = LogAction{
@@ -579,7 +580,7 @@ test "checkActionValidityTest" {
                 },
             },
             .should_error = true,
-            .result = error.MissingIfOperator,
+            .result = TaseNativeErrors.MissingIfOperator,
         },
         .{
             .log_action = LogAction{
@@ -590,7 +591,7 @@ test "checkActionValidityTest" {
                 },
             },
             .should_error = true,
-            .result = error.MissingIfCondition,
+            .result = TaseNativeErrors.MissingIfCondition,
         },
         .{
             .log_action = LogAction{
@@ -624,7 +625,7 @@ test "checkActionValidityTest" {
                 },
             },
             .should_error = true,
-            .result = error.TruncateRequiresSettings,
+            .result = TaseNativeErrors.TruncateRequiresSettings,
         },
         .{
             .log_action = LogAction{
@@ -658,7 +659,7 @@ test "checkMandatoryFieldsForRotateTest" {
         should_error: bool,
         result: ?anyerror = null,
     };
-    var tcs: [10]TestCase = .{
+    var tcs = [_]TestCase{
         .{
             .log_action = LogAction{
                 .strategy = "rotate",
@@ -684,7 +685,7 @@ test "checkMandatoryFieldsForRotateTest" {
                 },
             },
             .should_error = true,
-            .result = error.MissingKeepArchiveOperator,
+            .result = TaseNativeErrors.MissingKeepArchiveOperator,
         },
         .{
             .log_action = LogAction{
@@ -700,7 +701,7 @@ test "checkMandatoryFieldsForRotateTest" {
                 },
             },
             .should_error = true,
-            .result = error.MissingKeepArchiveOperand,
+            .result = TaseNativeErrors.MissingKeepArchiveOperand,
         },
         .{
             .log_action = LogAction{
@@ -717,7 +718,7 @@ test "checkMandatoryFieldsForRotateTest" {
                 },
             },
             .should_error = true,
-            .result = error.KeepArhiveOpenrandSizeError,
+            .result = TaseNativeErrors.KeepArhiveOpenrandSizeError,
         },
         .{
             .log_action = LogAction{
@@ -733,7 +734,7 @@ test "checkMandatoryFieldsForRotateTest" {
                 },
             },
             .should_error = true,
-            .result = error.MissingKeepArchiveCondition,
+            .result = TaseNativeErrors.MissingKeepArchiveCondition,
         },
         .{
             .log_action = LogAction{
@@ -750,7 +751,7 @@ test "checkMandatoryFieldsForRotateTest" {
                 },
             },
             .should_error = true,
-            .result = error.InvalidRotateKeepArchiveCondition,
+            .result = TaseNativeErrors.InvalidRotateKeepArchiveCondition,
         },
         .{
             .log_action = LogAction{
@@ -767,7 +768,7 @@ test "checkMandatoryFieldsForRotateTest" {
                 },
             },
             .should_error = true,
-            .result = error.InvalidRotateKeepArchiveOperator,
+            .result = TaseNativeErrors.InvalidRotateKeepArchiveOperator,
         },
         .{
             .log_action = LogAction{
@@ -786,36 +787,44 @@ test "checkMandatoryFieldsForRotateTest" {
             },
             .should_error = false,
         },
-        .{ .log_action = LogAction{
-            .strategy = "rotate",
-            .@"if" = IfOperation{
-                .condition = "size",
-                .operand = 2,
-                .operator = ">",
+        .{
+            .log_action = LogAction{
+                .strategy = "rotate",
+                .@"if" = IfOperation{
+                    .condition = "size",
+                    .operand = 2,
+                    .operator = ">",
+                },
+                .keep_archive = IfOperation{
+                    .condition = "days",
+                    .operand = 2,
+                    .operator = ">",
+                },
+                .compress = true,
+                .compression_type = "invalid-compression-type",
             },
-            .keep_archive = IfOperation{
-                .condition = "days",
-                .operand = 2,
-                .operator = ">",
+            .should_error = true,
+            .result = TaseNativeErrors.InvalidCompressioType,
+        },
+        .{
+            .log_action = LogAction{
+                .strategy = "rotate",
+                .@"if" = IfOperation{
+                    .condition = "size",
+                    .operand = 2,
+                    .operator = ">",
+                },
+                .keep_archive = IfOperation{
+                    .condition = "days",
+                    .operand = 2,
+                    .operator = ">",
+                },
+                .compress = true,
+                .compression_level = 2,
             },
-            .compress = true,
-            .compression_type = "invalid-compression-type",
-        }, .should_error = true, .result = error.InvalidCompressioType },
-        .{ .log_action = LogAction{
-            .strategy = "rotate",
-            .@"if" = IfOperation{
-                .condition = "size",
-                .operand = 2,
-                .operator = ">",
-            },
-            .keep_archive = IfOperation{
-                .condition = "days",
-                .operand = 2,
-                .operator = ">",
-            },
-            .compress = true,
-            .compression_level = 2,
-        }, .should_error = true, .result = error.CompressionLevelInvalid },
+            .should_error = true,
+            .result = TaseNativeErrors.CompressionLevelInvalid,
+        },
     };
 
     for (&tcs) |case| {
@@ -832,7 +841,7 @@ test "checkMandatoryFieldsForTruncateTest" {
         should_error: bool,
         result: ?anyerror = null,
     };
-    var tcs: [6]TestCase = .{
+    var tcs = [_]TestCase{
         .{
             .log_action = LogAction{
                 .strategy = "truncate",
@@ -843,7 +852,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 },
             },
             .should_error = true,
-            .result = error.TruncateRequiresSettings,
+            .result = TaseNativeErrors.TruncateRequiresSettings,
         },
         .{
             .log_action = LogAction{
@@ -859,7 +868,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 },
             },
             .should_error = true,
-            .result = error.MissingTruncateBy,
+            .result = TaseNativeErrors.MissingTruncateBy,
         },
         .{
             .log_action = LogAction{
@@ -875,7 +884,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 },
             },
             .should_error = true,
-            .result = error.MissingTruncateFrom,
+            .result = TaseNativeErrors.MissingTruncateFrom,
         },
         .{
             .log_action = LogAction{
@@ -891,7 +900,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 },
             },
             .should_error = true,
-            .result = error.MissingTruncateSize,
+            .result = TaseNativeErrors.MissingTruncateSize,
         },
         .{
             .log_action = LogAction{
@@ -908,7 +917,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 },
             },
             .should_error = true,
-            .result = error.TruncateSizeError,
+            .result = TaseNativeErrors.TruncateSizeError,
         },
         .{
             .log_action = LogAction{
