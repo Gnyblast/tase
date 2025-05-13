@@ -28,6 +28,7 @@ pub const Server = struct {
     setAgentsFn: *const fn (ptr: *anyopaque, agents: []configs.Agent) void,
     destroyFn: *const fn (ptr: *anyopaque, allocator: Allocator) void,
 
+    //test-no-cover-start
     pub fn startAgentServer(self: Server) !void {
         return self.startAgentServerFn(self.ptr);
     }
@@ -39,6 +40,7 @@ pub const Server = struct {
     pub fn setAgents(self: Server, agents: []configs.Agent) void {
         self.setAgentsFn(self.ptr, agents);
     }
+    //test-no-cover-end
 
     pub fn destroy(self: Server, allocator: Allocator) void {
         return self.destroyFn(self.ptr, allocator);

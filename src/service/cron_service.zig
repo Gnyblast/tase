@@ -27,6 +27,7 @@ pub const CronService = struct {
         };
     }
 
+    //test-no-cover-start
     pub fn start(self: CronService) void {
         var da: std.heap.DebugAllocator(.{}) = .init;
         defer {
@@ -64,6 +65,7 @@ pub const CronService = struct {
             std.time.sleep(std.time.ns_per_min);
         }
     }
+    //test-no-cover-end
 
     fn isItTime(self: CronService, app_name: []const u8, cron_expression: []const u8) !bool {
         std.log.scoped(.cron).debug("processing cron {s}: {s}", .{ app_name, cron_expression });
@@ -102,6 +104,7 @@ pub const CronService = struct {
         return TaseNativeErrors.NoAgentsFound;
     }
 
+    //test-no-cover-start
     fn processForAgent(self: CronService, allocator: Allocator, cfg: configs.LogConf, agent: configs.Agent) void {
         if (std.ascii.eqlIgnoreCase(agent.name, configs.LOCAL)) {
             self.localRun(allocator, cfg);
@@ -110,7 +113,9 @@ pub const CronService = struct {
 
         self.remoteRun(allocator, cfg, agent);
     }
+    //test-no-cover-end
 
+    //test-no-cover-start
     fn localRun(self: CronService, allocator: Allocator, cfg: configs.LogConf) void {
         const logs_service = LogService.create(
             allocator,
@@ -130,7 +135,9 @@ pub const CronService = struct {
         thread.detach();
         return;
     }
+    //test-no-cover-end
 
+    //test-no-cover-start
     fn remoteRun(self: CronService, allocator: Allocator, cfg: configs.LogConf, agent: configs.Agent) void {
         const tcp_client = clientFactory.getClient(allocator, self.server_type, agent.hostname, agent.port, agent.secret) catch |err| {
             const err_msg = errorFactory.getLogMessageByErr(allocator, err);
@@ -146,6 +153,7 @@ pub const CronService = struct {
             return;
         };
     }
+    //test-no-cover-end
 
     fn validateCronExpression(confs: []configs.LogConf) !void {
         for (confs) |cfg| {

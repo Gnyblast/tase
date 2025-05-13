@@ -114,6 +114,7 @@ pub fn build(b: *std.Build) void {
     const run_cover = b.addSystemCommand(&.{
         "kcov",
         "--clean",
+        "--exclude-region=//test-no-cover-start://test-no-cover-end",
         "--include-path=src/",
         b.pathJoin(&.{ b.install_path, "cover" }),
     });

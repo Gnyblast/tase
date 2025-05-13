@@ -26,10 +26,11 @@ pub const Client = struct {
     ptr: *anyopaque,
     sendLogConfFn: *const fn (ptr: *anyopaque, allocator: Allocator, cfg: configs.LogConf, timezone: datetime.Timezone) anyerror!void,
     destroyFn: *const fn (ptr: *anyopaque, allocator: Allocator) void,
-
+    //test-no-cover-start
     pub fn sendLogConf(self: Client, allocator: Allocator, cfg: configs.LogConf, timezone: datetime.Timezone) !void {
         return self.sendLogConfFn(self.ptr, allocator, cfg, timezone);
     }
+    //test-no-cover-end
 
     pub fn destroy(self: Client, allocator: Allocator) void {
         return self.destroyFn(self.ptr, allocator);

@@ -76,6 +76,7 @@ pub const TCPServer = struct {
         return listener;
     }
 
+    //test-no-cover-start
     fn startAgentServer(ptr: *anyopaque) !void {
         const self: *TCPServer = @ptrCast(@alignCast(ptr));
 
@@ -153,7 +154,9 @@ pub const TCPServer = struct {
             thread.detach();
         }
     }
+    //test-no-cover-end
 
+    //test-no-cover-start
     fn startMasterServer(ptr: *anyopaque) !void {
         const self: *TCPServer = @ptrCast(@alignCast(ptr));
 
@@ -216,6 +219,7 @@ pub const TCPServer = struct {
         //TODO: now decode and verify the message with correct secret used
         std.log.info("{s}", .{secret});
     }
+    //test-no-cover-end
 
     fn getAgentSecretByHostName(self: *TCPServer, hostname: []const u8) ![]const u8 {
         for (self.agents.?) |agent| {
@@ -234,6 +238,11 @@ test "initTest" {
     try testing.expectEqual(@as(u16, 8080), server.port);
     try testing.expectEqualStrings("supersecret", server.secret);
     try testing.expect(server.agents == null);
+}
+
+test "createTCPServerTest" {
+    const server = TCPServer.init("127.0.0.1", 8080, "supersecret");
+    _ = try server.createTCPServer(testing.allocator);
 }
 
 test "setAgentsTest" {

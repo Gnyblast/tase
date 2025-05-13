@@ -34,6 +34,7 @@ pub const TCPClient = struct {
         allocator.destroy(self);
     }
 
+    //test-no-cover-start
     fn sendLogConf(ptr: *anyopaque, allocator: Allocator, cfg: configs.LogConf, timezone: datetime.Timezone) !void {
         const self: *TCPClient = @ptrCast(@alignCast(ptr));
 
@@ -58,4 +59,5 @@ pub const TCPClient = struct {
         //TODO check success
         _ = try posix.write(socket, encoded);
     }
+    //test-no-cover-end
 };
