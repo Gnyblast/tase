@@ -58,11 +58,14 @@ pub fn log(
         std.debug.print("Failed to get a timestamp: {}\n", .{err});
         return;
     };
-
     defer allocator.free(time_stamp);
-    const prefix = "[{s}] " ++ comptime helpers.toUpperCase(message_log_level.asText()) ++ " " ++ "(" ++ @tagName(scope) ++ ") ";
+    const levelToUpper = helpers.toUpperCase(allocator, message_log_level.asText()) catch |err| {
+        std.debug.print("Failed to make log level uppercase: {}\n", .{err});
+        return;
+    };
+    defer allocator.free(levelToUpper);
 
-    const message = std.fmt.allocPrint(allocator, prefix ++ format ++ "\n", .{time_stamp} ++ args) catch |err| {
+    const message = std.fmt.allocPrint(allocator, "[{s}] {s}" ++ " " ++ "(" ++ @tagName(scope) ++ ") " ++ format ++ "\n", .{ time_stamp, levelToUpper } ++ args) catch |err| {
         std.debug.print("Failed to format log message with args: {}\n", .{err});
         return;
     };

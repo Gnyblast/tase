@@ -28,7 +28,7 @@ pub const TCPServer = struct {
     host: []const u8,
     port: u16,
     secret: []const u8,
-    agents: ?[]configs.Agents,
+    agents: ?[]configs.Agent,
 
     pub fn init(host: []const u8, port: u16, secret: []const u8) TCPServer {
         return TCPServer{
@@ -39,7 +39,7 @@ pub const TCPServer = struct {
         };
     }
 
-    fn setAgents(ptr: *anyopaque, agents: []configs.Agents) void {
+    fn setAgents(ptr: *anyopaque, agents: []configs.Agent) void {
         const self: *TCPServer = @ptrCast(@alignCast(ptr));
         self.agents = agents;
     }
@@ -134,7 +134,7 @@ pub const TCPServer = struct {
                 continue;
             }
 
-            const logsService = LogService.create(
+            const logs_service = LogService.create(
                 logs_alloc,
                 decoded.claims.timezone,
                 decoded.claims.job.logs_dir,
@@ -145,7 +145,7 @@ pub const TCPServer = struct {
                 continue;
             };
 
-            const thread = std.Thread.spawn(.{}, LogService.runAndDestroy, .{logsService}) catch |err| {
+            const thread = std.Thread.spawn(.{}, LogService.runAndDestroy, .{logs_service}) catch |err| {
                 std.log.scoped(.cron).err("Error while running local task on a thread: {}", .{err});
                 continue;
             };

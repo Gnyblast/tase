@@ -1,4 +1,5 @@
 const std = @import("std");
+const testing = std.testing;
 
 pub const TaseNativeErrors = error{
     DuplicateAgentName,
@@ -205,3 +206,32 @@ pub const errors = [_]TaseError{
         .message = "No matching agents found",
     },
 };
+
+test "getLogMessageByErrTest" {
+    const TestCase = struct {
+        err: anyerror,
+        expected: []const u8,
+        is_alloc: bool,
+    };
+
+    const tcs = [_]TestCase{
+        .{
+            .err = TaseNativeErrors.NoAgentsFound,
+            .expected = "No matching agents found",
+            .is_alloc = false,
+        },
+        .{
+            .err = error.TestError,
+            .expected = "error: error.TestError",
+            .is_alloc = true,
+        },
+    };
+
+    for (&tcs) |tc| {
+        var allocator = testing.allocator;
+        const err_msg = getLogMessageByErr(allocator, tc.err);
+        defer if (err_msg.allocated) allocator.free(err_msg.message);
+        try testing.expectEqualDeep(tc.expected, err_msg.message);
+        try testing.expectEqual(tc.is_alloc, err_msg.allocated);
+    }
+}

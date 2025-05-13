@@ -1,4 +1,5 @@
 const std = @import("std");
+const testing = std.testing;
 const tcp = @import("../server/tcp.zig");
 const configs = @import("../app/config.zig");
 
@@ -24,7 +25,7 @@ pub const Server = struct {
     ptr: *anyopaque,
     startAgentServerFn: *const fn (ptr: *anyopaque) anyerror!void,
     startMasterServerFn: *const fn (ptr: *anyopaque) anyerror!void,
-    setAgentsFn: *const fn (ptr: *anyopaque, agents: []configs.Agents) void,
+    setAgentsFn: *const fn (ptr: *anyopaque, agents: []configs.Agent) void,
     destroyFn: *const fn (ptr: *anyopaque, allocator: Allocator) void,
 
     pub fn startAgentServer(self: Server) !void {
@@ -35,7 +36,7 @@ pub const Server = struct {
         return self.startMasterServerFn(self.ptr);
     }
 
-    pub fn setAgents(self: Server, agents: []configs.Agents) void {
+    pub fn setAgents(self: Server, agents: []configs.Agent) void {
         self.setAgentsFn(self.ptr, agents);
     }
 
@@ -43,3 +44,12 @@ pub const Server = struct {
         return self.destroyFn(self.ptr, allocator);
     }
 };
+
+test "getServerTest" {
+    const allocator = testing.allocator;
+    const server = try getServer(allocator, "tcp", "localhost", 7424, "test");
+    defer server.destroy(allocator);
+
+    const server_err = getServer(testing.allocator, "tls", "localhost", 7424, "test");
+    try testing.expectError(TaseNativeErrors.InvalidServerType, server_err);
+}

@@ -1,27 +1,16 @@
 const std = @import("std");
+const testing = std.testing;
 const Allocator = std.mem.Allocator;
 
-pub fn toUpperCase(comptime string: []const u8) []u8 {
-    var u_string: [string.len]u8 = std.mem.zeroes([string.len]u8);
+pub fn toUpperCase(allocator: Allocator, string: []const u8) ![]u8 {
+    var u_string = try allocator.alloc(u8, string.len);
     for (string, 0..) |s, i| {
-        const l_s = std.ascii.toUpper(s);
-        u_string[i] = l_s;
+        u_string[i] = std.ascii.toUpper(s);
     }
-
-    return &u_string;
+    return u_string;
 }
 
-pub fn toLowerCase(comptime string: []const u8) []u8 {
-    var l_string: [string.len]u8 = std.mem.zeroes([string.len]u8);
-    for (string, 0..) |s, i| {
-        const l_s = std.ascii.toLower(s);
-        l_string[i] = l_s;
-    }
-
-    return &l_string;
-}
-
-pub fn toLowerCaseAlloc(allocator: Allocator, input: []const u8) ![]u8 {
+pub fn toLowerCase(allocator: Allocator, input: []const u8) ![]u8 {
     const result = try allocator.alloc(u8, input.len);
     for (input, 0..) |ch, i| {
         result[i] = std.ascii.toLower(ch);
@@ -68,4 +57,49 @@ pub fn printApplicationInfo(run_type: []const u8, version: []const u8, host: []c
     ;
 
     std.log.info("\n{s}\nType: {s}\nVersion: v{s}\nListening at {s}:{d}", .{ ascii, run_type, version, host, port });
+}
+
+test "toUpperCaseTest" {
+    const s: []const u8 = "aaaaaa";
+    const expected: []const u8 = "AAAAAA";
+
+    var allocator = testing.allocator;
+    const actual = try toUpperCase(allocator, s);
+    defer allocator.free(actual);
+    try testing.expectEqualDeep(expected, actual);
+}
+
+test "toLowerCaseTest" {
+    const s: []const u8 = "AAAAAA";
+    const expected: []const u8 = "aaaaaa";
+
+    var allocator = testing.allocator;
+    const actual = try toLowerCase(allocator, s);
+    defer allocator.free(actual);
+    try testing.expectEqualDeep(expected, actual);
+}
+
+test "concatStringtest" {
+    const a: []const u8 = "AAAAAA";
+    const b: []const u8 = "aaaaaa";
+    const expected: []const u8 = "AAAAAAaaaaaa";
+
+    var allocator = testing.allocator;
+    const actual = try concatString(allocator, a, b);
+    defer allocator.free(actual);
+    try testing.expectEqualDeep(expected, actual);
+}
+
+test "arrayContainsTest" {
+    var haystack: [3][]const u8 = .{ "test", "test1", "test2" };
+    const needle = "test1";
+
+    const expected = true;
+    const actual = arrayContains(u8, &haystack, needle);
+    try testing.expectEqual(expected, actual);
+}
+
+test "bytesToMegabytesTest" {
+    const actual = bytesToMegabytes(71263712);
+    try testing.expectEqual(6.796237182617188e1, actual);
 }

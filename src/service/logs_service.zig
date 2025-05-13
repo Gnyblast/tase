@@ -58,6 +58,7 @@ pub const LogService = struct {
         self.run();
     }
 
+    //TODO implement error factory
     pub fn run(self: LogService) void {
         self.log_action.checkActionValidity() catch |err| {
             std.log.scoped(.server).err("Error running logs service: {}", .{err});

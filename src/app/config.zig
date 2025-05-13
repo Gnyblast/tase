@@ -11,7 +11,7 @@ pub const LOCAL = "local";
 
 pub const YamlCfgContainer = struct {
     configs: []LogConf,
-    agents: ?[]Agents,
+    agents: ?[]Agent,
     server: MasterServerConf,
 
     pub fn isValidYaml(self: YamlCfgContainer, allocator: Allocator) !void {
@@ -22,12 +22,12 @@ pub const YamlCfgContainer = struct {
 
         if (self.agents != null) {
             for (self.agents.?) |a| {
-                const agent_name_lower = try utils.toLowerCaseAlloc(arena.allocator(), a.name);
+                const agent_name_lower = try utils.toLowerCase(arena.allocator(), a.name);
                 if (utils.arrayContains(u8, agent_names.items, agent_name_lower)) {
                     return TaseNativeErrors.DuplicateAgentName;
                 }
 
-                const hostname_lower = try utils.toLowerCaseAlloc(arena.allocator(), a.hostname);
+                const hostname_lower = try utils.toLowerCase(arena.allocator(), a.hostname);
                 if (utils.arrayContains(u8, agent_host_names.items, hostname_lower)) {
                     return TaseNativeErrors.DuplicateAgentHostName;
                 }
@@ -44,7 +44,7 @@ pub const YamlCfgContainer = struct {
             try c.isConfigValid(allocator);
 
             for (c.run_agent_names) |a| {
-                const agent_name_lower = try utils.toLowerCaseAlloc(arena.allocator(), a);
+                const agent_name_lower = try utils.toLowerCase(arena.allocator(), a);
                 if (std.ascii.eqlIgnoreCase(agent_name_lower, LOCAL))
                     continue;
 
@@ -58,7 +58,7 @@ pub const YamlCfgContainer = struct {
     }
 };
 
-pub const Agents = struct {
+pub const Agent = struct {
     name: []const u8,
     hostname: []const u8,
     port: u16,
@@ -243,50 +243,50 @@ pub const argOpts = struct {
 test "isValidYamlTest" {
     var as = [_][]const u8{ "test", "local" };
     var as_undefined = [_][]const u8{ "test", "test2" };
-    var agents = [_]Agents{
-        Agents{
+    var agents = [_]Agent{
+        Agent{
             .hostname = "remotehost",
             .name = "test",
             .port = 7424,
             .secret = "78asd6n7a8sd6hsa8a978ns6md78as6d",
         },
     };
-    var agent_name_local = [_]Agents{
-        Agents{
+    var agent_name_local = [_]Agent{
+        Agent{
             .hostname = "remotehost",
             .name = "local",
             .port = 7424,
             .secret = "78asd6n7a8sd6hsa8a978ns6md78as6d",
         },
-        Agents{
+        Agent{
             .hostname = "testhost",
             .name = "test",
             .port = 7424,
             .secret = "78asd6n7a8sd6hsa8a978ns6md78as6d",
         },
     };
-    var duplicate_agents_hostname = [_]Agents{
-        Agents{
+    var duplicate_agents_hostname = [_]Agent{
+        Agent{
             .hostname = "remotehost",
             .name = "test",
             .port = 7424,
             .secret = "78asd6n7a8sd6hsa8a978ns6md78as6d",
         },
-        Agents{
+        Agent{
             .hostname = "remotehost",
             .name = "asdsa",
             .port = 1232,
             .secret = "98asj76d89as67d897sa67s",
         },
     };
-    var duplicate_agents_name = [_]Agents{
-        Agents{
+    var duplicate_agents_name = [_]Agent{
+        Agent{
             .hostname = "remotehost",
             .name = "test",
             .port = 7424,
             .secret = "78asd6n7a8sd6hsa8a978ns6md78as6d",
         },
-        Agents{
+        Agent{
             .hostname = "sometotherhost",
             .name = "test",
             .port = 1232,

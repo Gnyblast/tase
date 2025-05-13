@@ -1,4 +1,5 @@
 const std = @import("std");
+const testing = std.testing;
 const yaml = @import("yaml");
 const configs = @import("../app/config.zig");
 
@@ -35,3 +36,9 @@ pub const YamlParseService = struct {
         return try loaded.parse(self.arena, configs.YamlCfgContainer);
     }
 };
+
+test "parseTest" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    _ = try YamlParseService.parse(arena.allocator(), "./app.yaml");
+}

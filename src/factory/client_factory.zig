@@ -1,4 +1,5 @@
 const std = @import("std");
+const testing = std.testing;
 const tcp = @import("../client/tcp.zig");
 const configs = @import("../app/config.zig");
 const datetime = @import("datetime").datetime;
@@ -34,3 +35,12 @@ pub const Client = struct {
         return self.destroyFn(self.ptr, allocator);
     }
 };
+
+test "getClientTest" {
+    const allocator = testing.allocator;
+    const client = try getClient(allocator, "tcp", "localhost", 7424, "test");
+    defer client.destroy(allocator);
+
+    const client_err = getClient(testing.allocator, "tls", "localhost", 7424, "test");
+    try testing.expectError(TaseNativeErrors.InvalidServerType, client_err);
+}
