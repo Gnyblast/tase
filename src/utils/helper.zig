@@ -44,6 +44,7 @@ pub fn dupeOptString(allocator: Allocator, value: ?[]const u8) !?[]const u8 {
     return if (value) |v| try allocator.dupe(u8, v) else null;
 }
 
+//test-no-cover-start
 pub fn printApplicationInfo(run_type: []const u8, version: []const u8, host: []const u8, port: u16) void {
     const ascii =
         \\==================================
@@ -58,6 +59,7 @@ pub fn printApplicationInfo(run_type: []const u8, version: []const u8, host: []c
 
     std.log.info("\n{s}\nType: {s}\nVersion: v{s}\nListening at {s}:{d}", .{ ascii, run_type, version, host, port });
 }
+//test-no-cover-end
 
 test "toUpperCaseTest" {
     const s: []const u8 = "aaaaaa";
