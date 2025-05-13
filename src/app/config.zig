@@ -329,8 +329,7 @@ test "isValidYamlTest" {
     };
     const TestCase = struct {
         yaml_cfg: YamlCfgContainer,
-        should_error: bool,
-        result: ?anyerror = null,
+        err: ?anyerror = null,
     };
     var tcs = [_]TestCase{
         .{
@@ -344,7 +343,6 @@ test "isValidYamlTest" {
                 },
                 .configs = &configs,
             },
-            .should_error = false,
         },
         .{
             .yaml_cfg = YamlCfgContainer{
@@ -357,8 +355,7 @@ test "isValidYamlTest" {
                 },
                 .configs = &configs_undefined_agent_name,
             },
-            .should_error = true,
-            .result = TaseNativeErrors.UndefinedAgent,
+            .err = TaseNativeErrors.UndefinedAgent,
         },
         .{
             .yaml_cfg = YamlCfgContainer{
@@ -371,8 +368,7 @@ test "isValidYamlTest" {
                 },
                 .configs = &configs,
             },
-            .should_error = true,
-            .result = TaseNativeErrors.DuplicateAgentHostName,
+            .err = TaseNativeErrors.DuplicateAgentHostName,
         },
         .{
             .yaml_cfg = YamlCfgContainer{
@@ -385,8 +381,7 @@ test "isValidYamlTest" {
                 },
                 .configs = &configs,
             },
-            .should_error = true,
-            .result = TaseNativeErrors.DuplicateAgentName,
+            .err = TaseNativeErrors.DuplicateAgentName,
         },
         .{
             .yaml_cfg = YamlCfgContainer{
@@ -399,14 +394,13 @@ test "isValidYamlTest" {
                 },
                 .configs = &configs,
             },
-            .should_error = true,
-            .result = TaseNativeErrors.LocalAgentNameIsReserved,
+            .err = TaseNativeErrors.LocalAgentNameIsReserved,
         },
     };
 
     for (&tcs) |case| {
-        if (case.should_error)
-            try testing.expectError(case.result.?, case.yaml_cfg.isValidYaml(testing.allocator))
+        if (case.err != null)
+            try testing.expectError(case.err.?, case.yaml_cfg.isValidYaml(testing.allocator))
         else
             try case.yaml_cfg.isValidYaml(testing.allocator);
     }
@@ -415,8 +409,7 @@ test "isConfigValidTest" {
     var a3 = [_][]const u8{ "Hello", "Foo", "Bar" };
     const TestCase = struct {
         log_conf: LogConf,
-        should_error: bool,
-        result: ?anyerror = null,
+        err: ?anyerror = null,
     };
     var tcs = [_]TestCase{
         .{
@@ -430,8 +423,7 @@ test "isConfigValidTest" {
                     .strategy = "truncate",
                 },
             },
-            .should_error = true,
-            .result = error.InvalidLength,
+            .err = error.InvalidLength,
         },
         .{
             .log_conf = LogConf{
@@ -444,8 +436,7 @@ test "isConfigValidTest" {
                     .strategy = "truncate",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.IfIsEmpty,
+            .err = TaseNativeErrors.IfIsEmpty,
         },
         .{
             .log_conf = LogConf{
@@ -458,8 +449,7 @@ test "isConfigValidTest" {
                     .strategy = "truncate",
                 },
             },
-            .should_error = true,
-            .result = error.compile,
+            .err = error.compile,
         },
         .{
             .log_conf = LogConf{
@@ -477,13 +467,12 @@ test "isConfigValidTest" {
                     },
                 },
             },
-            .should_error = false,
         },
     };
 
     for (&tcs) |case| {
-        if (case.should_error)
-            try testing.expectError(case.result.?, case.log_conf.isConfigValid(testing.allocator))
+        if (case.err != null)
+            try testing.expectError(case.err.?, case.log_conf.isConfigValid(testing.allocator))
         else
             try case.log_conf.isConfigValid(testing.allocator);
     }
@@ -531,8 +520,7 @@ test "LogActionDupeTest" {
 test "checkActionValidityTest" {
     const TestCase = struct {
         log_action: LogAction,
-        should_error: bool,
-        result: ?anyerror = null,
+        err: ?anyerror = null,
     };
     var tcs = [_]TestCase{
         .{
@@ -544,13 +532,11 @@ test "checkActionValidityTest" {
                     .operator = ">",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.InvalidStrategy,
+            .err = TaseNativeErrors.InvalidStrategy,
         },
         .{
             .log_action = LogAction{ .strategy = "delete" },
-            .should_error = true,
-            .result = TaseNativeErrors.IfIsEmpty,
+            .err = TaseNativeErrors.IfIsEmpty,
         },
         .{
             .log_action = LogAction{
@@ -560,16 +546,14 @@ test "checkActionValidityTest" {
                     .operator = ">",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.MissingIfOperand,
+            .err = TaseNativeErrors.MissingIfOperand,
         },
         .{
             .log_action = LogAction{
                 .strategy = "delete",
                 .@"if" = IfOperation{ .condition = "size", .operator = ">", .operand = -1 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.IfOperandSizeError,
+            .err = TaseNativeErrors.IfOperandSizeError,
         },
         .{
             .log_action = LogAction{
@@ -579,8 +563,7 @@ test "checkActionValidityTest" {
                     .operand = 2,
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.MissingIfOperator,
+            .err = TaseNativeErrors.MissingIfOperator,
         },
         .{
             .log_action = LogAction{
@@ -590,8 +573,7 @@ test "checkActionValidityTest" {
                     .operator = ">",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.MissingIfCondition,
+            .err = TaseNativeErrors.MissingIfCondition,
         },
         .{
             .log_action = LogAction{
@@ -602,7 +584,6 @@ test "checkActionValidityTest" {
                     .operator = ">",
                 },
             },
-            .should_error = false,
         },
         .{
             .log_action = LogAction{
@@ -613,7 +594,6 @@ test "checkActionValidityTest" {
                     .operator = ">",
                 },
             },
-            .should_error = false,
         },
         .{
             .log_action = LogAction{
@@ -624,8 +604,7 @@ test "checkActionValidityTest" {
                     .operator = ">",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.TruncateRequiresSettings,
+            .err = TaseNativeErrors.TruncateRequiresSettings,
         },
         .{
             .log_action = LogAction{
@@ -641,13 +620,12 @@ test "checkActionValidityTest" {
                     .size = 100,
                 },
             },
-            .should_error = false,
         },
     };
 
     for (&tcs) |case| {
-        if (case.should_error)
-            try testing.expectError(case.result.?, case.log_action.checkActionValidity())
+        if (case.err != null)
+            try testing.expectError(case.err.?, case.log_action.checkActionValidity())
         else
             try case.log_action.checkActionValidity();
     }
@@ -656,8 +634,7 @@ test "checkActionValidityTest" {
 test "checkMandatoryFieldsForRotateTest" {
     const TestCase = struct {
         log_action: LogAction,
-        should_error: bool,
-        result: ?anyerror = null,
+        err: ?anyerror = null,
     };
     var tcs = [_]TestCase{
         .{
@@ -669,7 +646,6 @@ test "checkMandatoryFieldsForRotateTest" {
                     .operator = ">",
                 },
             },
-            .should_error = false,
         },
         .{
             .log_action = LogAction{
@@ -684,8 +660,7 @@ test "checkMandatoryFieldsForRotateTest" {
                     .operand = 2,
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.MissingKeepArchiveOperator,
+            .err = TaseNativeErrors.MissingKeepArchiveOperator,
         },
         .{
             .log_action = LogAction{
@@ -700,8 +675,7 @@ test "checkMandatoryFieldsForRotateTest" {
                     .operator = ">",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.MissingKeepArchiveOperand,
+            .err = TaseNativeErrors.MissingKeepArchiveOperand,
         },
         .{
             .log_action = LogAction{
@@ -717,8 +691,7 @@ test "checkMandatoryFieldsForRotateTest" {
                     .operand = -1,
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.KeepArhiveOpenrandSizeError,
+            .err = TaseNativeErrors.KeepArhiveOpenrandSizeError,
         },
         .{
             .log_action = LogAction{
@@ -733,8 +706,7 @@ test "checkMandatoryFieldsForRotateTest" {
                     .operator = ">",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.MissingKeepArchiveCondition,
+            .err = TaseNativeErrors.MissingKeepArchiveCondition,
         },
         .{
             .log_action = LogAction{
@@ -750,8 +722,7 @@ test "checkMandatoryFieldsForRotateTest" {
                     .operator = ">",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.InvalidRotateKeepArchiveCondition,
+            .err = TaseNativeErrors.InvalidRotateKeepArchiveCondition,
         },
         .{
             .log_action = LogAction{
@@ -767,8 +738,7 @@ test "checkMandatoryFieldsForRotateTest" {
                     .operator = "invalid-operator",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.InvalidRotateKeepArchiveOperator,
+            .err = TaseNativeErrors.InvalidRotateKeepArchiveOperator,
         },
         .{
             .log_action = LogAction{
@@ -785,7 +755,6 @@ test "checkMandatoryFieldsForRotateTest" {
                 },
                 .compress = true,
             },
-            .should_error = false,
         },
         .{
             .log_action = LogAction{
@@ -803,8 +772,7 @@ test "checkMandatoryFieldsForRotateTest" {
                 .compress = true,
                 .compression_type = "invalid-compression-type",
             },
-            .should_error = true,
-            .result = TaseNativeErrors.InvalidCompressioType,
+            .err = TaseNativeErrors.InvalidCompressioType,
         },
         .{
             .log_action = LogAction{
@@ -822,14 +790,13 @@ test "checkMandatoryFieldsForRotateTest" {
                 .compress = true,
                 .compression_level = 2,
             },
-            .should_error = true,
-            .result = TaseNativeErrors.CompressionLevelInvalid,
+            .err = TaseNativeErrors.CompressionLevelInvalid,
         },
     };
 
     for (&tcs) |case| {
-        if (case.should_error)
-            try testing.expectError(case.result.?, case.log_action.checkActionValidity())
+        if (case.err != null)
+            try testing.expectError(case.err.?, case.log_action.checkActionValidity())
         else
             try case.log_action.checkActionValidity();
     }
@@ -838,8 +805,7 @@ test "checkMandatoryFieldsForRotateTest" {
 test "checkMandatoryFieldsForTruncateTest" {
     const TestCase = struct {
         log_action: LogAction,
-        should_error: bool,
-        result: ?anyerror = null,
+        err: ?anyerror = null,
     };
     var tcs = [_]TestCase{
         .{
@@ -851,8 +817,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                     .operator = ">",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.TruncateRequiresSettings,
+            .err = TaseNativeErrors.TruncateRequiresSettings,
         },
         .{
             .log_action = LogAction{
@@ -867,8 +832,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                     .from = "top",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.MissingTruncateBy,
+            .err = TaseNativeErrors.MissingTruncateBy,
         },
         .{
             .log_action = LogAction{
@@ -883,8 +847,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                     .by = "size",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.MissingTruncateFrom,
+            .err = TaseNativeErrors.MissingTruncateFrom,
         },
         .{
             .log_action = LogAction{
@@ -899,8 +862,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                     .by = "size",
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.MissingTruncateSize,
+            .err = TaseNativeErrors.MissingTruncateSize,
         },
         .{
             .log_action = LogAction{
@@ -916,8 +878,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                     .size = 0,
                 },
             },
-            .should_error = true,
-            .result = TaseNativeErrors.TruncateSizeError,
+            .err = TaseNativeErrors.TruncateSizeError,
         },
         .{
             .log_action = LogAction{
@@ -933,13 +894,12 @@ test "checkMandatoryFieldsForTruncateTest" {
                     .size = 1,
                 },
             },
-            .should_error = false,
         },
     };
 
     for (&tcs) |case| {
-        if (case.should_error)
-            try testing.expectError(case.result.?, case.log_action.checkActionValidity())
+        if (case.err != null)
+            try testing.expectError(case.err.?, case.log_action.checkActionValidity())
         else
             try case.log_action.checkActionValidity();
     }

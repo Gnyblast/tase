@@ -1,3 +1,6 @@
+const std = @import("std");
+const testing = std.testing;
+
 pub const ActionStrategy = enum {
     truncate,
     rotate,
@@ -19,7 +22,7 @@ pub const TruncateBy = enum {
     size,
 
     pub const TruncateByName = [@typeInfo(TruncateBy).@"enum".fields.len][:0]const u8{
-        "lines",
+        "line",
         "size",
     };
 
@@ -81,3 +84,29 @@ pub const CompressType = enum {
         }
     }
 };
+
+test "ActionStrategyTest" {
+    try testing.expectEqualDeep("truncate", ActionStrategy.truncate.str());
+    try testing.expectEqualDeep("delete", ActionStrategy.delete.str());
+    try testing.expectEqualDeep("rotate", ActionStrategy.rotate.str());
+}
+
+test "TruncateByTest" {
+    try testing.expectEqualDeep("line", TruncateBy.line.str());
+    try testing.expectEqualDeep("size", TruncateBy.size.str());
+}
+
+test "TruncateFromTest" {
+    try testing.expectEqualDeep("bottom", TruncateFrom.bottom.str());
+    try testing.expectEqualDeep("top", TruncateFrom.top.str());
+}
+
+test "IfConditionsTest" {
+    try testing.expectEqualDeep("size", IfConditions.size.str());
+    try testing.expectEqualDeep("days", IfConditions.days.str());
+}
+
+test "CompressTypeTest" {
+    try testing.expectEqualDeep("gzip", CompressType.gzip.str());
+    try testing.expectEqualDeep("gz", CompressType.gzip.getCompressionExtension());
+}

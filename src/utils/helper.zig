@@ -3,11 +3,11 @@ const testing = std.testing;
 const Allocator = std.mem.Allocator;
 
 pub fn toUpperCase(allocator: Allocator, string: []const u8) ![]u8 {
-    var u_string = try allocator.alloc(u8, string.len);
+    var result = try allocator.alloc(u8, string.len);
     for (string, 0..) |s, i| {
-        u_string[i] = std.ascii.toUpper(s);
+        result[i] = std.ascii.toUpper(s);
     }
-    return u_string;
+    return result;
 }
 
 pub fn toLowerCase(allocator: Allocator, input: []const u8) ![]u8 {

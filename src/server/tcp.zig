@@ -1,4 +1,5 @@
 const std = @import("std");
+const testing = std.testing;
 const jwt = @import("jwt");
 const net = std.net;
 const posix = std.posix;
@@ -226,3 +227,74 @@ pub const TCPServer = struct {
         return TaseNativeErrors.NotValidAgentHostname;
     }
 };
+
+test "initTest" {
+    const server = TCPServer.init("127.0.0.1", 8080, "supersecret");
+    try testing.expectEqualStrings("127.0.0.1", server.host);
+    try testing.expectEqual(@as(u16, 8080), server.port);
+    try testing.expectEqualStrings("supersecret", server.secret);
+    try testing.expect(server.agents == null);
+}
+
+test "setAgentsTest" {
+    var server = TCPServer.init("localhost", 9000, "secret");
+    var agents = [_]configs.Agent{
+        .{
+            .name = "agent1",
+            .hostname = "agent1",
+            .port = 7423,
+            .secret = "secret1",
+        },
+        .{
+            .name = "agent2",
+            .hostname = "agent2",
+            .port = 7423,
+            .secret = "secret2",
+        },
+    };
+    TCPServer.setAgents(@ptrCast(&server), &agents);
+
+    try testing.expect(server.agents != null);
+    try testing.expectEqual(@as(usize, 2), server.agents.?.len);
+    try testing.expectEqualStrings("agent1", server.agents.?[0].hostname);
+}
+
+test "getAgentSecretByHostNameTest" {
+    const TestCase = struct {
+        agents: []configs.Agent,
+        get_agent: []const u8,
+        get_secret: []const u8,
+        err: ?anyerror = null,
+    };
+    var agents = [_]configs.Agent{
+        .{
+            .name = "agent1",
+            .hostname = "test-host",
+            .port = 7423,
+            .secret = "secret123",
+        },
+        .{
+            .name = "agent2",
+            .hostname = "another-host",
+            .port = 7423,
+            .secret = "456",
+        },
+    };
+    var tcs = [_]TestCase{
+        .{
+            .get_agent = "test-host",
+            .get_secret = "secret123",
+            .agents = &agents,
+        },
+        .{ .get_agent = "invalidhost", .get_secret = "secret1234", .agents = &agents, .err = TaseNativeErrors.NotValidAgentHostname },
+    };
+
+    for (&tcs) |tc| {
+        var server = TCPServer.init("localhost", 1234, "defaultsecret");
+        TCPServer.setAgents(@ptrCast(&server), tc.agents);
+        if (tc.err == null)
+            try testing.expectEqualStrings(tc.get_secret, try server.getAgentSecretByHostName(tc.get_agent))
+        else
+            try testing.expectError(tc.err.?, server.getAgentSecretByHostName(tc.get_agent));
+    }
+}
