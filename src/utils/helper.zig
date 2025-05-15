@@ -2,6 +2,9 @@ const std = @import("std");
 const testing = std.testing;
 const Allocator = std.mem.Allocator;
 
+const errorFactory = @import("../factory/error_factory.zig");
+const configs = @import("../app/config.zig");
+
 pub fn toUpperCase(allocator: Allocator, string: []const u8) ![]u8 {
     var result = try allocator.alloc(u8, string.len);
     for (string, 0..) |s, i| {
@@ -60,6 +63,20 @@ pub fn printApplicationInfo(run_type: []const u8, version: []const u8, host: []c
     std.log.info("\n{s}\nType: {s}\nVersion: v{s}\nListening at {s}:{d}", .{ ascii, run_type, version, host, port });
 }
 //test-no-cover-end
+
+pub fn printErrorExit(allocator: Allocator, err: anyerror, cli_args: configs.argOpts, comptime scope: @TypeOf(.enum_literal), comptime fmt: []const u8) void {
+    const err_msg = errorFactory.getLogMessageByErr(allocator, err);
+    defer if (err_msg.allocated) allocator.free(err_msg.message);
+    std.debug.print("Check logs for more details at: {s}", .{cli_args.@"log-dir"});
+    std.log.scoped(scope).err(fmt, .{err_msg.message});
+    std.process.exit(1);
+}
+
+pub fn printError(allocator: Allocator, err: anyerror, comptime scope: @TypeOf(.enum_literal), comptime fmt: []const u8) void {
+    const err_msg = errorFactory.getLogMessageByErr(allocator, err);
+    defer if (err_msg.allocated) allocator.free(err_msg.message);
+    std.log.scoped(scope).err(fmt, .{err_msg.message});
+}
 
 test "toUpperCaseTest" {
     const s: []const u8 = "aaaaaa";

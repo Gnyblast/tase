@@ -21,7 +21,7 @@ pub const TaseNativeErrors = error{
     MissingKeepArchiveOperand,
     KeepArhiveOpenrandSizeError,
     CompressionLevelInvalid,
-    InvalidCompressioType,
+    InvalidCompressionType,
     TruncateRequiresSettings,
     MissingTruncateBy,
     InvalidTruncateByFieldValue,
@@ -63,7 +63,6 @@ pub fn getLogMessageByErr(alloc: std.mem.Allocator, erro: anyerror) ErrorMessage
     return ErrorMessage{ .message = msg, .allocated = true };
 }
 
-//TODO: recheck errors
 pub const errors = [_]TaseError{
     .{
         .err = TaseNativeErrors.DuplicateAgentName,
@@ -142,7 +141,7 @@ pub const errors = [_]TaseError{
         .message = "Compression levels are starting from 4 goes up to 9",
     },
     .{
-        .err = TaseNativeErrors.InvalidCompressioType,
+        .err = TaseNativeErrors.InvalidCompressionType,
         .message = "compression type is invalid",
     },
     .{

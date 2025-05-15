@@ -5,6 +5,7 @@ const timezones = @import("datetime").timezones;
 const cron = @import("cron");
 
 const configs = @import("./app/config.zig");
+const utils = @import("utils/helper.zig");
 const app = @import("./app/tase.zig");
 const logger = @import("./utils/logger.zig");
 const errorFactory = @import("./factory/error_factory.zig");
@@ -52,21 +53,13 @@ pub fn main() void {
     defer cli_args.deinit();
 
     var tase = app.Tase.init(allocator, &cli_args.options) catch |err| {
-        const err_msg = errorFactory.getLogMessageByErr(allocator, err);
-        defer if (err_msg.allocated) allocator.free(err_msg.message);
-        std.debug.print("Check logs for more details at: {s}", .{cli_args.options.@"log-dir"});
-        std.log.scoped(.yaml).err("Could not create application: {s}", .{err_msg.message});
-        std.process.exit(1);
+        return utils.printErrorExit(allocator, err, cli_args.options, .yaml, "Could not create application: {s}");
     };
     defer tase.deinit();
     timezone = tase.yaml_cfg.server.time_zone.?;
 
     tase.run() catch |err| {
-        const err_msg = errorFactory.getLogMessageByErr(allocator, err);
-        defer if (err_msg.allocated) allocator.free(err_msg.message);
-        std.debug.print("Check logs for more details at: {s}", .{tase.cli_args.@"log-dir"});
-        std.log.err("Could not start application: {s}", .{err_msg.message});
-        std.process.exit(1);
+        return utils.printErrorExit(allocator, err, tase.cli_args.*, .default, "Could not start application: {s}");
     };
 }
 

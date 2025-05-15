@@ -15,6 +15,7 @@ pub const YamlCfgContainer = struct {
     server: MasterServerConf,
 
     pub fn isValidYaml(self: YamlCfgContainer, allocator: Allocator) !void {
+        std.log.scoped(.config).debug("Validation check for YAML config", .{});
         var arena = std.heap.ArenaAllocator.init(allocator);
         var agent_names = std.ArrayList([]const u8).init(arena.allocator());
         var agent_host_names = std.ArrayList([]const u8).init(arena.allocator());
@@ -41,6 +42,7 @@ pub const YamlCfgContainer = struct {
         }
 
         for (self.configs) |c| {
+            std.log.scoped(.config).debug("Validation check for app config {s}", .{c.app_name});
             try c.isConfigValid(allocator);
 
             for (c.run_agent_names) |a| {
@@ -73,10 +75,12 @@ pub const LogConf = struct {
     run_agent_names: [][]const u8,
     action: LogAction,
 
-    //TODO check error handling here again does it need catch and print?
     pub fn isConfigValid(self: LogConf, allocator: Allocator) !void {
         var cron = Cron.init();
-        try cron.parse(self.cron_expression);
+        cron.parse(self.cron_expression) catch |err| {
+            std.log.scoped(.config).err("Error parsing cron: {s}", .{self.cron_expression});
+            return err;
+        };
 
         const regex = try Regex.initWithoutComptimeFlags(allocator, self.log_files_regexp, "");
         defer regex.deinit();
@@ -91,8 +95,7 @@ pub const LogAction = struct {
     truncate_settings: ?TruncateSettings = null,
     @"if": ?IfOperation = null,
     keep_archive: ?IfOperation = null,
-    compress: ?bool = false,
-    compression_type: ?[]const u8 = "gzip",
+    compress: ?[]const u8 = "gzip",
     compression_level: ?u8 = 4,
 
     /// Caller is resposible for freeing the memory
@@ -130,8 +133,7 @@ pub const LogAction = struct {
         action.@"if" = if (self.@"if" != null) if_operation else null;
         action.keep_archive = if (self.keep_archive != null) keep_archive else null;
         action.truncate_settings = if (self.truncate_settings != null) truncate_settings else null;
-        action.compress = self.compress;
-        action.compression_type = try utils.dupeOptString(allocator, self.compression_type);
+        action.compress = try utils.dupeOptString(allocator, self.compress);
         action.compression_level = self.compression_level;
         return action;
     }
@@ -167,14 +169,12 @@ pub const LogAction = struct {
                 return TaseNativeErrors.KeepArhiveOpenrandSizeError;
         }
 
-        if (self.compress != null and self.compress.?) {
-            if (self.compression_level.? < 4 or self.compression_level.? > 9)
-                return TaseNativeErrors.CompressionLevelInvalid;
-
-            switch (std.meta.stringToEnum(enums.CompressType, self.compression_type.?) orelse return TaseNativeErrors.InvalidCompressioType) {
+        if (self.compress != null) {
+            switch (std.meta.stringToEnum(enums.CompressType, self.compress.?) orelse return TaseNativeErrors.InvalidCompressionType) {
                 .gzip,
                 => {
-                    return;
+                    if (self.compression_level.? < 4 or self.compression_level.? > 9)
+                        return TaseNativeErrors.CompressionLevelInvalid;
                 },
             }
         }
@@ -753,7 +753,7 @@ test "checkMandatoryFieldsForRotateTest" {
                     .operand = 2,
                     .operator = ">",
                 },
-                .compress = true,
+                .compress = "gzip",
             },
         },
         .{
@@ -769,10 +769,9 @@ test "checkMandatoryFieldsForRotateTest" {
                     .operand = 2,
                     .operator = ">",
                 },
-                .compress = true,
-                .compression_type = "invalid-compression-type",
+                .compress = "invalid-compression-type",
             },
-            .err = TaseNativeErrors.InvalidCompressioType,
+            .err = TaseNativeErrors.InvalidCompressionType,
         },
         .{
             .log_action = LogAction{
@@ -787,7 +786,7 @@ test "checkMandatoryFieldsForRotateTest" {
                     .operand = 2,
                     .operator = ">",
                 },
-                .compress = true,
+                .compress = "gzip",
                 .compression_level = 2,
             },
             .err = TaseNativeErrors.CompressionLevelInvalid,

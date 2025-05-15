@@ -29,8 +29,7 @@ configs:
         condition: days
         operator: "<"
         operand: 1
-      compress: true
-      compression_type: gzip
+      compress: gzip
       compression_level: 5
 
   ##?? ROTATE BY DAYS COMPRESS PRUNE
@@ -53,8 +52,7 @@ configs:
         condition: days
         operator: "<"
         operand: 1
-      compress: true
-      compression_type: gzip
+      compress: gzip
       compression_level: 6
 
   ##?? ROTATE BY SIZE
@@ -86,8 +84,7 @@ configs:
         condition: size
         operator: ">"
         operand: 14
-      compress: true
-      compression_type: gzip
+      compress: gzip
       compression_level: 5
 
   ##?? ROTATE BY SIZE NO COMPRESS PRUNE

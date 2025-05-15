@@ -233,31 +233,31 @@ pub const TCPServer = struct {
 };
 
 test "initTest" {
-    const server = TCPServer.init("127.0.0.1", 8080, "supersecret");
+    const server = TCPServer.init("127.0.0.1", 7423, "supersecret");
     try testing.expectEqualStrings("127.0.0.1", server.host);
-    try testing.expectEqual(@as(u16, 8080), server.port);
+    try testing.expectEqual(@as(u16, 7423), server.port);
     try testing.expectEqualStrings("supersecret", server.secret);
     try testing.expect(server.agents == null);
 }
 
 test "createTCPServerTest" {
-    const server = TCPServer.init("127.0.0.1", 8080, "supersecret");
+    const server = TCPServer.init("127.0.0.1", 7423, "supersecret");
     _ = try server.createTCPServer(testing.allocator);
 }
 
 test "setAgentsTest" {
-    var server = TCPServer.init("localhost", 9000, "secret");
+    var server = TCPServer.init("localhost", 7423, "secret");
     var agents = [_]configs.Agent{
         .{
             .name = "agent1",
             .hostname = "agent1",
-            .port = 7423,
+            .port = 7424,
             .secret = "secret1",
         },
         .{
             .name = "agent2",
             .hostname = "agent2",
-            .port = 7423,
+            .port = 7424,
             .secret = "secret2",
         },
     };

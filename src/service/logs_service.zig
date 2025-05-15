@@ -58,11 +58,7 @@ pub const LogService = struct {
         self.run();
     }
 
-    //TODO implement error factory
     pub fn run(self: LogService) void {
-        self.log_action.checkActionValidity() catch |err| {
-            std.log.scoped(.server).err("Error running logs service: {}", .{err});
-        };
         var da: std.heap.DebugAllocator(.{}) = .init;
         defer {
             const leaks = da.deinit();
@@ -71,26 +67,27 @@ pub const LogService = struct {
 
         const allocator = da.allocator();
 
+        self.log_action.checkActionValidity() catch |err| {
+            return utils.printError(allocator, err, .logs, "Error running logs service: {s}");
+        };
+
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.log_action.strategy) orelse {
-            std.log.scoped(.server).err("Invalid Strategy {s}", .{self.log_action.strategy});
+            std.log.scoped(.logs).err("Invalid Strategy {s}", .{self.log_action.strategy});
             return;
         }) {
             enums.ActionStrategy.delete => {
                 return self.doDelete(allocator) catch |err| {
-                    std.log.scoped(.server).err("Error running logs service: {}", .{err});
-                    return;
+                    return utils.printError(allocator, err, .logs, "Error running logs service: {s}");
                 };
             },
             enums.ActionStrategy.rotate => {
                 return self.doRotate(allocator) catch |err| {
-                    std.log.scoped(.server).err("Error running logs service: {}", .{err});
-                    return;
+                    return utils.printError(allocator, err, .logs, "Error running logs service: {s}");
                 };
             },
             enums.ActionStrategy.truncate => {
                 return self.doTruncate() catch |err| {
-                    std.log.scoped(.server).err("Error running logs service: {}", .{err});
-                    return;
+                    return utils.printError(allocator, err, .logs, "Error running logs service: {s}");
                 };
             },
         }
@@ -143,7 +140,7 @@ pub const LogService = struct {
                 };
                 std.log.scoped(.logs).info("file rotated from {s} to {s}", .{ path, rotation_path });
 
-                if (self.log_action.compress.?)
+                if (self.log_action.compress != null)
                     compressAndRotate(allocator, self.log_action, rotation_path) catch |err| {
                         std.log.scoped(.logs).err("Error compression file {s}: {}", .{ rotation_path, err });
                         continue;
@@ -203,10 +200,10 @@ pub const LogService = struct {
     fn truncateFromTop(_: LogService) void {}
 
     fn getPruner(self: LogService, allocator: Allocator) !*LogService {
-        const compress_type = std.meta.stringToEnum(enums.CompressType, self.log_action.compression_type.?) orelse return TaseNativeErrors.InvalidCompressioType;
         var matcher = try std.fmt.allocPrint(allocator, "{s}-{s}", .{ self.matcher, "[0-9]+" });
 
-        if (self.log_action.compress.?) {
+        if (self.log_action.compress != null) {
+            const compress_type = std.meta.stringToEnum(enums.CompressType, self.log_action.compress.?) orelse return TaseNativeErrors.InvalidCompressionType;
             matcher = try std.fmt.allocPrint(allocator, "{s}-{s}\\.{s}", .{ self.matcher, "[0-9]+", compress_type.getCompressionExtension() });
         }
 
@@ -282,7 +279,7 @@ fn compareBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata) b
 }
 
 fn compressAndRotate(allocator: Allocator, log_action: *configs.LogAction, path: []const u8) !void {
-    const compress_type = std.meta.stringToEnum(enums.CompressType, log_action.compression_type.?) orelse return TaseNativeErrors.InvalidCompressioType;
+    const compress_type = std.meta.stringToEnum(enums.CompressType, log_action.compress.?) orelse return TaseNativeErrors.InvalidCompressionType;
 
     const rotation_path = try std.fmt.allocPrint(allocator, "{s}.{s}", .{ path, compress_type.getCompressionExtension() });
     defer allocator.free(rotation_path);

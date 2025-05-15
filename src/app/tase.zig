@@ -48,7 +48,7 @@ pub const Tase = struct {
             server_type = yaml_cfg.server.type;
             for (0..yaml_cfg.*.configs.len) |i| {
                 if (std.mem.eql(u8, yaml_cfg.*.configs[i].action.strategy, enums.ActionStrategy.rotate.str()) and yaml_cfg.*.configs[i].action.rotate_archives_dir == null) {
-                    yaml_cfg.*.configs[i].action.rotate_archives_dir.? = yaml_cfg.*.configs[i].logs_dir;
+                    yaml_cfg.*.configs[i].action.rotate_archives_dir = yaml_cfg.*.configs[i].logs_dir;
                 }
             }
         }

@@ -48,7 +48,6 @@ configs:
         operand: 3
       keep_archive_size: 7
       keep_archive_condition: "days"
-      compress: false
 
   ##?? ROTATE WITH COMPRESS
   - app_name: "rotate_app_compress"
@@ -67,9 +66,8 @@ configs:
         operand: 4096
       keep_archive_size: 7
       keep_archive_condition: "days"
-      compress: true
       ##?? gzip
-      compression_type: gzip
+      compress: gzip
       ##?? Between 4-9
       compression_level: 5
 
@@ -87,8 +85,7 @@ configs:
         condition: size
         operator: ">"
         operand: 4096
-      compress: true
-      compression_type: gzip
+      compress: gzip
       compression_level: 7
 
   ##?? DELETE
