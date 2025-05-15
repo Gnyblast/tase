@@ -2,6 +2,8 @@ const std = @import("std");
 const testing = std.testing;
 const Allocator = std.mem.Allocator;
 
+const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
+
 const errorFactory = @import("../factory/error_factory.zig");
 const configs = @import("../app/config.zig");
 
@@ -65,10 +67,8 @@ pub fn printApplicationInfo(run_type: []const u8, version: []const u8, host: []c
 //test-no-cover-end
 
 pub fn printErrorExit(allocator: Allocator, err: anyerror, cli_args: configs.argOpts, comptime scope: @TypeOf(.enum_literal), comptime fmt: []const u8) void {
-    const err_msg = errorFactory.getLogMessageByErr(allocator, err);
-    defer if (err_msg.allocated) allocator.free(err_msg.message);
+    printError(allocator, err, scope, fmt);
     std.debug.print("Check logs for more details at: {s}", .{cli_args.@"log-dir"});
-    std.log.scoped(scope).err(fmt, .{err_msg.message});
     std.process.exit(1);
 }
 
@@ -121,4 +121,9 @@ test "arrayContainsTest" {
 test "bytesToMegabytesTest" {
     const actual = bytesToMegabytes(71263712);
     try testing.expectEqual(6.796237182617188e1, actual);
+}
+
+test "printErrorTest" {
+    printError(testing.allocator, error.unknown, .testscope, "Test error: {s}");
+    printError(testing.allocator, TaseNativeErrors.CompressionLevelInvalid, .testscope, "Test error: {s}");
 }

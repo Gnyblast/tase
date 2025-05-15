@@ -56,7 +56,7 @@ pub fn getLogMessageByErr(alloc: std.mem.Allocator, erro: anyerror) ErrorMessage
         }
     }
 
-    const msg = std.fmt.allocPrint(alloc, "error: {}", .{erro}) catch {
+    const msg = std.fmt.allocPrint(alloc, "{}", .{erro}) catch {
         return ErrorMessage{ .message = "Unknown error" };
     };
 
@@ -221,7 +221,7 @@ test "getLogMessageByErrTest" {
         },
         .{
             .err = error.TestError,
-            .expected = "error: error.TestError",
+            .expected = "error.TestError",
             .is_alloc = true,
         },
     };
