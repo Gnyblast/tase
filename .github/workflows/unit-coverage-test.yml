@@ -11,21 +11,6 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Install dependencies for kcov
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake libcurl4-openssl-dev libelf-dev libdw-dev binutils-dev libiberty-dev
-
-      - name: Build and install kcov from source
-        run: |
-          git clone https://github.com/SimonKagstrom/kcov.git
-          cd kcov
-          mkdir build
-          cd build
-          cmake ..
-          make -j$(nproc)
-          sudo make install
-
       - name: Checkout code
         uses: actions/checkout@v3
 
