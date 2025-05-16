@@ -29,7 +29,7 @@ jobs:
         run: zig build test
 
       - name: Coverage test
-        run: zig build test
+        run: zig build cover
 
       # - name: Coverage test
       #   uses: sudo-bot/action-kcov@latest
