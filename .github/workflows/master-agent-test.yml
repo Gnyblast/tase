@@ -1,0 +1,24 @@
+name: Run Podman Script
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  run-docker-script:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Install podman
+        run: sudo apt install -y podman
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Give execute permission to script
+        run: chmod +x ./app-test-container/start-test.sh
+
+      - name: Run script
+        run: ./app-test-container/start-test.sh
