@@ -1,4 +1,4 @@
-name: Run Podman Script
+name: E2E Master-Agent Test
 
 on:
   push:
