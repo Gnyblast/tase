@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-docker-script:
+  E2E:
     runs-on: ubuntu-24.04
 
     steps:

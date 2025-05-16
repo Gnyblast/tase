@@ -105,6 +105,11 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_lib_unit_tests.step);
 
+    const test_binary = b.step("test-bin", "Generate test binary");
+    test_binary.dependOn(&run_lib_unit_tests.step);
+    const install_test = b.addInstallBinFile(lib_unit_tests.getEmittedBin(), "unit_tests");
+    test_binary.dependOn(&install_test.step);
+
     const rm = b.addSystemCommand(&.{
         "rm",
         "-rf",

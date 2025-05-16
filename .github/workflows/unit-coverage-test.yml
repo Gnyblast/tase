@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-docker-script:
+  Unit-Testing:
     runs-on: ubuntu-24.04
 
     steps:
@@ -37,8 +37,13 @@ jobs:
       - name: Zig build
         run: zig build
 
+      - name: Build test binary
+        run: zig build test-bin
+
       - name: Unit test
         run: zig build test
 
-      - name: Coverage test
-        run: zig build cover
+      - name: Run kcov coverage test
+        uses: sudo-bot/action-kcov@latest
+        with:
+          cli-args: "--clean --exclude-region=//test-no-cover-start://test-no-cover-end --include-path=src/ zig-out/bin/unit_tests"
