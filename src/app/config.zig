@@ -202,7 +202,7 @@ pub const IfOperation = struct {
     operand: ?i32 = null,
 };
 
-const MasterServerConf = struct {
+pub const MasterServerConf = struct {
     host: []const u8 = "127.0.0.1",
     port: u16 = 7423,
     type: []const u8 = "tcp",

@@ -1,5 +1,10 @@
 const std = @import("std");
+const testing = std.testing;
 const timezones = @import("datetime").timezones;
+
+const c = @cImport({
+    @cInclude("stdlib.h");
+});
 
 const Allocator = std.mem.Allocator;
 
@@ -40,9 +45,11 @@ pub const Tase = struct {
         }
 
         const yaml_cfg: *configs.YamlCfgContainer = try allocator.create(configs.YamlCfgContainer);
+        var arena = std.heap.ArenaAllocator.init(allocator);
+        defer arena.deinit();
 
         if (cli_args.master) {
-            yaml_cfg.* = try YamlParser.parse(allocator, cli_args.config);
+            yaml_cfg.* = try YamlParser.parse(arena.allocator(), cli_args.config);
             server_host = yaml_cfg.server.host;
             server_port = yaml_cfg.server.port;
             server_type = yaml_cfg.server.type;
@@ -119,3 +126,259 @@ pub const Tase = struct {
         }
     }
 };
+
+test "initDeinitTest" {
+    const TestCase = struct {
+        cli: configs.argOpts,
+        set_env: ?bool = false,
+        err: ?anyerror = null,
+    };
+
+    const tcs = [_]TestCase{
+        .{
+            .cli = configs.argOpts{
+                .master = true,
+                .config = "./app.yaml",
+            },
+        },
+        .{
+            .cli = configs.argOpts{
+                .agent = true,
+            },
+            .err = TaseNativeErrors.SecretIsMandatory,
+        },
+        .{
+            .cli = configs.argOpts{
+                .agent = true,
+            },
+            .set_env = true,
+        },
+        .{
+            .cli = configs.argOpts{
+                .agent = true,
+                .secret = "767asd6as78d678asd68as",
+            },
+        },
+    };
+    for (tcs) |tc| {
+        if (tc.err != null) {
+            try testing.expectError(tc.err.?, Tase.init(testing.allocator, &tc.cli));
+        } else {
+            if (tc.set_env.?)
+                _ = c.setenv("TASE_AGENT_SECRET", "as7j8d6as78d6n7asd", 1);
+
+            var tase = try Tase.init(testing.allocator, &tc.cli);
+            defer tase.deinit();
+        }
+    }
+}
+
+test "performCheckTest" {
+    // var tase = try Tase.init(testing.allocator, &cli);
+    // defer tase.deinit();
+    var agents = [_]configs.Agent{
+        configs.Agent{
+            .hostname = "remotehost",
+            .name = "test",
+            .port = 7424,
+            .secret = "78asd6n7a8sd6hsa8a978ns6md78as6d",
+        },
+    };
+    var as = [_][]const u8{ "test", "local" };
+    var cfs = [_]configs.LogConf{
+        configs.LogConf{
+            .app_name = "test",
+            .cron_expression = "5 4 * * *",
+            .log_files_regexp = "test.log",
+            .logs_dir = "/var/log/tase",
+            .run_agent_names = &as,
+            .action = configs.LogAction{
+                .strategy = "delete",
+                .@"if" = configs.IfOperation{
+                    .condition = "days",
+                    .operator = ">",
+                    .operand = 2,
+                },
+            },
+        },
+    };
+    var server = try serverFactory.getServer(testing.allocator, "tcp", "localhost", 7423, "");
+    defer server.destroy(testing.allocator);
+
+    const TestCase = struct {
+        tase: Tase,
+        err: ?anyerror = null,
+    };
+
+    const tcs = [_]TestCase{
+        .{
+            .tase = Tase{
+                .allocator = testing.allocator,
+                .cli_args = &configs.argOpts{
+                    .config = "../../app.yaml",
+                },
+                .secret = "",
+                .version = version,
+                .server = server,
+                .yaml_cfg = &configs.YamlCfgContainer{
+                    .agents = &agents,
+                    .server = configs.MasterServerConf{
+                        .host = "localhost",
+                        .port = 7424,
+                        .time_zone = "Asia/Nicosia",
+                        .type = "tcp",
+                    },
+                    .configs = &cfs,
+                },
+            },
+            .err = TaseNativeErrors.MasterOrAgent,
+        },
+        .{
+            .tase = Tase{
+                .allocator = testing.allocator,
+                .cli_args = &configs.argOpts{
+                    .config = "../../app.yaml",
+                    .master = true,
+                },
+                .secret = "",
+                .version = version,
+                .server = server,
+                .yaml_cfg = &configs.YamlCfgContainer{
+                    .agents = &agents,
+                    .server = configs.MasterServerConf{
+                        .host = "localhost",
+                        .port = 7424,
+                        .time_zone = "Asia/Nicosia",
+                        .type = "tcp",
+                    },
+                    .configs = &cfs,
+                },
+            },
+        },
+        .{
+            .tase = Tase{
+                .allocator = testing.allocator,
+                .cli_args = &configs.argOpts{
+                    .config = "../../app.yaml",
+                    .master = true,
+                    .agent = true,
+                },
+                .secret = "",
+                .version = version,
+                .server = server,
+                .yaml_cfg = &configs.YamlCfgContainer{
+                    .agents = &agents,
+                    .server = configs.MasterServerConf{
+                        .host = "localhost",
+                        .port = 7424,
+                        .time_zone = "Asia/Nicosia",
+                        .type = "tcp",
+                    },
+                    .configs = &cfs,
+                },
+            },
+            .err = TaseNativeErrors.OnlyMasterOrAgent,
+        },
+        .{
+            .tase = Tase{
+                .allocator = testing.allocator,
+                .cli_args = &configs.argOpts{
+                    .config = "../../app.yaml",
+                    .agent = true,
+                },
+                .secret = "",
+                .version = version,
+                .server = server,
+                .yaml_cfg = &configs.YamlCfgContainer{
+                    .agents = &agents,
+                    .server = configs.MasterServerConf{
+                        .host = "localhost",
+                        .port = 7424,
+                        .time_zone = "Asia/Nicosia",
+                        .type = "tcp",
+                    },
+                    .configs = &cfs,
+                },
+            },
+            .err = TaseNativeErrors.SecretIsMandatory,
+        },
+        .{
+            .tase = Tase{
+                .allocator = testing.allocator,
+                .cli_args = &configs.argOpts{
+                    .config = "../../app.yaml",
+                    .agent = true,
+                },
+                .secret = "78asas6n7j8as67m9das6n7m9asd79",
+                .version = version,
+                .server = server,
+                .yaml_cfg = &configs.YamlCfgContainer{
+                    .agents = &agents,
+                    .server = configs.MasterServerConf{
+                        .host = "localhost",
+                        .port = 7424,
+                        .time_zone = "Asia/Nicosia",
+                        .type = "tcp",
+                    },
+                    .configs = &cfs,
+                },
+            },
+            .err = TaseNativeErrors.MasterHostRequired,
+        },
+        .{
+            .tase = Tase{
+                .allocator = testing.allocator,
+                .cli_args = &configs.argOpts{
+                    .config = "../../app.yaml",
+                    .agent = true,
+                    .@"master-host" = "localhost",
+                },
+                .secret = "78asas6n7j8as67m9das6n7m9asd79",
+                .version = version,
+                .server = server,
+                .yaml_cfg = &configs.YamlCfgContainer{
+                    .agents = &agents,
+                    .server = configs.MasterServerConf{
+                        .host = "localhost",
+                        .port = 7424,
+                        .time_zone = "Asia/Nicosia",
+                        .type = "tcp",
+                    },
+                    .configs = &cfs,
+                },
+            },
+            .err = TaseNativeErrors.MasterPortRequired,
+        },
+        .{
+            .tase = Tase{
+                .allocator = testing.allocator,
+                .cli_args = &configs.argOpts{
+                    .config = "../../app.yaml",
+                    .agent = true,
+                    .@"master-host" = "localhost",
+                    .@"master-port" = 7423,
+                },
+                .secret = "78asas6n7j8as67m9das6n7m9asd79",
+                .version = version,
+                .server = server,
+                .yaml_cfg = &configs.YamlCfgContainer{
+                    .agents = &agents,
+                    .server = configs.MasterServerConf{
+                        .host = "localhost",
+                        .port = 7424,
+                        .time_zone = "Asia/Nicosia",
+                        .type = "tcp",
+                    },
+                    .configs = &cfs,
+                },
+            },
+        },
+    };
+
+    for (tcs) |tc| {
+        if (tc.err != null)
+            try testing.expectError(tc.err.?, tc.tase.performCheck())
+        else
+            try tc.tase.performCheck();
+    }
+}
