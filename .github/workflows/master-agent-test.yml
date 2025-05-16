@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Install podman
-        run: sudo apt install -y podman
+      - name: Install podman and kcov
+        run: sudo apt install -y podman kcov
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -30,11 +30,6 @@ jobs:
 
       - name: Coverage test
         run: zig build cover
-
-      # - name: Coverage test
-      #   uses: sudo-bot/action-kcov@latest
-      #   with:
-      #     cli-args: "kcov --clean --exclude-region=//test-no-cover-start://test-no-cover-end --include-path=src/"
 
       - name: Give execute permission to script
         run: chmod +x ./app-test-container/start-test.sh
