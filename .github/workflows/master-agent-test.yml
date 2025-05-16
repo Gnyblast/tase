@@ -14,6 +14,9 @@ jobs:
       - name: Install podman
         run: sudo apt install -y podman
 
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Install zig 14
         uses: mlugg/setup-zig@v2
         with:
