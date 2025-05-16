@@ -1,0 +1,44 @@
+name: Unit & Coverage Test
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  run-docker-script:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Install dependencies for kcov
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake libcurl4-openssl-dev libelf-dev libdw-dev binutils-dev libiberty-dev
+
+      - name: Build and install kcov from source
+        run: |
+          git clone https://github.com/SimonKagstrom/kcov.git
+          cd kcov
+          mkdir build
+          cd build
+          cmake ..
+          make -j$(nproc)
+          sudo make install
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install zig 14
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.0
+
+      - name: Zig build
+        run: zig build
+
+      - name: Unit test
+        run: zig build test
+
+      - name: Coverage test
+        run: zig build cover
