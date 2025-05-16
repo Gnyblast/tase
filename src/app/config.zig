@@ -95,7 +95,7 @@ pub const LogAction = struct {
     truncate_settings: ?TruncateSettings = null,
     @"if": ?IfOperation = null,
     keep_archive: ?IfOperation = null,
-    compress: ?[]const u8 = "gzip",
+    compress: ?[]const u8 = null,
     compression_level: ?u8 = 4,
 
     /// Caller is resposible for freeing the memory
