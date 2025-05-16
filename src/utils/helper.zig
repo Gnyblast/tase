@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const testing = std.testing;
 const Allocator = std.mem.Allocator;
 
@@ -72,10 +73,11 @@ pub fn printErrorExit(allocator: Allocator, err: anyerror, cli_args: configs.arg
     std.process.exit(1);
 }
 
+//TODO revisit this on future version for builtin.is_test
 pub fn printError(allocator: Allocator, err: anyerror, comptime scope: @TypeOf(.enum_literal), comptime fmt: []const u8) void {
     const err_msg = errorFactory.getLogMessageByErr(allocator, err);
     defer if (err_msg.allocated) allocator.free(err_msg.message);
-    std.log.scoped(scope).err(fmt, .{err_msg.message});
+    if (!builtin.is_test) std.log.scoped(scope).err(fmt, .{err_msg.message});
 }
 
 test "toUpperCaseTest" {

@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const testing = std.testing;
 const Cron = @import("cron-time").Cron;
 const enums = @import("../enum/config_enum.zig");
@@ -67,6 +68,7 @@ pub const Agent = struct {
     secret: []const u8,
 };
 
+//TODO revisit this on future version for builtin.is_test
 pub const LogConf = struct {
     app_name: []const u8,
     logs_dir: []const u8,
@@ -78,7 +80,7 @@ pub const LogConf = struct {
     pub fn isConfigValid(self: LogConf, allocator: Allocator) !void {
         var cron = Cron.init();
         cron.parse(self.cron_expression) catch |err| {
-            std.log.scoped(.config).err("Error parsing cron: {s}", .{self.cron_expression});
+            if (!builtin.is_test) std.log.scoped(.config).err("Error parsing cron: {s}", .{self.cron_expression});
             return err;
         };
 
