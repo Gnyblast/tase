@@ -25,7 +25,10 @@ jobs:
       - name: Zig build
         run: zig build
 
-      - name: Zig build test
+      - name: Unit test
+        run: zig build test
+
+      - name: Coverage test
         run: zig build test
 
       # - name: Coverage test
