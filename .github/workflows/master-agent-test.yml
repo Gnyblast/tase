@@ -17,6 +17,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.0
+      - run: zig build
+      - run: zig build cover
+
       - name: Give execute permission to script
         run: chmod +x ./app-test-container/start-test.sh
 
