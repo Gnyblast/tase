@@ -31,4 +31,4 @@ jobs:
       - name: Run kcov coverage test
         uses: sudo-bot/action-kcov@latest
         with:
-          cli-args: "--clean --exclude-region=//test-no-cover-start://test-no-cover-end --include-path=src/ zig-out/bin/unit_tests"
+          cli-args: "--clean --exclude-region=//test-no-cover-start://test-no-cover-end --include-path=src/ ./coverage ./zig-out/bin/unit_tests"
