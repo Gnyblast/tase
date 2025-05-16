@@ -14,6 +14,8 @@ ROTATION_CONTAINER="tase_rotate_agent"
 NETWORK="tase_network"
 SIGNAL_DIR="/tmp/tase-signal"
 
+BUILD_IMAGE=""
+
 cleanupExit() {
     local exit_code=0
     if [ -n "${1}" ]; then
@@ -34,6 +36,12 @@ prepare() {
     podman network create "${NETWORK}"
     rm -rf "${SIGNAL_DIR}"
     mkdir -p "${SIGNAL_DIR}"
+
+    if [ "${BUILD_IMAGE}" = "build" ]; then
+        podman build ./app-test-container/master/ -t "${MASTER_IMAGE}"
+        podman build ./app-test-container/rotate-agent-test/ -t "${ROTATION_AGENT_IMAGE}"
+        podman build ./app-test-container/delete-agent-test/ -t "${DELETION_AGENT_IMAGE}"
+    fi
 
 }
 
@@ -164,6 +172,10 @@ testResults() {
 }
 
 trap cleanupExit SIGINT
+
+if [ -n "$1" ]; then
+    BUILD_IMAGE="$1"
+fi
 
 prepare
 startAgents

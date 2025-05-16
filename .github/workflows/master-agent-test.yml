@@ -21,4 +21,4 @@ jobs:
         run: chmod +x ./app-test-container/start-test.sh
 
       - name: Run script
-        run: ./app-test-container/start-test.sh
+        run: ./app-test-container/start-test.sh build
