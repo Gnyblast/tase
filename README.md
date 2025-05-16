@@ -1,3 +1,5 @@
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/gnyblast/tase/.github%2Fworkflows%2Fmaster-agent-test.yml)
+
 <p align="center">
 <img src="./trans_bg_wo_wm.png" alt="drawing" width="200"/>
 <p>

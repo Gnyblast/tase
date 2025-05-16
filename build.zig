@@ -105,11 +105,11 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_lib_unit_tests.step);
 
-    // const rm = b.addSystemCommand(&.{
-    //     "rm",
-    //     "-rf",
-    //     "zig-out/cover",
-    // });
+    const rm = b.addSystemCommand(&.{
+        "rm",
+        "-rf",
+        "zig-out/cover",
+    });
 
     const run_cover = b.addSystemCommand(&.{
         "kcov",
@@ -121,6 +121,6 @@ pub fn build(b: *std.Build) void {
     run_cover.addArtifactArg(lib_unit_tests);
 
     const cover_step = b.step("cover", "Generate test coverage report");
-    // run_cover.step.dependOn(&rm.step);
+    run_cover.step.dependOn(&rm.step);
     cover_step.dependOn(&run_cover.step);
 }
