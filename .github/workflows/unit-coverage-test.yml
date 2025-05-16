@@ -11,6 +11,21 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+      - name: Install dependencies for kcov
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake libcurl4-openssl-dev libelf-dev libdw-dev binutils-dev libiberty-dev
+
+      - name: Build and install kcov from source
+        run: |
+          git clone https://github.com/SimonKagstrom/kcov.git
+          cd kcov
+          mkdir build
+          cd build
+          cmake ..
+          make -j$(nproc)
+          sudo make install
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -22,13 +37,8 @@ jobs:
       - name: Zig build
         run: zig build
 
-      - name: Build test binary
-        run: zig build test-bin
-
       - name: Unit test
         run: zig build test
 
-      - name: Run kcov coverage test
-        uses: sudo-bot/action-kcov@latest
-        with:
-          cli-args: "--clean --exclude-region=//test-no-cover-start://test-no-cover-end --include-path=src/ ./coverage ./zig-out/bin/unit_tests"
+      - name: Coverage test
+        run: zig build cover
