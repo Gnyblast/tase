@@ -3,7 +3,12 @@
 
 <p align="center">
 <img src="./trans_bg_wo_wm.png" alt="drawing" width="200"/>
-<p>
+</p>
+<p align="center">
+<a href="https://discord.gg/mf9R2AzXYq" target="_blank">
+<img src="https://discordapp.com/api/guilds/1373029846510342234/widget.png?style=banner2">
+</a>
+</p>
 
 > [!IMPORTANT]  
 > Tase is not working at the moment, being actively developed.
