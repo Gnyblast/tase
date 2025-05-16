@@ -185,7 +185,9 @@ for i in {1..30}; do
     if [ -f "/tmp/tase-signal/rotate-agent.rdy" ] && [ -f "/tmp/tase-signal/delete-agent.rdy" ]; then
         break
     fi
-    if [ "$i" -gt 29 ]; then
+    if [ "$i" -gt 59 ]; then
+        podman logs "${DELETION_CONTAINER}"
+        podman logs "${ROTATION_CONTAINER}"
         exit 1
     fi
     sleep 1
@@ -197,7 +199,8 @@ for i in {1..30}; do
     if [ -f "/tmp/tase-signal/master-agent.rdy" ]; then
         break
     fi
-    if [ "$i" -gt 29 ]; then
+    if [ "$i" -gt 59 ]; then
+        podman logs "${MASTER_CONTAINER}"
         exit 1
     fi
     sleep 1
