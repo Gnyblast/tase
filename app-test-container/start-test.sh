@@ -14,11 +14,16 @@ ROTATION_CONTAINER="tase_rotate_agent"
 NETWORK="tase_network"
 SIGNAL_DIR="/tmp/tase-signal"
 
-cleanup() {
+cleanupExit() {
+    local exit_code=0
+    if [ -n "${1}" ]; then
+        exit_code=$1
+    fi
     podman container stop "${DELETION_CONTAINER}"
     podman container stop "${ROTATION_CONTAINER}"
     podman container stop "${MASTER_CONTAINER}"
     podman container prune -f
+    exit "${exit_code}"
 }
 
 prepare() {
@@ -38,10 +43,36 @@ startAgents() {
 }
 
 startMaster() {
-    podman run -d -v "${SCRIPT_PATH}/../:/root/tase" -p 7425 --network "${NETWORK}" --name "${MASTER_CONTAINER}" "${MASTER_IMAGE}"
+    podman run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7425 --network "${NETWORK}" --name "${MASTER_CONTAINER}" "${MASTER_IMAGE}"
 }
 
-trap cleanup SIGINT
+testResults() {
+    echo "=============check ${DELETION_CONTAINER}============="
+    podman logs ${DELETION_CONTAINER} 2>&1 | grep -iE "\berrors?\b|\bfailures?\b|\bpanic\b|segfault|segmentation fault|memory leak|invalid memory (access|address)|null pointer"
+    DELETION_RESULT=$?
+    echo "=============check ${ROTATION_CONTAINER}============="
+    podman logs ${ROTATION_CONTAINER} 2>&1 | grep -iE "\berrors?\b|\bfailures?\b|\bpanic\b|segfault|segmentation fault|memory leak|invalid memory (access|address)|null pointer"
+    ROTATION_RESULT=$?
+    echo "=============check ${MASTER_CONTAINER}============="
+    podman logs ${MASTER_CONTAINER} 2>&1 | grep -iE "\berrors?\b|\bfailures?\b|\bpanic\b|segfault|segmentation fault|memory leak|invalid memory (access|address)|null pointer"
+    MASTER_RESULT=$?
+
+    if [ "${DELETION_RESULT}" -lt 1 ]; then
+        echo "Deletion failed: ${DELETION_RESULT}"
+    fi
+    if [ "${ROTATION_RESULT}" -lt 1 ]; then
+        echo "Rotation failed: ${ROTATION_RESULT}"
+    fi
+    if [ "${MASTER_RESULT}" -lt 1 ]; then
+        echo "Master failed: ${MASTER_RESULT}"
+    fi
+
+    if [ "${MASTER_RESULT}" -lt 1 ] || [ "${ROTATION_RESULT}" -lt 1 ] || [ "${DELETION_RESULT}" -lt 1 ]; then
+        cleanupExit 1
+    fi
+}
+
+trap cleanupExit SIGINT
 
 prepare
 startAgents
@@ -58,4 +89,16 @@ for i in {1..30}; do
 done
 
 startMaster
-sleep 60
+for i in {1..30}; do
+    echo "Waiting master to come up: ${i}. try!"
+    if [ -f "/tmp/tase-signal/master-agent.rdy" ]; then
+        break
+    fi
+    if [ "$i" -gt 29 ]; then
+        exit 1
+    fi
+    sleep 1
+done
+sleep 20
+testResults
+cleanupExit 0

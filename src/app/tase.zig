@@ -25,6 +25,7 @@ pub const Tase = struct {
     comptime version: []const u8 = version,
     server: serverFactory.Server,
     allocator: Allocator,
+    arena: std.heap.ArenaAllocator,
     secret: []const u8,
 
     pub fn init(allocator: Allocator, cli_args: *const configs.argOpts) !Tase {
@@ -46,7 +47,6 @@ pub const Tase = struct {
 
         const yaml_cfg: *configs.YamlCfgContainer = try allocator.create(configs.YamlCfgContainer);
         var arena = std.heap.ArenaAllocator.init(allocator);
-        defer arena.deinit();
 
         if (cli_args.master) {
             yaml_cfg.* = try YamlParser.parse(arena.allocator(), cli_args.config);
@@ -68,10 +68,12 @@ pub const Tase = struct {
             .yaml_cfg = yaml_cfg,
             .server = server,
             .secret = secret_dupe,
+            .arena = arena,
         };
     }
 
     pub fn deinit(self: *Tase) void {
+        self.arena.deinit();
         self.server.destroy(self.allocator);
         self.allocator.destroy(self.yaml_cfg);
         self.allocator.free(self.secret);
@@ -204,6 +206,8 @@ test "performCheckTest" {
     };
     var server = try serverFactory.getServer(testing.allocator, "tcp", "localhost", 7423, "");
     defer server.destroy(testing.allocator);
+    const allocator = testing.allocator;
+    const arena = std.heap.ArenaAllocator.init(allocator);
 
     const TestCase = struct {
         tase: Tase,
@@ -213,7 +217,8 @@ test "performCheckTest" {
     const tcs = [_]TestCase{
         .{
             .tase = Tase{
-                .allocator = testing.allocator,
+                .allocator = allocator,
+                .arena = arena,
                 .cli_args = &configs.argOpts{
                     .config = "../../app.yaml",
                 },
@@ -235,7 +240,8 @@ test "performCheckTest" {
         },
         .{
             .tase = Tase{
-                .allocator = testing.allocator,
+                .allocator = allocator,
+                .arena = arena,
                 .cli_args = &configs.argOpts{
                     .config = "../../app.yaml",
                     .master = true,
@@ -257,7 +263,8 @@ test "performCheckTest" {
         },
         .{
             .tase = Tase{
-                .allocator = testing.allocator,
+                .allocator = allocator,
+                .arena = arena,
                 .cli_args = &configs.argOpts{
                     .config = "../../app.yaml",
                     .master = true,
@@ -281,7 +288,8 @@ test "performCheckTest" {
         },
         .{
             .tase = Tase{
-                .allocator = testing.allocator,
+                .allocator = allocator,
+                .arena = arena,
                 .cli_args = &configs.argOpts{
                     .config = "../../app.yaml",
                     .agent = true,
@@ -304,7 +312,8 @@ test "performCheckTest" {
         },
         .{
             .tase = Tase{
-                .allocator = testing.allocator,
+                .allocator = allocator,
+                .arena = arena,
                 .cli_args = &configs.argOpts{
                     .config = "../../app.yaml",
                     .agent = true,
@@ -327,7 +336,8 @@ test "performCheckTest" {
         },
         .{
             .tase = Tase{
-                .allocator = testing.allocator,
+                .allocator = allocator,
+                .arena = arena,
                 .cli_args = &configs.argOpts{
                     .config = "../../app.yaml",
                     .agent = true,
@@ -351,7 +361,8 @@ test "performCheckTest" {
         },
         .{
             .tase = Tase{
-                .allocator = testing.allocator,
+                .allocator = allocator,
+                .arena = arena,
                 .cli_args = &configs.argOpts{
                     .config = "../../app.yaml",
                     .agent = true,
