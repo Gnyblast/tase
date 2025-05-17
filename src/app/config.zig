@@ -186,6 +186,7 @@ pub const LogAction = struct {
         _ = self.truncate_settings orelse return TaseNativeErrors.TruncateRequiresSettings;
         _ = std.meta.stringToEnum(enums.TruncateBy, self.truncate_settings.?.by orelse return TaseNativeErrors.MissingTruncateBy) orelse return TaseNativeErrors.InvalidTruncateByFieldValue;
         _ = std.meta.stringToEnum(enums.TruncateFrom, self.truncate_settings.?.from orelse return TaseNativeErrors.MissingTruncateFrom) orelse return TaseNativeErrors.InvalidTruncateFromFieldValue;
+        _ = std.meta.stringToEnum(enums.TruncateAction, self.truncate_settings.?.action orelse return TaseNativeErrors.MissingTruncateAction) orelse return TaseNativeErrors.InvalidTruncateActionFieldValue;
 
         if ((self.truncate_settings.?.size orelse return TaseNativeErrors.MissingTruncateSize) < 1)
             return TaseNativeErrors.TruncateSizeError;
@@ -193,6 +194,7 @@ pub const LogAction = struct {
 };
 
 pub const TruncateSettings = struct {
+    action: ?[]const u8 = null,
     from: ?[]const u8 = null,
     by: ?[]const u8 = null,
     size: ?i32 = null,
@@ -620,6 +622,7 @@ test "checkActionValidityTest" {
                     .by = "line",
                     .from = "top",
                     .size = 100,
+                    .action = "keep",
                 },
             },
         },
@@ -831,6 +834,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 .truncate_settings = TruncateSettings{
                     .size = 1,
                     .from = "top",
+                    .action = "keep",
                 },
             },
             .err = TaseNativeErrors.MissingTruncateBy,
@@ -845,7 +849,25 @@ test "checkMandatoryFieldsForTruncateTest" {
                 },
                 .truncate_settings = TruncateSettings{
                     .size = 1,
+                    .from = "top",
+                    .action = "keep",
+                    .by = "invalid",
+                },
+            },
+            .err = TaseNativeErrors.InvalidTruncateByFieldValue,
+        },
+        .{
+            .log_action = LogAction{
+                .strategy = "truncate",
+                .@"if" = IfOperation{
+                    .condition = "size",
+                    .operand = 2,
+                    .operator = ">",
+                },
+                .truncate_settings = TruncateSettings{
+                    .size = 1,
                     .by = "size",
+                    .action = "keep",
                 },
             },
             .err = TaseNativeErrors.MissingTruncateFrom,
@@ -859,8 +881,26 @@ test "checkMandatoryFieldsForTruncateTest" {
                     .operator = ">",
                 },
                 .truncate_settings = TruncateSettings{
+                    .size = 1,
+                    .by = "size",
+                    .action = "keep",
+                    .from = "invalid",
+                },
+            },
+            .err = TaseNativeErrors.InvalidTruncateFromFieldValue,
+        },
+        .{
+            .log_action = LogAction{
+                .strategy = "truncate",
+                .@"if" = IfOperation{
+                    .condition = "size",
+                    .operand = 2,
+                    .operator = ">",
+                },
+                .truncate_settings = TruncateSettings{
                     .from = "bottom",
                     .by = "size",
+                    .action = "keep",
                 },
             },
             .err = TaseNativeErrors.MissingTruncateSize,
@@ -877,6 +917,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                     .from = "bottom",
                     .by = "size",
                     .size = 0,
+                    .action = "keep",
                 },
             },
             .err = TaseNativeErrors.TruncateSizeError,
@@ -892,7 +933,41 @@ test "checkMandatoryFieldsForTruncateTest" {
                 .truncate_settings = TruncateSettings{
                     .from = "bottom",
                     .by = "size",
+                    .size = 0,
+                },
+            },
+            .err = TaseNativeErrors.MissingTruncateAction,
+        },
+        .{
+            .log_action = LogAction{
+                .strategy = "truncate",
+                .@"if" = IfOperation{
+                    .condition = "size",
+                    .operand = 2,
+                    .operator = ">",
+                },
+                .truncate_settings = TruncateSettings{
+                    .from = "bottom",
+                    .by = "size",
+                    .size = 0,
+                    .action = "invalid",
+                },
+            },
+            .err = TaseNativeErrors.InvalidTruncateActionFieldValue,
+        },
+        .{
+            .log_action = LogAction{
+                .strategy = "truncate",
+                .@"if" = IfOperation{
+                    .condition = "size",
+                    .operand = 2,
+                    .operator = ">",
+                },
+                .truncate_settings = TruncateSettings{
+                    .from = "bottom",
+                    .by = "size",
                     .size = 1,
+                    .action = "keep",
                 },
             },
         },

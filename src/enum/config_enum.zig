@@ -17,6 +17,20 @@ pub const ActionStrategy = enum {
     }
 };
 
+pub const TruncateAction = enum {
+    keep,
+    delete,
+
+    pub const TruncateActionName = [@typeInfo(TruncateAction).@"enum".fields.len][:0]const u8{
+        "keep",
+        "delete",
+    };
+
+    pub fn str(self: TruncateAction) [:0]const u8 {
+        return TruncateActionName[@intFromEnum(self)];
+    }
+};
+
 pub const TruncateBy = enum {
     line,
     size,
@@ -99,6 +113,11 @@ test "TruncateByTest" {
 test "TruncateFromTest" {
     try testing.expectEqualDeep("bottom", TruncateFrom.bottom.str());
     try testing.expectEqualDeep("top", TruncateFrom.top.str());
+}
+
+test "TruncateActionTest" {
+    try testing.expectEqualDeep("delete", TruncateAction.delete.str());
+    try testing.expectEqualDeep("keep", TruncateAction.keep.str());
 }
 
 test "IfConditionsTest" {

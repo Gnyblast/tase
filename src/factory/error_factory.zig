@@ -27,6 +27,8 @@ pub const TaseNativeErrors = error{
     InvalidTruncateByFieldValue,
     InvalidTruncateFromFieldValue,
     MissingTruncateFrom,
+    InvalidTruncateActionFieldValue,
+    MissingTruncateAction,
     MissingTruncateSize,
     TruncateSizeError,
     SecretIsMandatory,
@@ -163,6 +165,14 @@ pub const errors = [_]TaseError{
     .{
         .err = TaseNativeErrors.MissingTruncateFrom,
         .message = "Missing \"from\" in \"truncate_setting\"",
+    },
+    .{
+        .err = TaseNativeErrors.InvalidTruncateActionFieldValue,
+        .message = "\"action\" filed value in \"truncate_settings\" is invalid",
+    },
+    .{
+        .err = TaseNativeErrors.MissingTruncateAction,
+        .message = "Missing \"action\" in \"truncate_setting\"",
     },
     .{
         .err = TaseNativeErrors.MissingTruncateSize,
