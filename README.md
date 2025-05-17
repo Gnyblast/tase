@@ -1,5 +1,6 @@
 [![GitHub Actions Workflow Status](https://github.com/gnyblast/tase/actions/workflows/master-agent-test.yml/badge.svg)](https://github.com/gnyblast/tase/actions)
 [![GitHub Actions Workflow Status](https://github.com/gnyblast/tase/actions/workflows/unit-coverage-test.yml/badge.svg)](https://github.com/gnyblast/tase/actions)
+[![Coverage Status](https://coveralls.io/repos/github/Gnyblast/tase/badge.svg?branch=master)](https://coveralls.io/github/Gnyblast/tase?branch=master)
 
 <p align="center">
 <img src="./trans_bg_wo_wm.png" alt="drawing" width="200"/>

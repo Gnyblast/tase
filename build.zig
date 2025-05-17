@@ -121,6 +121,8 @@ pub fn build(b: *std.Build) void {
         "--clean",
         "--exclude-region=//test-no-cover-start://test-no-cover-end",
         "--include-path=src/",
+        "--verify",
+        b.args.?[0],
         b.pathJoin(&.{ b.install_path, "cover" }),
     });
     run_cover.addArtifactArg(lib_unit_tests);
