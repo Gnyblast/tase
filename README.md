@@ -11,7 +11,10 @@
 </p>
 
 > [!IMPORTANT]  
-> Tase is not working at the moment, being actively developed.
+> Tase is on beta version at the moment and missing truncate functionality.
+
+> [!WARNING]
+> Tase is well-tested on limited environments but not battle-tested fully.
 
 # Tase
 
@@ -22,6 +25,7 @@
   - [What is Tase?](#what-is-tase)
   - [Features](#features)
   - [Installation](#installation)
+  - [CLI Arguments](#CLI)
   - [Configuration Reference](#configuration-reference)
     - [Configuration File Structure](#configuration-file-structure)
       - [1. Configs (`configs`)](#1-configs-configs)
@@ -67,6 +71,23 @@ zig-out/bin/tase -m master -c /path/to/config.yml
 # Run the agent daemon on other servers that can communicate with master server
 zig-out/bin/tase --agent --secret <a-generated-secret-that-matches-to-config> --port 7423 --master-host localhost --master-port 7423
 ```
+
+## CLI
+
+| Argument         | Type   | Description                                                       | Default              | Required                            |
+| ---------------- | ------ | ----------------------------------------------------------------- | -------------------- | ----------------------------------- |
+| `--log-dir`      | string | Directory for tase self logs                                      | `/var/log/tase`      | No                                  |
+| `--log-level`    | string | Logging level (`debug`, `info`, `warn`, `error`)                  | `info`               | No                                  |
+| `--master`       | bool   | For server type master                                            | -                    | Either --master or --agent required |
+| `--agent`        | bool   | For server type agent                                             | -                    | Either --master or --agent required |
+| `--config`       | string | absolute path for configuration file                              | `/etc/tase/app.yaml` | No                                  |
+| `--secret`       | string | Agents only - Secret for master/agent communication (JWT secret)  | -                    | Yes - Only for --agent              |
+| `--host`         | string | Agent Server host address (Only for agents)                       | `127.0.0.1`          | No                                  |
+| `--port`         | string | Agent Server port (Only for agents)                               | `7423`               | No                                  |
+| `--server-type`  | string | Agent Server type, only `tcp` atm (Only for agents)               | `tcp`                | No                                  |
+| `--master-host`  | string | Host address of the master for agent to connect (Only for agents) | -                    | Yes                                 |
+| `--mastger-port` | string | Port address of the master for agent to connect (Only for agents) | -                    | Yes                                 |
+| `--help`         | bool   | Print help menu                                                   | -                    | No                                  |
 
 ## Configuration Reference
 
