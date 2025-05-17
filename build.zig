@@ -116,15 +116,24 @@ pub fn build(b: *std.Build) void {
         "zig-out/cover",
     });
 
-    const run_cover = b.addSystemCommand(&.{
+    var kcov_cmd: []const []const u8 = &.{
         "kcov",
         "--clean",
         "--exclude-region=//test-no-cover-start://test-no-cover-end",
         "--include-path=src/",
-        "--verify",
-        b.args.?[0],
         b.pathJoin(&.{ b.install_path, "cover" }),
-    });
+    };
+    if (b.args != null) {
+        kcov_cmd = &.{
+            "kcov",
+            b.args.?[0],
+            "--clean",
+            "--exclude-region=//test-no-cover-start://test-no-cover-end",
+            "--include-path=src/",
+            b.pathJoin(&.{ b.install_path, "cover" }),
+        };
+    }
+    const run_cover = b.addSystemCommand(kcov_cmd);
     run_cover.addArtifactArg(lib_unit_tests);
 
     const cover_step = b.step("cover", "Generate test coverage report");
