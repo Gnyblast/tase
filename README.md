@@ -99,14 +99,14 @@ The application uses a YAML configuration file with the following main sections:
 
 Each config defines a log management task with the following properties:
 
-| Property           | Type     | Description                                                                                             | Default | Required |
-| ------------------ | -------- | ------------------------------------------------------------------------------------------------------- | ------- | -------- |
-| `app_name`         | string   | Name of the application                                                                                 | -       | Yes      |
-| `logs_dir`         | string   | Directory containing log files                                                                          | -       | Yes      |
-| `log_files_regexp` | string   | Regular expression to match log files. **Always use single quotes `'`' because of Library Limitations** | -       | Yes      |
-| `cron_expression`  | string   | Cron schedule for the log management task                                                               | -       | Yes      |
-| `run_agent_names`  | string[] | List of agents to run this task **("local" is a reserved word to run against master server itself)**    | -       | Yes      |
-| `action`           | object   | Log management strategy details                                                                         | -       | Yes      |
+| Property           | Type     | Description                                                                                            | Default | Required |
+| ------------------ | -------- | ------------------------------------------------------------------------------------------------------ | ------- | -------- |
+| `app_name`         | string   | Name of the application                                                                                | -       | Yes      |
+| `logs_dir`         | string   | Directory containing log files                                                                         | -       | Yes      |
+| `log_files_regexp` | string   | Regular expression to match log files. **Always use single quotes `'` because of Library Limitations** | -       | Yes      |
+| `cron_expression`  | string   | Cron schedule for the log management task                                                              | -       | Yes      |
+| `run_agent_names`  | string[] | List of agents to run this task **("local" is a reserved word to run against master server itself)**   | -       | Yes      |
+| `action`           | object   | Log management strategy details                                                                        | -       | Yes      |
 
 #### 2. Action Strategies
 
