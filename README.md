@@ -25,7 +25,7 @@
   - [What is Tase?](#what-is-tase)
   - [Features](#features)
   - [Installation](#installation)
-  - [CLI Arguments](#CLI)
+  - [CLI Arguments](#CLI-Arguments)
   - [Configuration Reference](#configuration-reference)
     - [Configuration File Structure](#configuration-file-structure)
       - [1. Configs (`configs`)](#1-configs-configs)
@@ -49,9 +49,9 @@ Tase is a lightweight log management system written in Zig. It consists of a dae
 1. **Master-Agent Architecture**: The master server manages configurations and schedules, while agents execute log management tasks.
 2. **YAML-Based Configuration**: The master server reads a `config.yaml` file to determine agent behavior and scheduling.
 3. **Cron-based Scheduling**: The application uses cron-based scheduling to execute the log management tasks at predefined intervals.
-4. **Truncate Logs**: The application can truncate log files that are older than a specified number of days or exceed a certain size.
-5. **Rotate Logs**: The application can rotate log files, optionally compressing the archived files using the GZip algorithm. It can also delete archived logs older than a specified number of days.
-6. **Delete Logs**: The application can delete log files that are older than a specified number of days or exceed a certain size.
+4. **Delete Logs**: The application can delete log files that are older than a specified number of days or exceed a certain size.
+5. **Rotate Logs**: The application can rotate log files, optionally compressing the archived files using the GZip algorithm. It can also delete archived logs older than a specified number of days or size same as delete action.
+6. **Truncate Logs (Not yet implemented)**: The application can truncate log files that are older than a specified number of days or exceed a certain size.
 
 ## Installation
 
@@ -72,7 +72,7 @@ zig-out/bin/tase -m master -c /path/to/config.yml
 zig-out/bin/tase --agent --secret <a-generated-secret-that-matches-to-config> --port 7423 --master-host localhost --master-port 7423
 ```
 
-## CLI
+## CLI Arguments
 
 | Argument         | Type   | Description                                                       | Default              | Required                            |
 | ---------------- | ------ | ----------------------------------------------------------------- | -------------------- | ----------------------------------- |
@@ -105,7 +105,7 @@ Each config defines a log management task with the following properties:
 | `logs_dir`         | string   | Directory containing log files                                                                          | -       | Yes      |
 | `log_files_regexp` | string   | Regular expression to match log files. **Always use single quotes `'`' because of Library Limitations** | -       | Yes      |
 | `cron_expression`  | string   | Cron schedule for the log management task                                                               | -       | Yes      |
-| `run_agent_names`  | string[] | List of agents to run this task ("local" is a reserved word for master server itself)                   | -       | Yes      |
+| `run_agent_names`  | string[] | List of agents to run this task **("local" is a reserved word to run against master server itself)**    | -       | Yes      |
 | `action`           | object   | Log management strategy details                                                                         | -       | Yes      |
 
 #### 2. Action Strategies
