@@ -99,14 +99,14 @@ The application uses a YAML configuration file with the following main sections:
 
 Each config defines a log management task with the following properties:
 
-| Property           | Type     | Description                                                                           | Default | Required |
-| ------------------ | -------- | ------------------------------------------------------------------------------------- | ------- | -------- |
-| `app_name`         | string   | Name of the application                                                               | -       | Yes      |
-| `logs_dir`         | string   | Directory containing log files                                                        | -       | Yes      |
-| `log_files_regexp` | string   | Regular expression to match log files                                                 | -       | Yes      |
-| `cron_expression`  | string   | Cron schedule for the log management task                                             | -       | Yes      |
-| `run_agent_names`  | string[] | List of agents to run this task ("local" is a reserved word for master server itself) | -       | Yes      |
-| `action`           | object   | Log management strategy details                                                       | -       | Yes      |
+| Property           | Type     | Description                                                                                             | Default | Required |
+| ------------------ | -------- | ------------------------------------------------------------------------------------------------------- | ------- | -------- |
+| `app_name`         | string   | Name of the application                                                                                 | -       | Yes      |
+| `logs_dir`         | string   | Directory containing log files                                                                          | -       | Yes      |
+| `log_files_regexp` | string   | Regular expression to match log files. **Always use single quotes `'`' because of Library Limitations** | -       | Yes      |
+| `cron_expression`  | string   | Cron schedule for the log management task                                                               | -       | Yes      |
+| `run_agent_names`  | string[] | List of agents to run this task ("local" is a reserved word for master server itself)                   | -       | Yes      |
+| `action`           | object   | Log management strategy details                                                                         | -       | Yes      |
 
 #### 2. Action Strategies
 
@@ -114,29 +114,31 @@ The `action` object supports three strategies:
 
 ##### Truncate Strategy
 
-| Property       | Type   | Description                                 | Default | Required |
-| -------------- | ------ | ------------------------------------------- | ------- | -------- |
-| `strategy`     | string | Must be `"truncate"`                        | -       | Yes      |
-| `from`         | string | Where to truncate (`"top"` or `"bottom"`)   | -       | Yes      |
-| `if.condition` | string | Condition type (`"days"` or `"size" in MB`) | -       | Yes      |
-| `if.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`)   | -       | Yes      |
-| `if.operand`   | number | Threshold value                             | -       | Yes      |
+| Property                   | Type   | Description                                                          | Default | Required |
+| -------------------------- | ------ | -------------------------------------------------------------------- | ------- | -------- |
+| `strategy`                 | string | Must be `"truncate"`                                                 | -       | Yes      |
+| `truncate_settings.from`   | string | Truncate from top or bottom (`"top"` or `"bottom"`)                  | -       | Yes      |
+| `truncate_settings.by`     | string | Truncate by lines or size (`"line"` or `"size"`)                     | -       | Yes      |
+| `truncate_settings.size`   | int    | Truncate by size, line numbers or size in mb                         | -       | Yes      |
+| `truncate_settings.action` | string | Keep or Delete matching `truncate_settings` (`"delete"` or `"keep"`) | -       | Yes      |
+| `if.condition`             | string | Condition type (`"days"` or `"size" in MB`)                          | -       | Yes      |
+| `if.operator`              | string | Comparison operator (`">"`, `"<"`, `"="`)                            | -       | Yes      |
+| `if.operand`               | number | Threshold value                                                      | -       | Yes      |
 
 ##### Rotate Strategy
 
-| Property                 | Type    | Description                                 | Default                      | Required              |
-| ------------------------ | ------- | ------------------------------------------- | ---------------------------- | --------------------- |
-| `strategy`               | string  | Must be `"rotate"`                          | -                            | Yes                   |
-| `rotate_archives_dir`    | string  | Directory for archiving rotated files       | same directory with log file | No                    |
-| `if.condition`           | string  | Condition type (`"days"` or `"size" in MB`) | -                            | Yes                   |
-| `if.operator`            | string  | Comparison operator (`">"`, `"<"`, `"="`)   | -                            | Yes                   |
-| `if.operand`             | number  | Threshold value                             | -                            | Yes                   |
-| `keep_archive.condition` | string  | Condition type (`"days"` or `"size" in MB`) | -                            | Yes                   |
-| `keep_archive.operator`  | string  | Comparison operator (`">"`, `"<"`, `"="`)   | -                            | Yes                   |
-| `keep_archive.operand`   | number  | Threshold value                             | -                            | Yes                   |
-| `compress`               | boolean | Enable compression                          | `false`                      | No                    |
-| `compression_type`       | string  | Compression algorithm (`"gzip"`)            | `"gzip"`                     | No if `compress=true` |
-| `compression_level`      | number  | Compression level (4-9)                     | 4                            | No if `compress=true` |
+| Property                 | Type   | Description                                 | Default                      | Required                         |
+| ------------------------ | ------ | ------------------------------------------- | ---------------------------- | -------------------------------- |
+| `strategy`               | string | Must be `"rotate"`                          | -                            | Yes                              |
+| `rotate_archives_dir`    | string | Directory for archiving rotated files       | same directory with log file | No                               |
+| `if.condition`           | string | Condition type (`"days"` or `"size" in MB`) | -                            | Yes                              |
+| `if.operator`            | string | Comparison operator (`">"`, `"<"`, `"="`)   | -                            | Yes                              |
+| `if.operand`             | number | Threshold value                             | -                            | Yes                              |
+| `keep_archive.condition` | string | Condition type (`"days"` or `"size" in MB`) | -                            | Yes if `keep_archive` is defined |
+| `keep_archive.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`)   | -                            | Yes if `keep_archive` is defined |
+| `keep_archive.operand`   | number | Threshold value                             | -                            | Yes if `keep_archive` is defined |
+| `compress`               | string | Compression algorithm (`"gzip"`)            | -                            | No                               |
+| `compression_level`      | number | Compression level (4-9)                     | 4                            | No                               |
 
 ##### Delete Strategy
 
@@ -149,12 +151,12 @@ The `action` object supports three strategies:
 
 #### 3. Agents Configuration
 
-| Property   | Type   | Description                                     | Default | Required |
-| ---------- | ------ | ----------------------------------------------- | ------- | -------- |
-| `name`     | string | Agent name ("local" is reserved cannot be used) | -       | Yes      |
-| `hostname` | string | Agent hostname                                  | -       | Yes      |
-| `port`     | number | Agent port                                      | -       | Yes      |
-| `secret`   | string | Authentication secret                           | -       | Yes      |
+| Property   | Type   | Description                                         | Default | Required |
+| ---------- | ------ | --------------------------------------------------- | ------- | -------- |
+| `name`     | string | Agent name **("local" is reserved cannot be used)** | -       | Yes      |
+| `hostname` | string | Agent hostname                                      | -       | Yes      |
+| `port`     | number | Agent port                                          | -       | Yes      |
+| `secret`   | string | Authentication secret                               | -       | Yes      |
 
 #### 4. Server Configuration
 
@@ -171,18 +173,32 @@ The `action` object supports three strategies:
 configs:
   - app_name: "rotate_logs"
     logs_dir: "/var/log/myapp"
-    log_files_regexp: ".*\\.log"
+    log_files_regexp: 'test\.log'
     cron_expression: "0 0 * * *"
-    run_agent_names: ["agent_1"]
+    run_agent_names:
+      - agent_1
     action:
       strategy: rotate
       if:
         condition: days
         operator: ">"
         operand: 7
-      compress: true
       compression_type: gzip
       compression_level: 5
+
+  - app_name: "delete_logs"
+    logs_dir: "/var/log/myapp2"
+    log_files_regexp: 'test\.log'
+    cron_expression: "30 08 * * 7"
+    run_agent_names:
+      - agent_1
+      - local
+    action:
+      strategy: delete
+      if:
+        condition: size
+        operator: ">"
+        operand: 20
 
 agents:
   - name: agent_1
