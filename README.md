@@ -170,6 +170,17 @@ The `action` object supports three strategies:
 ## Example Configuration
 
 ```yaml
+server:
+  host: "127.0.0.1"
+  port: 7423
+  time_zone: "UTC"
+
+agents:
+  - name: agent_1
+    hostname: "192.xxx.xxx.xxx"
+    port: 7423
+    secret: "your-secret-key"
+
 configs:
   - app_name: "rotate_logs"
     logs_dir: "/var/log/myapp"
@@ -199,17 +210,6 @@ configs:
         condition: size
         operator: ">"
         operand: 20
-
-agents:
-  - name: agent_1
-    hostname: "192.xxx.xxx.xxx"
-    port: 7423
-    secret: "your-secret-key"
-
-server:
-  host: "127.0.0.1"
-  port: 7423
-  time_zone: "UTC"
 ```
 
 ## License
