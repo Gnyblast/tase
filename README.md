@@ -39,6 +39,7 @@
   - [Example Configuration](#example-configuration)
   - [License](#license)
   - [Contributing](#contributing)
+  - [Roadmap](#roadmap)
   - [Author](#author)
 
 ## What is Tase?
@@ -213,13 +214,31 @@ configs:
         operand: 20
 ```
 
-## License
-
-This project is licensed under the [MIT License](LICENSE).
+For more example please see: [config](app-test-container/master/config.yaml)
 
 ## Contributing
 
 Contributions are welcome! Feel free to submit issues and pull requests on [GitHub](https://github.com/Gnyblast/tase).
+Please read [Contiribution guide](CONTRIBUTING.md)
+
+## Roadmap
+
+### Version 1.0.0
+
+1. Write unit and coverate tests for `log_service.zig`
+1. Write Truncate feature and it's tests to `log_service.zig`
+1. Add Truncate container testing to `app-test-container` with all the requirements
+1. Update [config](app-test-container/master/config.yaml) to cover truncate for test
+
+### Version 2.0.0
+
+1. Log file monitoring
+1. Parse and process monitored log files
+1. Save processed log files to a database for future consumption by a UI application
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
 
 ## Author
 

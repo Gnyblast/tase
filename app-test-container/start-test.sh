@@ -14,6 +14,7 @@ ROTATION_CONTAINER="tase_rotate_agent"
 NETWORK="tase_network"
 SIGNAL_DIR="/tmp/tase-signal"
 
+CONTAINER_ENGINE=""
 BUILD_IMAGE=""
 
 cleanupExit() {
@@ -21,37 +22,53 @@ cleanupExit() {
     if [ -n "${1}" ]; then
         exit_code=$1
     fi
-    podman container stop "${DELETION_CONTAINER}"
-    podman container stop "${ROTATION_CONTAINER}"
-    podman container stop "${MASTER_CONTAINER}"
-    podman container prune -f
+    ${CONTAINER_ENGINE} container stop "${DELETION_CONTAINER}"
+    ${CONTAINER_ENGINE} container stop "${ROTATION_CONTAINER}"
+    ${CONTAINER_ENGINE} container stop "${MASTER_CONTAINER}"
+    ${CONTAINER_ENGINE} container prune -f
     exit "${exit_code}"
 }
 
+setContainerEngine() {
+    if command -v podman; then
+        CONTAINER_ENGINE="podman"
+        return
+    fi
+    if command -v docker; then
+        CONTAINER_ENGINE="docker"
+        return
+    fi
+
+    if [ -z "$CONTAINER_ENGINE" ]; then
+        echo "No container engine found please install podman or docker and re-try!"
+        exit 1
+    fi
+}
+
 prepare() {
-    podman container rm -f "${DELETION_CONTAINER}"
-    podman container rm -f "${ROTATION_CONTAINER}"
-    podman container rm -f "${MASTER_CONTAINER}"
-    podman network rm "${NETWORK}"
-    podman network create "${NETWORK}"
+    ${CONTAINER_ENGINE} container rm -f "${DELETION_CONTAINER}"
+    ${CONTAINER_ENGINE} container rm -f "${ROTATION_CONTAINER}"
+    ${CONTAINER_ENGINE} container rm -f "${MASTER_CONTAINER}"
+    ${CONTAINER_ENGINE} network rm "${NETWORK}"
+    ${CONTAINER_ENGINE} network create "${NETWORK}"
     rm -rf "${SIGNAL_DIR}"
     mkdir -p "${SIGNAL_DIR}"
 
     if [ "${BUILD_IMAGE}" = "build" ]; then
-        podman build ./app-test-container/master/ -t "${MASTER_IMAGE}"
-        podman build ./app-test-container/rotate-agent-test/ -t "${ROTATION_AGENT_IMAGE}"
-        podman build ./app-test-container/delete-agent-test/ -t "${DELETION_AGENT_IMAGE}"
+        ${CONTAINER_ENGINE} build ./app-test-container/master/ -t "${MASTER_IMAGE}"
+        ${CONTAINER_ENGINE} build ./app-test-container/rotate-agent-test/ -t "${ROTATION_AGENT_IMAGE}"
+        ${CONTAINER_ENGINE} build ./app-test-container/delete-agent-test/ -t "${DELETION_AGENT_IMAGE}"
     fi
 
 }
 
 startAgents() {
-    podman run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7424 --network "${NETWORK}" --name "${DELETION_CONTAINER}" "${DELETION_AGENT_IMAGE}"
-    podman run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7425 --network "${NETWORK}" --name "${ROTATION_CONTAINER}" "${ROTATION_AGENT_IMAGE}"
+    ${CONTAINER_ENGINE} run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7424 --network "${NETWORK}" --name "${DELETION_CONTAINER}" "${DELETION_AGENT_IMAGE}"
+    ${CONTAINER_ENGINE} run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7425 --network "${NETWORK}" --name "${ROTATION_CONTAINER}" "${ROTATION_AGENT_IMAGE}"
 }
 
 startMaster() {
-    podman run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7425 --network "${NETWORK}" --name "${MASTER_CONTAINER}" "${MASTER_IMAGE}"
+    ${CONTAINER_ENGINE} run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7425 --network "${NETWORK}" --name "${MASTER_CONTAINER}" "${MASTER_IMAGE}"
 }
 
 checkFiles() {
@@ -61,7 +78,7 @@ checkFiles() {
     local REGEX_NEG="$3"
     local REGEX="$4"
     local EXPECTED_COUNT="$5"
-    files=$(podman exec -it "${CONTAINER_NAME}" find "${DIR}" -maxdepth 1 -type f)
+    files=$(${CONTAINER_ENGINE} exec -it "${CONTAINER_NAME}" find "${DIR}" -maxdepth 1 -type f)
     files_sc=$?
     file_count=$(echo -e "${files}" | wc -l)
     if [ ${files_sc} -ne 0 ] || [ "${file_count}" -ne "${EXPECTED_COUNT}" ]; then
@@ -122,7 +139,7 @@ testResults() {
         echo "Deletion Files: OK"
     fi
 
-    podman logs ${DELETION_CONTAINER} 2>&1 | grep -iE "\berrors?\b|\bfailures?\b|\bpanic\b|segfault|segmentation fault|memory leak|invalid memory (access|address)|null pointer"
+    ${CONTAINER_ENGINE} logs ${DELETION_CONTAINER} 2>&1 | grep -iE "\berrors?\b|\bfailures?\b|\bpanic\b|segfault|segmentation fault|memory leak|invalid memory (access|address)|null pointer"
     DELETION_RESULT=$?
     if [ "${DELETION_RESULT}" -lt 1 ]; then
         echo -e "Deletion Logs Check Failed: \n${DELETION_RESULT}"
@@ -139,7 +156,7 @@ testResults() {
         echo "Rotation Files: OK"
     fi
 
-    podman logs ${ROTATION_CONTAINER} 2>&1 | grep -iE "\berrors?\b|\bfailures?\b|\bpanic\b|segfault|segmentation fault|memory leak|invalid memory (access|address)|null pointer"
+    ${CONTAINER_ENGINE} logs ${ROTATION_CONTAINER} 2>&1 | grep -iE "\berrors?\b|\bfailures?\b|\bpanic\b|segfault|segmentation fault|memory leak|invalid memory (access|address)|null pointer"
     ROTATION_RESULT=$?
     if [ "${ROTATION_RESULT}" -lt 1 ]; then
         echo -e "Rotation Logs Check Failed: \n${ROTATION_RESULT}"
@@ -156,7 +173,7 @@ testResults() {
         echo "Master Files: OK"
     fi
 
-    podman logs ${MASTER_CONTAINER} 2>&1 | grep -iE "\berrors?\b|\bfailures?\b|\bpanic\b|segfault|segmentation fault|memory leak|invalid memory (access|address)|null pointer"
+    ${CONTAINER_ENGINE} logs ${MASTER_CONTAINER} 2>&1 | grep -iE "\berrors?\b|\bfailures?\b|\bpanic\b|segfault|segmentation fault|memory leak|invalid memory (access|address)|null pointer"
     MASTER_RESULT=$?
     if [ "${MASTER_RESULT}" -lt 1 ]; then
         echo -e "Master failed: \n${MASTER_RESULT}"
@@ -177,6 +194,7 @@ if [ -n "$1" ]; then
     BUILD_IMAGE="$1"
 fi
 
+setContainerEngine
 prepare
 startAgents
 
@@ -186,8 +204,8 @@ for i in {1..30}; do
         break
     fi
     if [ "$i" -gt 59 ]; then
-        podman logs "${DELETION_CONTAINER}"
-        podman logs "${ROTATION_CONTAINER}"
+        ${CONTAINER_ENGINE} logs "${DELETION_CONTAINER}"
+        ${CONTAINER_ENGINE} logs "${ROTATION_CONTAINER}"
         exit 1
     fi
     sleep 1
@@ -200,7 +218,7 @@ for i in {1..30}; do
         break
     fi
     if [ "$i" -gt 59 ]; then
-        podman logs "${MASTER_CONTAINER}"
+        ${CONTAINER_ENGINE} logs "${MASTER_CONTAINER}"
         exit 1
     fi
     sleep 1
