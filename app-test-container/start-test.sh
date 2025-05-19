@@ -55,9 +55,9 @@ prepare() {
     mkdir -p "${SIGNAL_DIR}"
 
     if [ "${BUILD_IMAGE}" = "build" ]; then
-        ${CONTAINER_ENGINE} build ./app-test-container/master/ -t "${MASTER_IMAGE}"
-        ${CONTAINER_ENGINE} build ./app-test-container/rotate-agent-test/ -t "${ROTATION_AGENT_IMAGE}"
-        ${CONTAINER_ENGINE} build ./app-test-container/delete-agent-test/ -t "${DELETION_AGENT_IMAGE}"
+        ${CONTAINER_ENGINE} build ./app-test-container/master/Containerfile -t "${MASTER_IMAGE}"
+        ${CONTAINER_ENGINE} build ./app-test-container/rotate-agent-test/Containerfile -t "${ROTATION_AGENT_IMAGE}"
+        ${CONTAINER_ENGINE} build ./app-test-container/delete-agent-test/Containerfile -t "${DELETION_AGENT_IMAGE}"
     fi
 
 }
