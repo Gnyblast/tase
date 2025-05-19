@@ -226,10 +226,12 @@ Please read [Contiribution guide](CONTRIBUTING.md)
 
 ### Version 1.0.0
 
-1. Write unit and coverate tests for `log_service.zig`
-1. Write Truncate feature and it's tests to `log_service.zig`
-1. Add Truncate container testing to `app-test-container` with all the requirements
-1. Update [config](app-test-container/master/config.yaml) to cover truncate for test
+- Write unit and coverate tests for `log_service.zig`
+- Truncate
+  - Write Truncate feature and it's tests to `log_service.zig`
+  - Add Truncate container testing to `app-test-container` with all the requirements
+  - Update [config](app-test-container/master/config.yaml) to cover truncate for test
+- Create a builder for different CPU architectures and OS and implement a released inside
 
 ### Version 2.0.0
 
