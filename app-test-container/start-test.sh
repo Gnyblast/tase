@@ -64,11 +64,29 @@ prepare() {
 
 startAgents() {
     ${CONTAINER_ENGINE} run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7424 --network "${NETWORK}" --name "${DELETION_CONTAINER}" "${DELETION_AGENT_IMAGE}"
+    waitContainer "Waiting deletion server to build and start" "/tmp/tase-signal/delete-agent.rdy" "${DELETION_CONTAINER}"
+
     ${CONTAINER_ENGINE} run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7425 --network "${NETWORK}" --name "${ROTATION_CONTAINER}" "${ROTATION_AGENT_IMAGE}"
+    waitContainer "Waiting rotation server to build and start" "/tmp/tase-signal/rotate-agent.rdy" "${ROTATION_CONTAINER}"
 }
 
 startMaster() {
     ${CONTAINER_ENGINE} run -d -v "${SCRIPT_PATH}/../:/root/tase" -v "${SIGNAL_DIR}:/var/signal" -p 7425 --network "${NETWORK}" --name "${MASTER_CONTAINER}" "${MASTER_IMAGE}"
+    waitContainer "Waiting master server to build and start" "/tmp/tase-signal/master-agent.rdy" "${MASTER_CONTAINER}"
+}
+
+waitContainer() {
+    for i in {1..60}; do
+        echo "${1}"
+        if [ -f "${2}" ]; then
+            break
+        fi
+        if [ "$i" -gt 59 ]; then
+            ${CONTAINER_ENGINE} logs "${3}"
+            exit 1
+        fi
+        sleep 1
+    done
 }
 
 checkFiles() {
@@ -197,32 +215,7 @@ fi
 setContainerEngine
 prepare
 startAgents
-
-for i in {1..30}; do
-    echo "Waiting agents to come up: ${i}. try!"
-    if [ -f "/tmp/tase-signal/rotate-agent.rdy" ] && [ -f "/tmp/tase-signal/delete-agent.rdy" ]; then
-        break
-    fi
-    if [ "$i" -gt 59 ]; then
-        ${CONTAINER_ENGINE} logs "${DELETION_CONTAINER}"
-        ${CONTAINER_ENGINE} logs "${ROTATION_CONTAINER}"
-        exit 1
-    fi
-    sleep 1
-done
-
 startMaster
-for i in {1..30}; do
-    echo "Waiting master to come up: ${i}. try!"
-    if [ -f "/tmp/tase-signal/master-agent.rdy" ]; then
-        break
-    fi
-    if [ "$i" -gt 59 ]; then
-        ${CONTAINER_ENGINE} logs "${MASTER_CONTAINER}"
-        exit 1
-    fi
-    sleep 1
-done
 sleep 20
 testResults
 cleanupExit 0
