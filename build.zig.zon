@@ -49,8 +49,8 @@
             .hash = "libregex-0.1.0-RTzUhRlYAACnCAUq7kW7B6HSwsqTt9K04aWtarpH9m6B",
         },
         .yaml = .{
-            .url = "git+https://github.com/gnyblast/zig-yaml?ref=master#0af02355db6baab01f3cd2f2f6bc3f9f39e00167",
-            .hash = "zig_yaml-0.1.0-C1161qaIAgAHORq4XMCDiwYV1l3d_lOZ2vQT2aGVQd4t",
+            .url = "git+https://github.com/kubkon/zig-yaml?ref=main#47aed6a945d1eaeb47d63b7f10b8f68ad6e37820",
+            .hash = "zig_yaml-0.1.0-C1161rqKAgBMVoj-bfHWpzEdjtcd2FUU8VerXw-jnrQ-",
         },
     },
     .paths = .{
