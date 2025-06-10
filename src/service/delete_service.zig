@@ -4,7 +4,7 @@ const datetime = @import("datetime").datetime;
 const configs = @import("../app/config.zig");
 const enums = @import("../enum/config_enum.zig");
 
-const helper = @import("helper.zig");
+const helper = @import("prune_helper.zig");
 const Pruner = @import("./pruner.zig").Pruner;
 
 const Allocator = std.mem.Allocator;

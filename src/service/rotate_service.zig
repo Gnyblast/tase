@@ -1,7 +1,7 @@
 const std = @import("std");
 const testing = std.testing;
 const datetime = @import("datetime").datetime;
-const helper = @import("helper.zig");
+const helper = @import("prune_helper.zig");
 const configs = @import("../app/config.zig");
 const enums = @import("../enum/config_enum.zig");
 const compressionFactory = @import("../factory/compression_factory.zig");
@@ -209,7 +209,6 @@ test "compressAndRotateTest" {
 
     var paths = [_][]const u8{ mock_archive_path, "mock-rotate.log" };
     const mock_file_path = try std.fs.path.join(testing.allocator, &paths);
-    std.debug.print("{s}\n", .{mock_file_path});
     defer testing.allocator.free(mock_file_path);
     var mock_file = try std.fs.createFileAbsolute(mock_file_path, .{});
     defer mock_file.close();

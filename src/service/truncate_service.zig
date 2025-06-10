@@ -1,5 +1,5 @@
 const std = @import("std");
-const helper = @import("helper.zig");
+const helper = @import("prune_helper.zig");
 const enums = @import("../enum/config_enum.zig");
 const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 const Pruner = @import("./pruner.zig").Pruner;
