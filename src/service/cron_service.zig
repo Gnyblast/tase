@@ -3,7 +3,7 @@ const testing = std.testing;
 const datetime = @import("datetime").datetime;
 const cron = @import("cron-time").Cron;
 const Allocator = std.mem.Allocator;
-const LogService = @import("../service/logs_service.zig").LogService;
+const Pruner = @import("../service/pruner.zig").Pruner;
 const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
 const configs = @import("../app/config.zig");
@@ -117,7 +117,7 @@ pub const CronService = struct {
 
     //test-no-cover-start
     fn localRun(self: CronService, allocator: Allocator, cfg: configs.LogConf) void {
-        const logs_service = LogService.create(
+        const pruner = Pruner.create(
             allocator,
             self.tz,
             cfg.logs_dir,
@@ -128,7 +128,7 @@ pub const CronService = struct {
             return;
         };
 
-        const thread = std.Thread.spawn(.{}, LogService.runAndDestroy, .{logs_service}) catch |err| {
+        const thread = std.Thread.spawn(.{}, Pruner.runAndDestroy, .{pruner}) catch |err| {
             std.log.scoped(.cron).err("Error while running local task on a thread: {}", .{err});
             return;
         };

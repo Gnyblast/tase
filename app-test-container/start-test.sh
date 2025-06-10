@@ -77,7 +77,7 @@ startMaster() {
 
 waitContainer() {
     for i in {1..60}; do
-        echo "${1}"
+        echo "#${i} - ${1}"
         if [ -f "${2}" ]; then
             break
         fi

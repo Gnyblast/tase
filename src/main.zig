@@ -3,7 +3,7 @@ const argsParser = @import("args");
 const timezones = @import("datetime").timezones;
 
 const configs = @import("./app/config.zig");
-const utils = @import("utils/helper.zig");
+const utils = @import("./utils/helper.zig");
 const app = @import("./app/tase.zig");
 const logger = @import("./utils/logger.zig");
 

@@ -9,7 +9,7 @@ const Allocator = std.mem.Allocator;
 
 const serverFactory = @import("../factory/server_factory.zig");
 const configs = @import("../app/config.zig");
-const LogService = @import("../service/logs_service.zig").LogService;
+const Pruner = @import("../service/pruner.zig").Pruner;
 const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
 pub const MasterClaims = struct {
@@ -136,7 +136,7 @@ pub const TCPServer = struct {
                 continue;
             }
 
-            const logs_service = LogService.create(
+            const pruner = Pruner.create(
                 logs_alloc,
                 decoded.claims.timezone,
                 decoded.claims.job.logs_dir,
@@ -147,7 +147,7 @@ pub const TCPServer = struct {
                 continue;
             };
 
-            const thread = std.Thread.spawn(.{}, LogService.runAndDestroy, .{logs_service}) catch |err| {
+            const thread = std.Thread.spawn(.{}, Pruner.runAndDestroy, .{pruner}) catch |err| {
                 std.log.scoped(.cron).err("Error while running local task on a thread: {}", .{err});
                 continue;
             };
