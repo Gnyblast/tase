@@ -9,10 +9,10 @@ const Allocator = std.mem.Allocator;
 pub fn doTruncate(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateFrom, pruner.log_action.truncate_settings.?.from.?) orelse return TaseNativeErrors.InvalidTruncateFromFieldValue) {
         .bottom => {
-            processForBottom();
+            processForBottom(pruner);
         },
         .top => {
-            processForTop();
+            processForTop(pruner);
         },
     }
 }
