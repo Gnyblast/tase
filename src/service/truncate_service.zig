@@ -9,62 +9,62 @@ const Allocator = std.mem.Allocator;
 pub fn doTruncate(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateFrom, pruner.log_action.truncate_settings.?.from.?) orelse return TaseNativeErrors.InvalidTruncateFromFieldValue) {
         .bottom => {
-            processForBottom(pruner);
+            try processForBottom(pruner);
         },
         .top => {
-            processForTop(pruner);
+            try processForTop(pruner);
         },
     }
 }
 
-fn processForBottom(pruner: Pruner) void {
+fn processForBottom(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateAction, pruner.log_action.truncate_settings.?.action.?) orelse return TaseNativeErrors.InvalidTruncateActionFieldValue) {
-        .keep => processKeepBottom(pruner),
-        .delete => processDeleteBottom(pruner),
+        .keep => try processKeepBottom(pruner),
+        .delete => try processDeleteBottom(pruner),
     }
 }
 
-fn processKeepBottom(pruner: Pruner) void {
+fn processKeepBottom(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => keepBottomBySize(pruner),
-        .line => keepBottomByLine(pruner),
+        .size => try keepBottomBySize(pruner),
+        .line => try keepBottomByLine(pruner),
     }
 }
 
-fn processDeleteBottom(pruner: Pruner) void {
+fn processDeleteBottom(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => deleteBottomBySize(pruner),
-        .line => deleteBottomByLine(pruner),
+        .size => try deleteBottomBySize(pruner),
+        .line => try deleteBottomByLine(pruner),
     }
 }
 
-fn keepBottomBySize(_: Pruner) void {}
-fn keepBottomByLine(_: Pruner) void {}
-fn deleteBottomBySize(_: Pruner) void {}
-fn deleteBottomByLine(_: Pruner) void {}
+fn keepBottomBySize(_: Pruner) !void {}
+fn keepBottomByLine(_: Pruner) !void {}
+fn deleteBottomBySize(_: Pruner) !void {}
+fn deleteBottomByLine(_: Pruner) !void {}
 
-fn processForTop(pruner: Pruner) void {
+fn processForTop(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateAction, pruner.log_action.truncate_settings.?.action.?) orelse return TaseNativeErrors.InvalidTruncateActionFieldValue) {
-        .keep => processKeepTop(pruner),
-        .delete => processDeleteTop(pruner),
+        .keep => try processKeepTop(pruner),
+        .delete => try processDeleteTop(pruner),
     }
 }
 
-fn processKeepTop(pruner: Pruner) void {
+fn processKeepTop(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => keepTopBySize(pruner),
-        .line => keepTopByLine(pruner),
+        .size => try keepTopBySize(pruner),
+        .line => try keepTopByLine(pruner),
     }
 }
 
-fn processDeleteTop(pruner: Pruner) void {
+fn processDeleteTop(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => deleteTopBySize(pruner),
-        .line => deleteTopByLine(pruner),
+        .size => try deleteTopBySize(pruner),
+        .line => try deleteTopByLine(pruner),
     }
 }
 
-fn keepTopBySize(_: Pruner) void {}
-fn keepTopByLine(_: Pruner) void {}
-fn deleteTopBySize(_: Pruner) void {}
-fn deleteTopByLine(_: Pruner) void {}
+fn keepTopBySize(_: Pruner) !void {}
+fn keepTopByLine(_: Pruner) !void {}
+fn deleteTopBySize(_: Pruner) !void {}
+fn deleteTopByLine(_: Pruner) !void {}
