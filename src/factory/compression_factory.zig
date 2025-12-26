@@ -1,5 +1,5 @@
 const std = @import("std");
-const compress_service = @import("../service/compress_service.zig");
+const compress_service = @import("../engine/compressor.zig");
 
 const enums = @import("../enum/config_enum.zig");
 

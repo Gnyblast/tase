@@ -7,7 +7,7 @@ const Pruner = @import("../service/pruner.zig").Pruner;
 const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
 const configs = @import("../app/config.zig");
-const agentFactory = @import("../factory/agent_factory.zig");
+const clientFactory = @import("../factory/client_factory.zig");
 const errorFactory = @import("../factory/error_factory.zig");
 const utils = @import("../utils/helper.zig");
 
@@ -139,14 +139,14 @@ pub const CronService = struct {
 
     //test-no-cover-start
     fn remoteRun(self: CronService, allocator: Allocator, cfg: configs.LogConf, agent: configs.Agent) void {
-        const tcp_agent = agentFactory.getAgent(allocator, self.server_type, agent.hostname, agent.port, agent.secret) catch |err| {
+        const tcp_client = clientFactory.getClient(allocator, self.server_type, agent.hostname, agent.port, agent.secret) catch |err| {
             const err_msg = errorFactory.getLogMessageByErr(allocator, err);
             defer if (err_msg.allocated) allocator.free(err_msg.message);
-            std.log.scoped(.cron).err("problem getting agent to agent: {s}", .{err_msg.message});
+            std.log.scoped(.cron).err("problem getting client to agent: {s}", .{err_msg.message});
             return;
         };
-        defer tcp_agent.destroy(allocator);
-        tcp_agent.sendLogConf(allocator, cfg, self.tz) catch |err| {
+        defer tcp_client.destroy(allocator);
+        tcp_client.sendLogConf(allocator, cfg, self.tz) catch |err| {
             const err_msg = errorFactory.getLogMessageByErr(allocator, err);
             defer if (err_msg.allocated) allocator.free(err_msg.message);
             std.log.scoped(.cron).err("problem sending message to agent: {s}", .{err_msg.message});

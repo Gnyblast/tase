@@ -6,23 +6,23 @@ const datetime = @import("datetime").datetime;
 
 const configs = @import("../app/config.zig");
 const AgentClaims = @import("../server/tcp.zig").AgentClaims;
-const agentFactory = @import("../factory/agent_factory.zig");
+const clientFactory = @import("../factory/client_factory.zig");
 
 const Allocator = std.mem.Allocator;
 
-pub const TCPAgent = struct {
+pub const TCPClient = struct {
     host: []const u8,
     port: u16,
     secret: []const u8,
 
-    pub fn init(host: []const u8, port: u16, secret: []const u8) TCPAgent {
-        return TCPAgent{ .host = host, .port = port, .secret = secret };
+    pub fn init(host: []const u8, port: u16, secret: []const u8) TCPClient {
+        return TCPClient{ .host = host, .port = port, .secret = secret };
     }
 
-    pub fn create(allocator: Allocator, host: []const u8, port: u16, secret: []const u8) !agentFactory.Agent {
-        const tcp = try allocator.create(TCPAgent);
-        tcp.* = TCPAgent.init(host, port, secret);
-        return agentFactory.Agent{
+    pub fn create(allocator: Allocator, host: []const u8, port: u16, secret: []const u8) !clientFactory.Client {
+        const tcp = try allocator.create(TCPClient);
+        tcp.* = TCPClient.init(host, port, secret);
+        return clientFactory.Client{
             .ptr = tcp,
             .destroyFn = destroy,
             .sendLogConfFn = sendLogConf,
@@ -30,13 +30,13 @@ pub const TCPAgent = struct {
     }
 
     fn destroy(ptr: *anyopaque, allocator: Allocator) void {
-        const self: *TCPAgent = @ptrCast(@alignCast(ptr));
+        const self: *TCPClient = @ptrCast(@alignCast(ptr));
         allocator.destroy(self);
     }
 
     //test-no-cover-start
     fn sendLogConf(ptr: *anyopaque, allocator: Allocator, cfg: configs.LogConf, timezone: datetime.Timezone) !void {
-        const self: *TCPAgent = @ptrCast(@alignCast(ptr));
+        const self: *TCPClient = @ptrCast(@alignCast(ptr));
 
         const agentMsg = AgentClaims{
             .agent_hostname = "",
