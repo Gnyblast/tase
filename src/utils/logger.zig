@@ -21,7 +21,7 @@ pub fn log(
 
     const allocator = std.heap.page_allocator;
     createLogDirIfNotExist(log_file_dir) catch |err| {
-        std.debug.print("Failed to create logging dir: {}\n", .{err});
+        std.debug.print("Failed to create logging dir: {any}\n", .{err});
         std.process.exit(1);
         return;
     };
@@ -30,49 +30,49 @@ pub fn log(
     const log_file_name = if (is_agent) "tase-agent.log" else "tase-master.log";
 
     const path = std.fmt.allocPrint(allocator, "{s}/{s}", .{ log_dir, log_file_name }) catch |err| {
-        std.debug.print("Failed to generate logging path: {}\n", .{err});
+        std.debug.print("Failed to generate logging path: {any}\n", .{err});
         return;
     };
     defer allocator.free(path);
 
     const file = openOrCreateLogFile(path) catch |err| {
-        std.debug.print("Failed to open or create log file, make sure log dir exist with required permissions: {}\n", .{err});
+        std.debug.print("Failed to open or create log file, make sure log dir exist with required permissions: {any}\n", .{err});
         std.process.exit(1);
         return;
     };
     defer file.close();
 
     const stat = file.stat() catch |err| {
-        std.debug.print("Failed to get stat of log file: {}\n", .{err});
+        std.debug.print("Failed to get stat of log file: {any}\n", .{err});
         std.process.exit(1);
         return;
     };
     file.seekTo(stat.size) catch |err| {
-        std.debug.print("Failed to seek log file: {}\n", .{err});
+        std.debug.print("Failed to seek log file: {any}\n", .{err});
         std.process.exit(1);
         return;
     };
 
     const time = std.time.timestamp();
     const time_stamp = getTimeStamp(allocator, time, tz, log_level) catch |err| {
-        std.debug.print("Failed to get a timestamp: {}\n", .{err});
+        std.debug.print("Failed to get a timestamp: {any}\n", .{err});
         return;
     };
     defer allocator.free(time_stamp);
     const levelToUpper = helpers.toUpperCase(allocator, message_log_level.asText()) catch |err| {
-        std.debug.print("Failed to make log level uppercase: {}\n", .{err});
+        std.debug.print("Failed to make log level uppercase: {any}\n", .{err});
         return;
     };
     defer allocator.free(levelToUpper);
 
     const message = std.fmt.allocPrint(allocator, "[{s}] {s}" ++ " " ++ "(" ++ @tagName(scope) ++ ") " ++ format ++ "\n", .{ time_stamp, levelToUpper } ++ args) catch |err| {
-        std.debug.print("Failed to format log message with args: {}\n", .{err});
+        std.debug.print("Failed to format log message with args: {any}\n", .{err});
         return;
     };
     defer allocator.free(message);
 
     file.writeAll(message) catch |err| {
-        std.debug.print("Failed to write to log file: {}\n", .{err});
+        std.debug.print("Failed to write to log file: {any}\n", .{err});
     };
 }
 

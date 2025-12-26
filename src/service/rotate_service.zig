@@ -20,21 +20,21 @@ pub fn doRotate(pruner: Pruner, allocator: Allocator) !void {
     for (files.items) |file_name| {
         var paths = [_][]const u8{ pruner.directory, file_name };
         const path = std.fs.path.join(allocator, &paths) catch |err| {
-            std.log.scoped(.logs).err("error joining paths: {s}/{s}, {}", .{ pruner.directory, file_name, err });
+            std.log.scoped(.logs).err("error joining paths: {s}/{s}, {any}", .{ pruner.directory, file_name, err });
             continue;
         };
         defer allocator.free(path);
 
         if (helper.shouldProcess(pruner.log_action.@"if".?, path, pruner.timezone)) {
             const rotation_file = std.fmt.allocPrint(allocator, "{s}-{d}", .{ file_name, datetime.Datetime.now().toTimestamp() }) catch |err| {
-                std.log.scoped(.logs).err("error generating file name for {s}: {}", .{ path, err });
+                std.log.scoped(.logs).err("error generating file name for {s}: {any}", .{ path, err });
                 continue;
             };
             defer allocator.free(rotation_file);
 
             var rotation_paths = [_][]const u8{ pruner.log_action.rotate_archives_dir.?, rotation_file };
             const rotation_path = std.fs.path.join(allocator, &rotation_paths) catch |err| {
-                std.log.scoped(.logs).err("error joining paths: {s}/{s}, {}", .{ pruner.log_action.rotate_archives_dir.?, rotation_file, err });
+                std.log.scoped(.logs).err("error joining paths: {s}/{s}, {any}", .{ pruner.log_action.rotate_archives_dir.?, rotation_file, err });
                 continue;
             };
             defer allocator.free(rotation_path);
@@ -42,30 +42,30 @@ pub fn doRotate(pruner: Pruner, allocator: Allocator) !void {
             _ = std.fs.openDirAbsolute(pruner.log_action.rotate_archives_dir.?, .{}) catch |err| {
                 if (err == std.fs.Dir.OpenError.FileNotFound) {
                     std.fs.makeDirAbsolute(pruner.log_action.rotate_archives_dir.?) catch {
-                        std.log.scoped(.log).err("unable to create rotate directory {s}: {}", .{ pruner.log_action.rotate_archives_dir.?, err });
+                        std.log.scoped(.log).err("unable to create rotate directory {s}: {any}", .{ pruner.log_action.rotate_archives_dir.?, err });
                         continue;
                     };
                 } else {
-                    std.log.scoped(.log).err("unable to create rotate directory {s}: {}", .{ pruner.log_action.rotate_archives_dir.?, err });
+                    std.log.scoped(.log).err("unable to create rotate directory {s}: {any}", .{ pruner.log_action.rotate_archives_dir.?, err });
                     continue;
                 }
             };
 
             std.fs.renameAbsolute(path, rotation_path) catch |err| {
-                std.log.scoped(.log).err("unable to rotate file {s} -> {s}: {}", .{ path, rotation_path, err });
+                std.log.scoped(.log).err("unable to rotate file {s} -> {s}: {any}", .{ path, rotation_path, err });
                 continue;
             };
             std.log.scoped(.logs).info("file rotated from {s} to {s}", .{ path, rotation_path });
 
             if (pruner.log_action.compress != null)
                 compressAndRotate(allocator, pruner.log_action, rotation_path) catch |err| {
-                    std.log.scoped(.logs).err("Error compression file {s}: {}", .{ rotation_path, err });
+                    std.log.scoped(.logs).err("Error compression file {s}: {any}", .{ rotation_path, err });
                     continue;
                 };
 
             if (pruner.log_action.keep_archive != null) {
                 const new_pruner = getPruner(pruner.log_action, pruner.matcher, pruner.timezone, arena.allocator()) catch |err| {
-                    std.log.scoped(.log).err("unable to create a pruner for archive file in {s}: {}", .{ pruner.log_action.rotate_archives_dir.?, err });
+                    std.log.scoped(.log).err("unable to create a pruner for archive file in {s}: {any}", .{ pruner.log_action.rotate_archives_dir.?, err });
                     continue;
                 };
 
@@ -87,7 +87,7 @@ fn compressAndRotate(allocator: Allocator, log_action: *configs.LogAction, path:
     defer reader.close();
 
     const compressor = compressionFactory.getCompressor(compress_type);
-    try compressor.compress(reader.reader(), writer.writer(), .{ .level = @enumFromInt(log_action.compression_level.?) });
+    try compressor.compress(reader, writer, log_action.compression_level.?);
 
     try std.fs.deleteFileAbsolute(path);
     std.log.scoped(.logs).info("file compressed from {s} to {s}", .{ path, rotation_path });
@@ -124,7 +124,7 @@ test "doRotateTest" {
     const mock_archive_path = try std.fs.path.join(testing.allocator, &archive_paths);
     defer {
         std.fs.deleteTreeAbsolute(mock_archive_path) catch |err| {
-            std.debug.print("{}", .{err});
+            std.debug.print("{any}", .{err});
         };
         testing.allocator.free(mock_archive_path);
         testing.allocator.free(cwd);
@@ -185,7 +185,7 @@ test "compressAndRotateTest" {
     try std.fs.makeDirAbsolute(mock_archive_path);
     defer {
         std.fs.deleteTreeAbsolute(mock_archive_path) catch |err| {
-            std.debug.print("{}", .{err});
+            std.debug.print("{any}", .{err});
         };
         testing.allocator.free(mock_archive_path);
         testing.allocator.free(cwd);
@@ -224,7 +224,7 @@ test "getPrunerTest" {
     const mock_archive_path = try std.fs.path.join(testing.allocator, &archive_paths);
     defer {
         std.fs.deleteTreeAbsolute(mock_archive_path) catch |err| {
-            std.debug.print("{}", .{err});
+            std.debug.print("{any}", .{err});
         };
         testing.allocator.free(mock_archive_path);
         testing.allocator.free(cwd);

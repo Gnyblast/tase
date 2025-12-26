@@ -18,8 +18,8 @@ pub const YamlCfgContainer = struct {
     pub fn isValidYaml(self: YamlCfgContainer, allocator: Allocator) !void {
         std.log.scoped(.config).debug("Validation check for YAML config", .{});
         var arena = std.heap.ArenaAllocator.init(allocator);
-        var agent_names = std.ArrayList([]const u8).init(arena.allocator());
-        var agent_host_names = std.ArrayList([]const u8).init(arena.allocator());
+        var agent_names = std.array_list.Managed([]const u8).init(arena.allocator());
+        var agent_host_names = std.array_list.Managed([]const u8).init(arena.allocator());
         defer arena.deinit();
 
         if (self.agents != null) {

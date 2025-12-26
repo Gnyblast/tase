@@ -7,11 +7,11 @@ const utils = @import("../utils/helper.zig");
 
 const Allocator = std.mem.Allocator;
 
-pub fn findRegexMatchesInDir(arena: Allocator, dir: []const u8, regexp: []const u8) !std.ArrayList([]const u8) {
+pub fn findRegexMatchesInDir(arena: Allocator, dir: []const u8, regexp: []const u8) !std.array_list.Managed([]const u8) {
     var files = try std.fs.openDirAbsolute(dir, .{ .iterate = true, .access_sub_paths = false });
     defer files.close();
 
-    var matchedFiles = std.ArrayList([]const u8).init(arena);
+    var matchedFiles = std.array_list.Managed([]const u8).init(arena);
 
     var f_it = files.iterate();
     while (try f_it.next()) |file| {
@@ -19,7 +19,7 @@ pub fn findRegexMatchesInDir(arena: Allocator, dir: []const u8, regexp: []const 
         defer regex.deinit();
 
         const matched = regex.matches(file.name) catch |err| {
-            std.log.scoped(.cron).err("error matching file {s}: {}", .{ file.name, err });
+            std.log.scoped(.cron).err("error matching file {s}: {any}", .{ file.name, err });
             continue;
         };
 
@@ -34,13 +34,13 @@ pub fn findRegexMatchesInDir(arena: Allocator, dir: []const u8, regexp: []const 
 
 pub fn shouldProcess(ifOpr: configs.IfOperation, path: []u8, timezone: *datetime.Timezone) bool {
     const file = std.fs.openFileAbsolute(path, .{ .mode = .read_write }) catch |err| {
-        std.log.scoped(.logs).err("error opening file: {s} {}", .{ path, err });
+        std.log.scoped(.logs).err("error opening file: {s} {any}", .{ path, err });
         return false;
     };
     defer file.close();
 
-    const file_stats = file.metadata() catch |err| {
-        std.log.scoped(.logs).err("error retrieving file metadata: {s} {}", .{ path, err });
+    const file_stats = file.stat() catch |err| {
+        std.log.scoped(.logs).err("error retrieving file metadata: {s} {any}", .{ path, err });
         return false;
     };
 
@@ -54,8 +54,8 @@ pub fn shouldProcess(ifOpr: configs.IfOperation, path: []u8, timezone: *datetime
     }
 }
 
-fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata, timezone: *datetime.Timezone) bool {
-    const mtime_ns = file_stats.modified();
+fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Stat, timezone: *datetime.Timezone) bool {
+    const mtime_ns = file_stats.mtime;
 
     const mtime_ms: i64 = @as(i64, @intCast(@divFloor(mtime_ns, std.time.ns_per_ms)));
 
@@ -74,16 +74,16 @@ fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata, ti
     }
 }
 
-fn compareBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Metadata) bool {
+fn compareBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Stat) bool {
     switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator.?) orelse return false) {
         .@">" => {
-            return utils.bytesToMegabytes(file_stats.size()) > @as(f64, @floatFromInt(ifOpr.operand.?));
+            return utils.bytesToMegabytes(file_stats.size) > @as(f64, @floatFromInt(ifOpr.operand.?));
         },
         .@"<" => {
-            return utils.bytesToMegabytes(file_stats.size()) < @as(f64, @floatFromInt(ifOpr.operand.?));
+            return utils.bytesToMegabytes(file_stats.size) < @as(f64, @floatFromInt(ifOpr.operand.?));
         },
         .@"=" => {
-            return utils.bytesToMegabytes(file_stats.size()) == @as(f64, @floatFromInt(ifOpr.operand.?));
+            return utils.bytesToMegabytes(file_stats.size) == @as(f64, @floatFromInt(ifOpr.operand.?));
         },
     }
 }

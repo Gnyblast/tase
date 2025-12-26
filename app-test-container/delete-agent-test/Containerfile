@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk add --no-cache bash coreutils libfaketime wget tar xz tini
+RUN apk add --no-cache bash coreutils libfaketime wget tar xz tini zlib-dev
 
 RUN wget https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz -O /tmp/zig-install.tar
 RUN mkdir -p /tmp/zig /usr/local/zig

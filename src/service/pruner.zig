@@ -106,7 +106,7 @@ test "initRunTest" {
     const mock_archive_path = try std.fs.path.join(testing.allocator, &archive_paths);
     defer {
         std.fs.deleteTreeAbsolute(mock_archive_path) catch |err| {
-            std.debug.print("{}", .{err});
+            std.debug.print("{any}", .{err});
         };
         testing.allocator.free(mock_archive_path);
         testing.allocator.free(cwd);

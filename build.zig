@@ -31,10 +31,14 @@ pub fn build(b: *std.Build) void {
 
     const exe = b.addExecutable(.{
         .name = "tase",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
+
+    exe.linkSystemLibrary("z");
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -86,9 +90,11 @@ pub fn build(b: *std.Build) void {
     // Creates a step for unit testing. This only builds the test executable
     // but does not run it.
     const lib_unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/root.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
     lib_unit_tests.root_module.addImport("yaml", yaml.module("yaml"));
     lib_unit_tests.root_module.addImport("args", zig_args.module("args"));
@@ -96,6 +102,7 @@ pub fn build(b: *std.Build) void {
     lib_unit_tests.root_module.addImport("datetime", datetime.module("datetime"));
     lib_unit_tests.root_module.addImport("libregex", regexLib.module("libregex"));
     lib_unit_tests.root_module.addImport("jwt", jwt.module("jwt"));
+    lib_unit_tests.linkSystemLibrary("z");
 
     const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
 

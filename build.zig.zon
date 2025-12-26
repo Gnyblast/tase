@@ -29,28 +29,28 @@
         //     .hash = "zig_yaml-0.1.0-C1161hVrAgDsyB2EZnq-Vp-QuZ9xJm2y0dECRXGG3UaP",
         // },
         .datetime = .{
-            .url = "git+https://github.com/frmdstryr/zig-datetime?ref=master#b8dcd4948ac1dc29694a4d79794921121426981b",
-            .hash = "datetime-0.8.0-cJNXzPXXAQBatvf9tYfTS2FMKMKNGM7zJnxmetb6AWJy",
+            .url = "git+https://github.com/frmdstryr/zig-datetime?ref=master#3a39a21e6e34dcb0ade0ff828d0914d40ba535f3",
+            .hash = "datetime-0.8.0-cJNXzP_YAQBxQ5hkNNP6ScnG5XsqciJmeP5RVV4xwCBA",
         },
         .args = .{
-            .url = "git+https://github.com/ikskuh/zig-args?ref=master#9425b94c103a031777fdd272c555ce93a7dea581",
-            .hash = "args-0.0.0-CiLiqv_NAAC97fGpk9hS2K681jkiqPsWP6w3ucb_ctGH",
-        },
-        .@"cron-time" = .{
-            .url = "git+https://github.com/dying-will-bullet/cron?ref=master#78d91378a01d3e311ff6006ad5a379f28231a960",
-            .hash = "cron-0.3.0-joDqxHvoAAAZlzrySW3wlzd4uueBleHlTxMhA8L84T6b",
-        },
-        .jwt = .{
-            .url = "git+https://github.com/Gnyblast/zig-jwt?ref=main#b4fe2cd1bc5024b727a5caa766145630dc9a27e4",
-            .hash = "jwt-0.1.0-Npgsfr-JAAAnh3ySnGw5GuHKGvaDfFvYqoxlU55EcUpw",
-        },
-        .libregex = .{
-            .url = "git+https://github.com/gnyblast/libregex-z#1b9afe8565803a0208d7cfc92c50099d869e1aa5",
-            .hash = "libregex-0.1.0-RTzUhRlYAACnCAUq7kW7B6HSwsqTt9K04aWtarpH9m6B",
+            .url = "git+https://github.com/ikskuh/zig-args?ref=master#e060ac80c244e9675471b6d213b22ddc83cc8f98",
+            .hash = "args-0.0.0-CiLiqo_RAADz2TiHUzG5-0Mk7IZHR-h1SZgUrb_k4c7d",
         },
         .yaml = .{
-            .url = "git+https://github.com/kubkon/zig-yaml?ref=main#47aed6a945d1eaeb47d63b7f10b8f68ad6e37820",
-            .hash = "zig_yaml-0.1.0-C1161rqKAgBMVoj-bfHWpzEdjtcd2FUU8VerXw-jnrQ-",
+            .url = "git+https://github.com/kubkon/zig-yaml?ref=main#a6c2cd8760bf45c49b17a3f6259c4dfe3ded528e",
+            .hash = "zig_yaml-0.2.0-C1161pmrAgDnipDTh_4v4RQD27XN5GNaVlzzvlXf1jfW",
+        },
+        .jwt = .{
+            .url = "git+https://github.com/Gnyblast/zig-jwt?ref=main#a142d6ca872e765cf2e062128656acbfa92dfbac",
+            .hash = "jwt-0.1.0-NpgsfuymAAApYfFmGeu9oEto38u33YL-XNwAFMwDf0ua",
+        },
+        .@"cron-time" = .{
+            .url = "git+https://github.com/dying-will-bullet/cron?ref=master#cffdf6e93b045f0b1df7152f2894fa4e5fa6584f",
+            .hash = "cron-0.3.0-joDqxM3nAAC6GdPc2iPAzxRIvJXKHRLfXodnIfNcq0ah",
+        },
+        .libregex = .{
+            .url = "git+https://github.com/gnyblast/libregex-z#137041d8853cb5587b4f030865882050d251894f",
+            .hash = "libregex-0.1.0-RTzUhexYAACB-OW_DT8lkrrIRKPTMjF6i5eow3XuLGo6",
         },
     },
     .paths = .{

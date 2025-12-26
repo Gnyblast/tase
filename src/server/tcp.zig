@@ -92,17 +92,17 @@ pub const TCPServer = struct {
         defer posix.close(listener);
 
         while (true) {
-            var client_address: net.Address = undefined;
-            var client_address_len: posix.socklen_t = @sizeOf(net.Address);
-            const socket = posix.accept(listener, &client_address.any, &client_address_len, 0) catch |err| {
+            var agent_address: net.Address = undefined;
+            var agent_address_len: posix.socklen_t = @sizeOf(net.Address);
+            const socket = posix.accept(listener, &agent_address.any, &agent_address_len, 0) catch |err| {
                 // Rare that this happens, but in later parts we'll
                 // see examples where it does.
-                std.log.scoped(.server).err("error accept: {}", .{err});
+                std.log.scoped(.server).err("error accept: {any}", .{err});
                 continue;
             };
             defer posix.close(socket);
 
-            std.log.scoped(.server).debug("{} connected", .{client_address});
+            std.log.scoped(.server).debug("{any} connected", .{agent_address});
 
             const timeout = posix.timeval{ .sec = 2, .usec = 500_000 };
             try posix.setsockopt(socket, posix.SOL.SOCKET, posix.SO.RCVTIMEO, &std.mem.toBytes(timeout));
@@ -110,7 +110,7 @@ pub const TCPServer = struct {
 
             var buf: [1024]u8 = undefined;
             const read = posix.read(socket, &buf) catch |err| {
-                std.log.scoped(.server).err("error reading: {}", .{err});
+                std.log.scoped(.server).err("error reading: {any}", .{err});
                 continue;
             };
 
@@ -122,14 +122,14 @@ pub const TCPServer = struct {
             defer arena.deinit();
 
             var decoded = jwt.decode(arena.allocator(), AgentClaims, buf[0..read], .{ .secret = self.secret }, .{}) catch |err| {
-                std.log.scoped(.server).err("JWT Decode error: {}", .{err});
+                std.log.scoped(.server).err("JWT Decode error: {any}", .{err});
                 continue;
             };
             defer decoded.deinit();
 
             // std.log.info("{any}", .{decoded.claims});
             const write = posix.write(socket, "Accepted!") catch |err| {
-                std.log.scoped(.server).err("Error sending response back to master: {}", .{err});
+                std.log.scoped(.server).err("Error sending response back to master: {any}", .{err});
                 continue;
             };
             if (write == 0) {
@@ -143,12 +143,12 @@ pub const TCPServer = struct {
                 decoded.claims.job.log_files_regexp,
                 decoded.claims.job.action,
             ) catch |err| {
-                std.log.scoped(.server).err("error init logs service: {}", .{err});
+                std.log.scoped(.server).err("error init logs service: {any}", .{err});
                 continue;
             };
 
             const thread = std.Thread.spawn(.{}, Pruner.runAndDestroy, .{pruner}) catch |err| {
-                std.log.scoped(.cron).err("Error while running local task on a thread: {}", .{err});
+                std.log.scoped(.cron).err("Error while running local task on a thread: {any}", .{err});
                 continue;
             };
             thread.detach();
@@ -176,13 +176,13 @@ pub const TCPServer = struct {
         defer pool.deinit();
 
         while (true) {
-            var client_address: net.Address = undefined;
-            var client_address_len: posix.socklen_t = @sizeOf(net.Address);
+            var agent_address: net.Address = undefined;
+            var agent_address_len: posix.socklen_t = @sizeOf(net.Address);
 
-            const socket = posix.accept(listener, &client_address.any, &client_address_len, 0) catch |err| {
+            const socket = posix.accept(listener, &agent_address.any, &agent_address_len, 0) catch |err| {
                 // Rare that this happens, but in later parts we'll
                 // see examples where it does.
-                std.log.scoped(.server).debug("error accept: {}", .{err});
+                std.log.scoped(.server).debug("error accept: {any}", .{err});
                 continue;
             };
 
@@ -195,7 +195,7 @@ pub const TCPServer = struct {
 
         var buf: [1024]u8 = undefined;
         const read = posix.read(socket, &buf) catch |err| {
-            std.log.scoped(.server).err("error reading: {}", .{err});
+            std.log.scoped(.server).err("error reading: {any}", .{err});
             return;
         };
 
@@ -207,12 +207,12 @@ pub const TCPServer = struct {
         defer arena.deinit();
 
         var decoded = jwt.decodeNoVerify(arena.allocator(), MasterClaims, buf[0..read]) catch |err| {
-            std.log.scoped(.server).err("JWT Decode error: {}", .{err});
+            std.log.scoped(.server).err("JWT Decode error: {any}", .{err});
             return;
         };
         defer decoded.deinit();
         const secret = self.getAgentSecretByHostName(decoded.claims.agent_hostname.?) catch |err| {
-            std.log.scoped(.server).err("JWT Decode error: {}", .{err});
+            std.log.scoped(.server).err("JWT Decode error: {any}", .{err});
             return;
         };
 

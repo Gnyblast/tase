@@ -61,7 +61,7 @@ pub fn main() void {
 
 fn parseCLIOrExit(allocator: Allocator) argsParser.ParseArgsResult(configs.argOpts, null) {
     const cli_args = argsParser.parseForCurrentProcess(configs.argOpts, allocator, .print) catch |err| {
-        std.debug.print("Error parsing CLI arguments: {}", .{err});
+        std.debug.print("Error parsing CLI arguments: {any}", .{err});
         std.process.exit(1);
     };
     //? Do not log anything into std.log before below lines.
@@ -70,8 +70,10 @@ fn parseCLIOrExit(allocator: Allocator) argsParser.ParseArgsResult(configs.argOp
     is_agent = cli_args.options.agent;
 
     if (cli_args.options.help) {
-        argsParser.printHelp(configs.argOpts, "Tase", std.io.getStdOut().writer()) catch |err| {
-            std.log.err("Could not print help: {}", .{err});
+        var stdout_buffer: [1024]u8 = undefined;
+        var stdout_writer = std.fs.File.stdout().writer(&stdout_buffer).interface;
+        argsParser.printHelp(configs.argOpts, "Tase", &stdout_writer) catch |err| {
+            std.log.err("Could not print help: {any}", .{err});
         };
         std.process.exit(0);
     }

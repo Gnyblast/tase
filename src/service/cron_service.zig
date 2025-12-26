@@ -7,7 +7,7 @@ const Pruner = @import("../service/pruner.zig").Pruner;
 const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
 const configs = @import("../app/config.zig");
-const clientFactory = @import("../factory/client_factory.zig");
+const agentFactory = @import("../factory/agent_factory.zig");
 const errorFactory = @import("../factory/error_factory.zig");
 const utils = @import("../utils/helper.zig");
 
@@ -37,7 +37,7 @@ pub const CronService = struct {
 
         const allocator = da.allocator();
 
-        std.time.sleep(getSleepInNS(datetime.Datetime.now()));
+        std.Thread.sleep(getSleepInNS(datetime.Datetime.now()));
 
         while (true) {
             for (self.confs) |cfg| {
@@ -62,7 +62,7 @@ pub const CronService = struct {
                 }
             }
 
-            std.time.sleep(std.time.ns_per_min);
+            std.Thread.sleep(std.time.ns_per_min);
         }
     }
     //test-no-cover-end
@@ -77,8 +77,8 @@ pub const CronService = struct {
         return duration.seconds < 59;
     }
 
-    fn getAgentsByName(self: CronService, allocator: Allocator, agent_names: [][]const u8) !std.ArrayList(configs.Agent) {
-        var agents = std.ArrayList(configs.Agent).init(allocator);
+    fn getAgentsByName(self: CronService, allocator: Allocator, agent_names: [][]const u8) !std.array_list.Managed(configs.Agent) {
+        var agents = std.array_list.Managed(configs.Agent).init(allocator);
         for (agent_names) |name| {
             if (std.ascii.eqlIgnoreCase(name, configs.LOCAL)) {
                 try agents.append(configs.Agent{
@@ -124,12 +124,12 @@ pub const CronService = struct {
             cfg.log_files_regexp,
             cfg.action,
         ) catch |err| {
-            std.log.scoped(.server).err("error init logs service: {}", .{err});
+            std.log.scoped(.server).err("error init logs service: {any}", .{err});
             return;
         };
 
         const thread = std.Thread.spawn(.{}, Pruner.runAndDestroy, .{pruner}) catch |err| {
-            std.log.scoped(.cron).err("Error while running local task on a thread: {}", .{err});
+            std.log.scoped(.cron).err("Error while running local task on a thread: {any}", .{err});
             return;
         };
         thread.detach();
@@ -139,14 +139,14 @@ pub const CronService = struct {
 
     //test-no-cover-start
     fn remoteRun(self: CronService, allocator: Allocator, cfg: configs.LogConf, agent: configs.Agent) void {
-        const tcp_client = clientFactory.getClient(allocator, self.server_type, agent.hostname, agent.port, agent.secret) catch |err| {
+        const tcp_agent = agentFactory.getAgent(allocator, self.server_type, agent.hostname, agent.port, agent.secret) catch |err| {
             const err_msg = errorFactory.getLogMessageByErr(allocator, err);
             defer if (err_msg.allocated) allocator.free(err_msg.message);
-            std.log.scoped(.cron).err("problem getting client to agent: {s}", .{err_msg.message});
+            std.log.scoped(.cron).err("problem getting agent to agent: {s}", .{err_msg.message});
             return;
         };
-        defer tcp_client.destroy(allocator);
-        tcp_client.sendLogConf(allocator, cfg, self.tz) catch |err| {
+        defer tcp_agent.destroy(allocator);
+        tcp_agent.sendLogConf(allocator, cfg, self.tz) catch |err| {
             const err_msg = errorFactory.getLogMessageByErr(allocator, err);
             defer if (err_msg.allocated) allocator.free(err_msg.message);
             std.log.scoped(.cron).err("problem sending message to agent: {s}", .{err_msg.message});

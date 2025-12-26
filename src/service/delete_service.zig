@@ -20,14 +20,14 @@ pub fn doDelete(pruner: Pruner, allocator: Allocator) !void {
     for (files.items) |file_name| {
         var paths = [_][]const u8{ pruner.directory, file_name };
         const path = std.fs.path.join(allocator, &paths) catch |err| {
-            std.log.scoped(.logs).err("error joining paths: {s}/{s}, {}", .{ pruner.directory, file_name, err });
+            std.log.scoped(.logs).err("error joining paths: {s}/{s}, {any}", .{ pruner.directory, file_name, err });
             continue;
         };
         defer allocator.free(path);
 
         if (helper.shouldProcess(pruner.log_action.@"if".?, path, pruner.timezone)) {
             std.fs.deleteFileAbsolute(path) catch |err| {
-                std.log.scoped(.log).err("unable to delete file {s}: {}", .{ path, err });
+                std.log.scoped(.log).err("unable to delete file {s}: {any}", .{ path, err });
                 continue;
             };
             std.log.scoped(.logs).info("deleted file: {s}", .{file_name});

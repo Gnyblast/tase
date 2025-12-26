@@ -12,7 +12,7 @@ const configs = @import("./config.zig");
 const enums = @import("../enum/config_enum.zig");
 const helpers = @import("../utils/helper.zig");
 const serverFactory = @import("../factory/server_factory.zig");
-const clientFactory = @import("../factory/client_factory.zig");
+const agentFactory = @import("../factory/agent_factory.zig");
 const CronService = @import("../service/cron_service.zig").CronService;
 const YamlParser = @import("../utils/yaml_parser.zig").YamlParseService;
 const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
@@ -96,9 +96,9 @@ pub const Tase = struct {
                 self.server.setAgents(self.yaml_cfg.agents.?);
                 try self.server.startMasterServer();
 
-                // const client = try clientFactory.getClient(self.allocator, "tcp", "127.0.0.1", 7423, "b9d36fa4b6cd3d8a2f5527c792143bfc");
-                // defer client.destroy(self.allocator);
-                // try client.sendMessage(&self.yaml_cfg.*.configs[0], self.allocator);
+                //                const agent = try agentFactory.getAgent(self.allocator, "tcp", "127.0.0.1", 7423, "b9d36fa4b6cd3d8a2f5527c792143bfc");
+                //                defer agent.destroy(self.allocator);
+                //                try agent.sendMessage(&self.yaml_cfg.*.configs[0], self.allocator);
             }
         }
     }
