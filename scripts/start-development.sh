@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 clear
 
 if ! zig build; then
