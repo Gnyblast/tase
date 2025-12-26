@@ -20,10 +20,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install zig 14
-        uses: mlugg/setup-zig@v2
+      - name: Install zig 15
+        uses: https://codeberg.org/mlugg/setup-zig@v2
         with:
-          version: 0.14.0
+          version: 0.15.2
 
       - name: Give execute permission to script
         run: chmod +x ./app-test-container/start-test.sh
