@@ -95,6 +95,7 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
         }),
+        .use_llvm = true,
     });
     lib_unit_tests.root_module.addImport("yaml", yaml.module("yaml"));
     lib_unit_tests.root_module.addImport("args", zig_args.module("args"));
