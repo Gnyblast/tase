@@ -3,7 +3,6 @@ const helper = @import("prune_helper.zig");
 const enums = @import("../enum/config_enum.zig");
 const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 const Pruner = @import("./pruner.zig").Pruner;
-const File = std.fs.File;
 
 const Allocator = std.mem.Allocator;
 
@@ -23,114 +22,90 @@ pub fn doTruncate(pruner: Pruner, allocator: Allocator) !void {
         defer allocator.free(path);
 
         if (helper.shouldProcess(pruner.log_action.@"if".?, path, pruner.timezone)) {
-            var file = try std.fs.openFileAbsolute(path, .{ .mode = .read_write });
             switch (std.meta.stringToEnum(enums.TruncateFrom, pruner.log_action.truncate_settings.?.from.?) orelse return TaseNativeErrors.InvalidTruncateFromFieldValue) {
                 .bottom => {
-                    try processForBottom(pruner, &file);
+                    try processForBottom(pruner);
                 },
                 .top => {
-                    try processForTop(pruner, &file);
+                    try processForTop(pruner);
                 },
             }
         }
     }
 }
 
-fn processForBottom(pruner: Pruner, file: *File) !void {
+fn processForBottom(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateAction, pruner.log_action.truncate_settings.?.action.?) orelse return TaseNativeErrors.InvalidTruncateActionFieldValue) {
-        .keep => try processKeepBottom(pruner, file),
-        .delete => try processDeleteBottom(pruner, file),
+        .keep => try processKeepBottom(pruner),
+        .delete => try processDeleteBottom(pruner),
     }
 }
 
-fn processKeepBottom(pruner: Pruner, file: *File) !void {
-    const keep = @as(u64, @intCast(pruner.log_action.truncate_settings.?.size.?));
+fn processKeepBottom(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => try keepBottomBySize(file, keep),
-        .line => try keepBottomByLine(pruner, file),
+        .size => try keepBottomBySize(pruner),
+        .line => try keepBottomByLine(pruner),
     }
 }
 
-fn processDeleteBottom(pruner: Pruner, file: *File) !void {
+fn processDeleteBottom(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => try deleteBottomBySize(pruner, file),
-        .line => try deleteBottomByLine(pruner, file),
+        .size => try deleteBottomBySize(pruner),
+        .line => try deleteBottomByLine(pruner),
     }
 }
 
-fn keepBottomBySize(file: *File, keep: u64) !void {
+fn keepBottomBySize(pruner: Pruner, file: std.fs.File) !void {
     const size = try file.getEndPos();
+    const keep = pruner.log_action.truncate_settings.?.size.?;
 
     if (keep >= size) return;
 
-    const from = size - @as(u64, @intCast(keep));
-    try shiftForward(file, from);
+    const from = size - keep;
+    try shiftForward(&file, from);
 }
 
-fn keepBottomByLine(_: Pruner, _: *File) !void {}
+fn keepBottomByLine(_: Pruner) !void {}
+fn deleteBottomBySize(_: Pruner) !void {}
+fn deleteBottomByLine(_: Pruner) !void {}
 
-fn deleteBottomBySize(_: Pruner, file: *File, del: u64) !void {
-    const size = try file.getEndPos();
-    if (del >= size) {
-        try file.setEndPos(0);
-        return;
-    }
-
-    try keepTopBySize(p, size - del);
-}
-
-fn deleteBottomByLine(_: Pruner, _: *File) !void {}
-
-fn processForTop(pruner: Pruner, file: *File) !void {
+fn processForTop(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateAction, pruner.log_action.truncate_settings.?.action.?) orelse return TaseNativeErrors.InvalidTruncateActionFieldValue) {
-        .keep => try processKeepTop(pruner, file),
-        .delete => try processDeleteTop(pruner, file),
+        .keep => try processKeepTop(pruner),
+        .delete => try processDeleteTop(pruner),
     }
 }
 
-fn processKeepTop(pruner: Pruner, file: *File) !void {
+fn processKeepTop(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => try keepTopBySize(pruner, file),
-        .line => try keepTopByLine(pruner, file),
+        .size => try keepTopBySize(pruner),
+        .line => try keepTopByLine(pruner),
     }
 }
 
-fn processDeleteTop(pruner: Pruner, file: *File) !void {
+fn processDeleteTop(pruner: Pruner) !void {
     switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => try deleteTopBySize(pruner, file),
-        .line => try deleteTopByLine(pruner, file),
+        .size => try deleteTopBySize(pruner),
+        .line => try deleteTopByLine(pruner),
     }
 }
 
-fn keepTopBySize(pruner: Pruner, file: *File) !void {
-    const keep = @as(u64, @intCast(pruner.log_action.truncate_settings.?.size.?));
+fn keepTopBySize(pruner: Pruner, file: std.fs.File) !void {
+    const keep = pruner.log_action.truncate_settings.?.size.?;
     try file.setEndPos(keep);
 }
 
-fn keepTopByLine(_: Pruner, _: *File) !void {}
+fn keepTopByLine(_: Pruner) !void {}
+fn deleteTopBySize(_: Pruner) !void {}
+fn deleteTopByLine(_: Pruner) !void {}
 
-fn deleteTopBySize(pruner: Pruner, file: *File) !void {
-    const size = try file.getEndPos();
-    const del = pruner.log_action.truncate_settings.?.size.?;
-
-    if (del >= size) {
-        try file.setEndPos(0);
-        return;
-    }
-
-    const from = size - @as(u64, @intCast(del));
-    try keepBottomBySize(file, from);
-}
-
-fn deleteTopByLine(_: Pruner, _: *File) !void {}
-
-fn shiftForward(file: *File, from: u64) !void {
+fn shiftForward(file: *std.fs.File, from: u64) !void {
     const end = try file.getEndPos();
 
     var read_pos = from;
     var write_pos: u64 = 0;
 
-    var buf: []u8 = try std.heap.page_allocator.alloc(u8, 1024 * 64);
+    var buf: []u8 = try std.heap.page_allocator.alloc(u8, buf_size);
     defer std.heap.page_allocator.free(buf);
 
     while (read_pos < end) {
@@ -138,7 +113,7 @@ fn shiftForward(file: *File, from: u64) !void {
         const n = try file.read(buf);
         if (n == 0) break;
 
-        try file.pwriteAll(buf[0..n], write_pos);
+        try file.writeAll(buf[0..n], write_pos);
 
         read_pos += n;
         write_pos += n;

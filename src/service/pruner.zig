@@ -89,7 +89,7 @@ pub const Pruner = struct {
                 };
             },
             enums.ActionStrategy.truncate => {
-                return doTruncate(self) catch |err| {
+                return doTruncate(self, allocator) catch |err| {
                     return utils.printError(allocator, err, .logs, "Error running logs service: {s}");
                 };
             },
