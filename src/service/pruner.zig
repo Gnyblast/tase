@@ -71,7 +71,7 @@ pub const Pruner = struct {
         const allocator = da.allocator();
 
         self.log_action.checkActionValidity() catch |err| {
-            return utils.printError(allocator, err, .logs, "Error running logs service: {s}");
+            return utils.printError(allocator, err, .logs, "Error running pruner: {s}");
         };
 
         switch (std.meta.stringToEnum(enums.ActionStrategy, self.log_action.strategy) orelse {
@@ -80,17 +80,17 @@ pub const Pruner = struct {
         }) {
             enums.ActionStrategy.delete => {
                 return doDelete(self, allocator) catch |err| {
-                    return utils.printError(allocator, err, .logs, "Error running logs service: {s}");
+                    return utils.printError(allocator, err, .logs, "Error running pruner: {s}");
                 };
             },
             enums.ActionStrategy.rotate => {
                 return doRotate(self, allocator) catch |err| {
-                    return utils.printError(allocator, err, .logs, "Error running logs service: {s}");
+                    return utils.printError(allocator, err, .logs, "Error running pruner: {s}");
                 };
             },
             enums.ActionStrategy.truncate => {
                 return doTruncate(self, allocator) catch |err| {
-                    return utils.printError(allocator, err, .logs, "Error running logs service: {s}");
+                    return utils.printError(allocator, err, .logs, "Error running pruner: {s}");
                 };
             },
         }

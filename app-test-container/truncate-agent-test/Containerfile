@@ -1,0 +1,21 @@
+FROM alpine
+
+RUN apk add --no-cache bash coreutils libfaketime wget tar xz tini zlib-dev
+
+RUN wget https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz -O /tmp/zig-install.tar
+RUN mkdir -p /tmp/zig /usr/local/zig
+RUN tar -xf /tmp/zig-install.tar -C /tmp/zig
+RUN cp -R /tmp/zig/zig*/lib /usr/local/zig/
+RUN cp /tmp/zig/zig*/zig /usr/local/zig/
+
+RUN echo "export PATH=\$PATH:/usr/local/zig" >> /etc/profile
+
+COPY ./create-logs.sh /usr/local/bin
+COPY ./live-logging.sh /usr/local/bin/
+COPY ./entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/*.sh
+
+RUN create-logs.sh
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/bin/bash", "/usr/local/bin/entrypoint.sh"]

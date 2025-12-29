@@ -127,6 +127,7 @@ pub const LogAction = struct {
                 .from = try allocator.dupe(u8, self.truncate_settings.?.from.?),
                 .by = try allocator.dupe(u8, self.truncate_settings.?.by.?),
                 .size = self.truncate_settings.?.size.?,
+                .action = try allocator.dupe(u8, self.truncate_settings.?.action.?),
             };
         }
 

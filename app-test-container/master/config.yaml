@@ -135,6 +135,78 @@ configs:
         operator: ">"
         operand: 2
 
+  ## ?? TRUNCATE BY LINES
+  - app_name: "truncate_by_lines_keep_bottom"
+    logs_dir: "/var/log/truncate-by-lines"
+    log_files_regexp: 'keep-bottom\.log'
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_truncate_agent"
+    action:
+      strategy: truncate
+      if:
+        condition: days
+        operator: ">"
+        operand: 2
+      truncate_settings:
+        action: "keep"
+        from: "bottom"
+        by: "line"
+        size: 1000
+ 
+  - app_name: "truncate_by_lines_delete_bottom"
+    logs_dir: "/var/log/truncate-by-lines"
+    log_files_regexp: 'delete-bottom\.log'
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_truncate_agent"
+    action:
+      strategy: truncate
+      if:
+        condition: days
+        operator: ">"
+        operand: 2
+      truncate_settings:
+        action: "delete"
+        from: "bottom"
+        by: "line"
+        size: 1000
+ 
+  - app_name: "truncate_by_lines_keep_top"
+    logs_dir: "/var/log/truncate-by-lines"
+    log_files_regexp: 'keep-top\.log'
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_truncate_agent"
+    action:
+      strategy: truncate
+      if:
+        condition: days
+        operator: ">"
+        operand: 2
+      truncate_settings:
+        action: "keep"
+        from: "top"
+        by: "line"
+        size: 1000
+
+  - app_name: "truncate_by_lines_delete_top"
+    logs_dir: "/var/log/truncate-by-lines"
+    log_files_regexp: 'delete-top\.log'
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_truncate_agent"
+    action:
+      strategy: truncate
+      if:
+        condition: days
+        operator: ">"
+        operand: 2
+      truncate_settings:
+        action: "delete"
+        from: "top"
+        by: "line"
+        size: 1000
 agents:
   - name: tase_delete_agent
     hostname: "tase_delete_agent"
@@ -145,6 +217,11 @@ agents:
     hostname: "tase_rotate_agent"
     port: 7425
     secret: 6fd01c09e3a82eb3d2b7cafb5804c8e7
+  
+  - name: tase_truncate_agent
+    hostname: "tase_truncate_agent"
+    port: 7426
+    secret: e93ccf5ffc90eefcc0bdb81f87d25d1a
 
 server:
   host: "127.0.0.1"

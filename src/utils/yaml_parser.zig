@@ -22,7 +22,8 @@ pub const YamlParseService = struct {
     fn loadYAML(self: YamlParseService) !yaml.Yaml {
         std.log.debug("Parsing config file at {s}", .{self.file_path});
         const cwd = std.fs.cwd();
-        const fileContents = try cwd.readFileAlloc(self.arena, self.file_path, 4096);
+        const ten_mb = 10 * 1024 * 1024;
+        const fileContents = try cwd.readFileAlloc(self.arena, self.file_path, ten_mb);
         defer self.arena.free(fileContents);
 
         std.log.debug("Loading conf file content", .{});

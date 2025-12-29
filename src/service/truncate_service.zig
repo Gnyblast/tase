@@ -23,6 +23,7 @@ pub fn doTruncate(pruner: Pruner, allocator: Allocator) !void {
         defer allocator.free(path);
 
         if (helper.shouldProcess(pruner.log_action.@"if".?, path, pruner.timezone)) {
+            std.log.info("truncating file {s}", .{file_name});
             var file = try std.fs.openFileAbsolute(path, .{ .mode = .read_write });
             switch (std.meta.stringToEnum(enums.TruncateFrom, pruner.log_action.truncate_settings.?.from.?) orelse return TaseNativeErrors.InvalidTruncateFromFieldValue) {
                 .bottom => {
@@ -210,24 +211,32 @@ fn deleteTopBySize(file: *File, del: u64) !void {
 fn deleteTopByLine(file: *File, del: usize) !void {
     if (del == 0) return;
 
-    // Count total lines
     var buf: [64 * 1024]u8 = undefined;
 
-    var total: usize = 0;
-    while (true) {
+    var lines: usize = 0;
+    var del_size: usize = 0;
+    var pos: usize = 0;
+
+    outer: while (true) {
         const n = try file.read(&buf);
         if (n == 0) break;
         for (buf[0..n]) |c| {
-            if (c == '\n') total += 1;
+            if (c == '\n') {
+                lines += 1;
+                del_size += pos;
+                pos = 0;
+            }
+
+            if (lines >= del) {
+                del_size += 1;
+                break :outer;
+            }
+            pos += 1;
         }
     }
 
-    if (del >= total) {
-        try file.setEndPos(0);
-        return;
-    }
-
-    try keepBottomByLine(file, total - del);
+    const from = @as(u64, @intCast(del_size));
+    try shiftForward(file, from);
 }
 
 fn shiftForward(file: *File, from: u64) !void {
