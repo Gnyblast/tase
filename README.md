@@ -11,9 +11,6 @@
 </a>
 </p>
 
-> [!IMPORTANT]  
-> Tase is on beta version at the moment and missing truncate functionality.
-
 > [!WARNING]
 > Tase is well-tested on limited environments but not battle-tested fully.
 
@@ -53,7 +50,7 @@ Tase is a lightweight log management system written in Zig. It consists of a dae
 3. **Cron-based Scheduling**: The application uses cron-based scheduling to execute the log management tasks at predefined intervals.
 4. **Delete Logs**: The application can delete log files that are older than a specified number of days or exceed a certain size.
 5. **Rotate Logs**: The application can rotate log files, optionally compressing the archived files using the GZip algorithm. It can also delete archived logs older than a specified number of days or size same as delete action.
-6. **Truncate Logs (Not yet implemented)**: The application can truncate log files that are older than a specified number of days or exceed a certain size.
+6. **Truncate Logs**: The application can truncate log files that are older than a specified number of days or exceed a certain size.
 
 ## Installation
 
@@ -226,11 +223,6 @@ Please read [Contiribution guide](CONTRIBUTING.md)
 
 ### Version 1.0.0
 
-- Write unit and coverate tests for `log_service.zig`
-- Truncate
-  - Write Truncate feature and it's tests to `log_service.zig`
-  - Add Truncate container testing to `app-test-container` with all the requirements
-  - Update [config](app-test-container/master/config.yaml) to cover truncate for test
 - Create a builder for different CPU architectures and OS and implement a released inside
 
 ### Version 2.0.0

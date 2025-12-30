@@ -158,6 +158,37 @@ check_truncate_by_lines() {
 		echo "$err"
 	fi
 }
+check_truncate_by_size() {
+	local err=""
+	local FILE="$1"
+	local CONTAINER_NAME="$2"
+	local EXPECTED_SIZE="$3"
+	local MATCH_TYPE="$4"
+	local MATCH_VAL="$5"
+
+	size=$(${CONTAINER_ENGINE} exec ${CONTAINER_NAME} du -kh "$FILE" | cut -f 1)
+	if [[ "$size" != "${EXPECTED_SIZE}M" ]]; then
+		err+="Unexpected file size for ${FILE}: $size/${EXPECTED_SIZE}M \n"
+	fi
+
+	line_value_head=$(${CONTAINER_ENGINE} exec ${CONTAINER_NAME} head -n 1 "$FILE")
+	if [[ "$MATCH_TYPE" == "negative" ]]; then
+		if echo "$line_value_head" | grep -q "$MATCH_VAL"; then
+			err+="Unexpected beginning of file ${FILE}: $line_value_head \n"
+		fi
+	fi
+
+	if [[ "$MATCH_TYPE" == "positive" ]]; then
+		if ! echo "$line_value_head" | grep -q "$MATCH_VAL"; then
+			err+="Unexpected beginning of file ${FILE}: $line_value_head \n"
+		fi
+
+	fi
+
+	if [ -n "$err" ]; then
+		echo "$err"
+	fi
+}
 
 master_checks() {
 	check_files '/var/log/delete-by-days' "${MASTER_CONTAINER}" 'test-(Tue|Wed|Thu|Fri)\.log' 'test(-Mon)?\.log' 2
@@ -186,10 +217,14 @@ rotation_checks() {
 }
 
 truncate_checks() {
-	check_truncate_by_lines "/var/log/truncate-by-lines/keep-bottom.log" "${TRUNCATE_CONTAINER}" 999 9001 10000
+	check_truncate_by_lines "/var/log/truncate-by-lines/keep-bottom.log" "${TRUNCATE_CONTAINER}" 1000 9001 10000
 	check_truncate_by_lines "/var/log/truncate-by-lines/delete-bottom.log" "${TRUNCATE_CONTAINER}" 9000 1 9000
 	check_truncate_by_lines "/var/log/truncate-by-lines/keep-top.log" "${TRUNCATE_CONTAINER}" 1000 1 1000
 	check_truncate_by_lines "/var/log/truncate-by-lines/delete-top.log" "${TRUNCATE_CONTAINER}" 9000 1001 10000
+	check_truncate_by_size "/var/log/truncate-by-size/keep-bottom.log" "${TRUNCATE_CONTAINER}" 10 "negative" 00000001
+	check_truncate_by_size "/var/log/truncate-by-size/delete-bottom.log" "${TRUNCATE_CONTAINER}" 20 "positive" 00000001
+	check_truncate_by_size "/var/log/truncate-by-size/keep-top.log" "${TRUNCATE_CONTAINER}" "2.0" "positive" 00000001
+	check_truncate_by_size "/var/log/truncate-by-size/delete-top.log" "${TRUNCATE_CONTAINER}" 15 "negative" 00000001
 }
 
 test_results() {

@@ -135,7 +135,7 @@ configs:
         operator: ">"
         operand: 2
 
-  ## ?? TRUNCATE BY LINES
+  ## ?? TRUNCATE BY LINES KEEP BOTTOM 
   - app_name: "truncate_by_lines_keep_bottom"
     logs_dir: "/var/log/truncate-by-lines"
     log_files_regexp: 'keep-bottom\.log'
@@ -154,6 +154,7 @@ configs:
         by: "line"
         size: 1000
  
+  ## ?? TRUNCATE BY LINES DELETE BOTTOM 
   - app_name: "truncate_by_lines_delete_bottom"
     logs_dir: "/var/log/truncate-by-lines"
     log_files_regexp: 'delete-bottom\.log'
@@ -172,6 +173,7 @@ configs:
         by: "line"
         size: 1000
  
+  ## ?? TRUNCATE BY LINES KEEP TOP
   - app_name: "truncate_by_lines_keep_top"
     logs_dir: "/var/log/truncate-by-lines"
     log_files_regexp: 'keep-top\.log'
@@ -190,6 +192,7 @@ configs:
         by: "line"
         size: 1000
 
+  ## ?? TRUNCATE BY LINES DELETE TOP
   - app_name: "truncate_by_lines_delete_top"
     logs_dir: "/var/log/truncate-by-lines"
     log_files_regexp: 'delete-top\.log'
@@ -207,6 +210,82 @@ configs:
         from: "top"
         by: "line"
         size: 1000
+
+  ## ?? TRUNCATE BY SIZE KEEP BOTTOM
+  - app_name: "truncate_by_size_keep_bottom"
+    logs_dir: "/var/log/truncate-by-size"
+    log_files_regexp: 'keep-bottom\.log'
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_truncate_agent"
+    action:
+      strategy: truncate
+      if:
+        condition: size
+        operator: ">"
+        operand: 20
+      truncate_settings:
+        action: "keep"
+        from: "bottom"
+        by: "size"
+        size: 10
+
+  ## ?? TRUNCATE BY SIZE DELETE BOTTOM
+  - app_name: "truncate_by_size_delete_bottom"
+    logs_dir: "/var/log/truncate-by-size"
+    log_files_regexp: 'delete-bottom\.log'
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_truncate_agent"
+    action:
+      strategy: truncate
+      if:
+        condition: days
+        operator: ">"
+        operand: 2
+      truncate_settings:
+        action: "delete"
+        from: "bottom"
+        by: "size"
+        size: 10
+
+  ## ?? TRUNCATE BY SIZE KEEP TOP
+  - app_name: "truncate_by_size_keep_top"
+    logs_dir: "/var/log/truncate-by-size"
+    log_files_regexp: 'keep-top\.log'
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_truncate_agent"
+    action:
+      strategy: truncate
+      if:
+        condition: days
+        operator: ">"
+        operand: 2
+      truncate_settings:
+        action: "keep"
+        from: "top"
+        by: "size"
+        size: 2
+  ## ?? TRUNCATE BY SIZE DELETE TOP
+  - app_name: "truncate_by_size_delete_top"
+    logs_dir: "/var/log/truncate-by-size"
+    log_files_regexp: 'delete-top\.log'
+    cron_expression: "00 00 * * *"
+    run_agent_names:
+      - "tase_truncate_agent"
+    action:
+      strategy: truncate
+      if:
+        condition: size
+        operator: ">"
+        operand: 20
+      truncate_settings:
+        action: "delete"
+        from: "top"
+        by: "size"
+        size: 15
+
 agents:
   - name: tase_delete_agent
     hostname: "tase_delete_agent"

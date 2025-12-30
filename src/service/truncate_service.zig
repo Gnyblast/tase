@@ -23,7 +23,7 @@ pub fn doTruncate(pruner: Pruner, allocator: Allocator) !void {
         defer allocator.free(path);
 
         if (helper.shouldProcess(pruner.log_action.@"if".?, path, pruner.timezone)) {
-            std.log.info("truncating file {s}", .{file_name});
+            std.log.debug("truncating file {s}", .{path});
             var file = try std.fs.openFileAbsolute(path, .{ .mode = .read_write });
             switch (std.meta.stringToEnum(enums.TruncateFrom, pruner.log_action.truncate_settings.?.from.?) orelse return TaseNativeErrors.InvalidTruncateFromFieldValue) {
                 .bottom => {
@@ -33,6 +33,7 @@ pub fn doTruncate(pruner: Pruner, allocator: Allocator) !void {
                     try processForTop(pruner, &file);
                 },
             }
+            std.log.info("truncated file {s}", .{path});
         }
     }
 }
@@ -60,12 +61,13 @@ fn processDeleteBottom(pruner: Pruner, file: *File) !void {
     }
 }
 
-fn keepBottomBySize(file: *File, keep: u64) !void {
+fn keepBottomBySize(file: *File, keep_mb: u64) !void {
     const size = try file.getEndPos();
+    const bytes_to_keep = keep_mb * 1024 * 1024;
 
-    if (keep >= size) return;
+    if (bytes_to_keep >= size) return;
 
-    const from = size - @as(u64, @intCast(keep));
+    const from = size - @as(u64, @intCast(bytes_to_keep));
     try shiftForward(file, from);
 }
 
@@ -92,25 +94,27 @@ fn keepBottomByLine(file: *File, keep: usize) !void {
         while (i > 0) {
             i -= 1;
             if (buf[i] == '\n') {
-                lines += 1;
                 if (lines == keep) {
                     const from = @as(u64, @intCast(pos)) + i + 1;
                     try shiftForward(file, from);
                     return;
                 }
+                lines += 1;
             }
         }
     }
 }
 
-fn deleteBottomBySize(file: *File, del: u64) !void {
+fn deleteBottomBySize(file: *File, del_mb: u64) !void {
+    const bytes_to_del = del_mb * 1024 * 1024;
     const size = try file.getEndPos();
-    if (del >= size) {
+    if (bytes_to_del >= size) {
         try file.setEndPos(0);
         return;
     }
 
-    try keepTopBySize(file, size - del);
+    const mb_to_del: usize = (size - bytes_to_del) / 1024 / 1024;
+    try keepTopBySize(file, mb_to_del);
 }
 
 fn deleteBottomByLine(file: *File, del: usize) !void {
@@ -159,8 +163,9 @@ fn processDeleteTop(pruner: Pruner, file: *File) !void {
     }
 }
 
-fn keepTopBySize(file: *File, keep: u64) !void {
-    try file.setEndPos(keep);
+fn keepTopBySize(file: *File, keep_mb: u64) !void {
+    const bytes_to_keep = keep_mb * 1024 * 1024;
+    try file.setEndPos(bytes_to_keep);
 }
 
 fn keepTopByLine(file: *File, keep: usize) !void {
@@ -196,16 +201,17 @@ fn keepTopByLine(file: *File, keep: usize) !void {
     }
 }
 
-fn deleteTopBySize(file: *File, del: u64) !void {
+fn deleteTopBySize(file: *File, del_mb: u64) !void {
     const size = try file.getEndPos();
+    const bytes_to_del = del_mb * 1024 * 1024;
 
-    if (del >= size) {
+    if (bytes_to_del >= size) {
         try file.setEndPos(0);
         return;
     }
 
-    const from = size - @as(u64, @intCast(del));
-    try keepBottomBySize(file, from);
+    const mb_to_keep = (size - @as(u64, @intCast(bytes_to_del))) / 1024 / 1024;
+    try keepBottomBySize(file, mb_to_keep);
 }
 
 fn deleteTopByLine(file: *File, del: usize) !void {
