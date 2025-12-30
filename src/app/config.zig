@@ -510,6 +510,7 @@ test "LogActionDupeTest" {
                     .by = "size",
                     .from = "bottom",
                     .size = 1024,
+                    .action = "delete",
                 },
             },
         },
