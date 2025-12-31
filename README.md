@@ -23,7 +23,7 @@
   - [What is Tase?](#what-is-tase)
   - [Features](#features)
   - [Installation](#installation)
-  - [CLI Arguments](#CLI-Arguments)
+  - [CLI Arguments](#cli-arguments)
   - [Configuration Reference](#configuration-reference)
     - [Configuration File Structure](#configuration-file-structure)
       - [1. Configs (`configs`)](#1-configs-configs)
@@ -118,7 +118,7 @@ The `action` object supports three strategies:
 | `strategy`                 | string | Must be `"truncate"`                                                 | -       | Yes      |
 | `truncate_settings.from`   | string | Truncate from top or bottom (`"top"` or `"bottom"`)                  | -       | Yes      |
 | `truncate_settings.by`     | string | Truncate by lines or size (`"line"` or `"size"`)                     | -       | Yes      |
-| `truncate_settings.size`   | int    | Truncate by size, line numbers or size in mb                         | -       | Yes      |
+| `truncate_settings.size`   | int    | Truncate by line numbers or size in mb                               | -       | Yes      |
 | `truncate_settings.action` | string | Keep or Delete matching `truncate_settings` (`"delete"` or `"keep"`) | -       | Yes      |
 | `if.condition`             | string | Condition type (`"days"` or `"size" in MB`)                          | -       | Yes      |
 | `if.operator`              | string | Comparison operator (`">"`, `"<"`, `"="`)                            | -       | Yes      |

@@ -17,12 +17,12 @@ const CronService = @import("../service/cron_service.zig").CronService;
 const YamlParser = @import("../utils/yaml_parser.zig").YamlParseService;
 const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
 
-pub const version = "0.0.2";
+pub const VERSION = "0.0.2";
 
 pub const Tase = struct {
     yaml_cfg: *const configs.YamlCfgContainer,
     cli_args: *const configs.argOpts,
-    comptime version: []const u8 = version,
+    comptime version: []const u8 = VERSION,
     server: serverFactory.Server,
     allocator: Allocator,
     arena: std.heap.ArenaAllocator,
@@ -223,7 +223,7 @@ test "performCheckTest" {
                     .config = "../../app.yaml",
                 },
                 .secret = "",
-                .version = version,
+                .version = VERSION,
                 .server = server,
                 .yaml_cfg = &configs.YamlCfgContainer{
                     .agents = &agents,
@@ -247,7 +247,7 @@ test "performCheckTest" {
                     .master = true,
                 },
                 .secret = "",
-                .version = version,
+                .version = VERSION,
                 .server = server,
                 .yaml_cfg = &configs.YamlCfgContainer{
                     .agents = &agents,
@@ -271,7 +271,7 @@ test "performCheckTest" {
                     .agent = true,
                 },
                 .secret = "",
-                .version = version,
+                .version = VERSION,
                 .server = server,
                 .yaml_cfg = &configs.YamlCfgContainer{
                     .agents = &agents,
@@ -295,7 +295,7 @@ test "performCheckTest" {
                     .agent = true,
                 },
                 .secret = "",
-                .version = version,
+                .version = VERSION,
                 .server = server,
                 .yaml_cfg = &configs.YamlCfgContainer{
                     .agents = &agents,
@@ -319,7 +319,7 @@ test "performCheckTest" {
                     .agent = true,
                 },
                 .secret = "78asas6n7j8as67m9das6n7m9asd79",
-                .version = version,
+                .version = VERSION,
                 .server = server,
                 .yaml_cfg = &configs.YamlCfgContainer{
                     .agents = &agents,
@@ -344,7 +344,7 @@ test "performCheckTest" {
                     .@"master-host" = "localhost",
                 },
                 .secret = "78asas6n7j8as67m9das6n7m9asd79",
-                .version = version,
+                .version = VERSION,
                 .server = server,
                 .yaml_cfg = &configs.YamlCfgContainer{
                     .agents = &agents,
@@ -370,7 +370,7 @@ test "performCheckTest" {
                     .@"master-port" = 7423,
                 },
                 .secret = "78asas6n7j8as67m9das6n7m9asd79",
-                .version = version,
+                .version = VERSION,
                 .server = server,
                 .yaml_cfg = &configs.YamlCfgContainer{
                     .agents = &agents,

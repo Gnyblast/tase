@@ -69,10 +69,28 @@ fn parseCLIOrExit(allocator: Allocator) argsParser.ParseArgsResult(configs.argOp
     log_path = cli_args.options.@"log-dir";
     is_agent = cli_args.options.agent;
 
+    if (cli_args.options.version) {
+        var stdout_buffer: [1024]u8 = undefined;
+        var stdout_writer = std.fs.File.stdout().writer(&stdout_buffer);
+        const stdout = &stdout_writer.interface;
+        stdout.print("Tase Version: v{s}\n", .{app.VERSION}) catch |err| {
+            std.log.err("Could not print help: {any}", .{err});
+        };
+        stdout.flush() catch |err| {
+            std.log.err("Could not print help: {any}", .{err});
+        };
+
+        std.process.exit(0);
+    }
+
     if (cli_args.options.help) {
         var stdout_buffer: [1024]u8 = undefined;
-        var stdout_writer = std.fs.File.stdout().writer(&stdout_buffer).interface;
-        argsParser.printHelp(configs.argOpts, "Tase", &stdout_writer) catch |err| {
+        var stdout_writer = std.fs.File.stdout().writer(&stdout_buffer);
+        const stdout = &stdout_writer.interface;
+        argsParser.printHelp(configs.argOpts, "Tase", stdout) catch |err| {
+            std.log.err("Could not print help: {any}", .{err});
+        };
+        stdout.flush() catch |err| {
             std.log.err("Could not print help: {any}", .{err});
         };
         std.process.exit(0);

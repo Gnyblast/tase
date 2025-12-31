@@ -227,6 +227,7 @@ pub const argOpts = struct {
     help: bool = false,
     @"master-host": ?[]const u8 = null,
     @"master-port": ?u16 = null,
+    version: bool = false,
 
     pub const meta = .{
         .option_docs = .{
@@ -242,6 +243,7 @@ pub const argOpts = struct {
             .help = "Print help",
             .@"master-host" = "master host address",
             .@"master-port" = "master port for connection",
+            .version = "Print Application Version",
         },
     };
 };
