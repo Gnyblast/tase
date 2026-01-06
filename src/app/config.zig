@@ -316,7 +316,7 @@ test "isValidYamlTest" {
                 .strategy = "delete",
                 .@"if" = IfOperation{
                     .condition = "days",
-                    .operator = ">",
+                    .operator = "gt",
                     .operand = 2,
                 },
             },
@@ -333,7 +333,7 @@ test "isValidYamlTest" {
                 .strategy = "delete",
                 .@"if" = IfOperation{
                     .condition = "days",
-                    .operator = ">",
+                    .operator = "gt",
                     .operand = 2,
                 },
             },
@@ -474,7 +474,7 @@ test "isConfigValidTest" {
                     .strategy = "delete",
                     .@"if" = IfOperation{
                         .condition = "days",
-                        .operator = ">",
+                        .operator = "gt",
                         .operand = 2,
                     },
                 },
@@ -506,12 +506,12 @@ test "LogActionDupeTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .keep_archive = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .truncate_settings = TruncateSettings{
                     .from = "bottom",
@@ -541,7 +541,7 @@ test "checkActionValidityTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
             .err = TaseNativeErrors.InvalidStrategy,
@@ -555,7 +555,7 @@ test "checkActionValidityTest" {
                 .strategy = "delete",
                 .@"if" = IfOperation{
                     .condition = "size",
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
             .err = TaseNativeErrors.MissingIfOperand,
@@ -563,7 +563,11 @@ test "checkActionValidityTest" {
         .{
             .log_action = LogAction{
                 .strategy = "delete",
-                .@"if" = IfOperation{ .condition = "size", .operator = ">", .operand = -1 },
+                .@"if" = IfOperation{
+                    .condition = "size",
+                    .operator = "gt",
+                    .operand = -1,
+                },
             },
             .err = TaseNativeErrors.IfOperandSizeError,
         },
@@ -582,7 +586,7 @@ test "checkActionValidityTest" {
                 .strategy = "delete",
                 .@"if" = IfOperation{
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
             .err = TaseNativeErrors.MissingIfCondition,
@@ -593,7 +597,7 @@ test "checkActionValidityTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
         },
@@ -603,7 +607,7 @@ test "checkActionValidityTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
         },
@@ -613,7 +617,7 @@ test "checkActionValidityTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
             .err = TaseNativeErrors.TruncateRequiresSettings,
@@ -624,7 +628,7 @@ test "checkActionValidityTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .truncate_settings = TruncateSettings{
                     .from = "top",
@@ -655,7 +659,7 @@ test "checkMandatoryFieldsForRotateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
         },
@@ -665,7 +669,7 @@ test "checkMandatoryFieldsForRotateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .keep_archive = IfOperation{
                     .condition = "size",
@@ -680,11 +684,11 @@ test "checkMandatoryFieldsForRotateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .keep_archive = IfOperation{
                     .condition = "size",
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
             .err = TaseNativeErrors.MissingKeepArchiveOperand,
@@ -695,11 +699,11 @@ test "checkMandatoryFieldsForRotateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .keep_archive = IfOperation{
                     .condition = "size",
-                    .operator = ">",
+                    .operator = "gt",
                     .operand = -1,
                 },
             },
@@ -711,11 +715,11 @@ test "checkMandatoryFieldsForRotateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .keep_archive = IfOperation{
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
             .err = TaseNativeErrors.MissingKeepArchiveCondition,
@@ -726,12 +730,12 @@ test "checkMandatoryFieldsForRotateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .keep_archive = IfOperation{
                     .condition = "invalid-condition",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
             .err = TaseNativeErrors.InvalidRotateKeepArchiveCondition,
@@ -742,7 +746,7 @@ test "checkMandatoryFieldsForRotateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .keep_archive = IfOperation{
                     .condition = "days",
@@ -758,12 +762,12 @@ test "checkMandatoryFieldsForRotateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .keep_archive = IfOperation{
                     .condition = "days",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .compress = "gzip",
             },
@@ -774,12 +778,12 @@ test "checkMandatoryFieldsForRotateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .keep_archive = IfOperation{
                     .condition = "days",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .compress = "invalid-compression-type",
             },
@@ -791,12 +795,12 @@ test "checkMandatoryFieldsForRotateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .keep_archive = IfOperation{
                     .condition = "days",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .compress = "gzip",
                 .compression_level = 2,
@@ -825,7 +829,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
             },
             .err = TaseNativeErrors.TruncateRequiresSettings,
@@ -836,7 +840,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .truncate_settings = TruncateSettings{
                     .from = "top",
@@ -851,7 +855,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .truncate_settings = TruncateSettings{
                     .from = "top",
@@ -868,7 +872,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .truncate_settings = TruncateSettings{
                     .size = 1,
@@ -883,7 +887,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .truncate_settings = TruncateSettings{
                     .size = 1,
@@ -899,7 +903,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .truncate_settings = TruncateSettings{
                     .from = "bottom",
@@ -914,7 +918,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .truncate_settings = TruncateSettings{
                     .from = "bottom",
@@ -930,7 +934,7 @@ test "checkMandatoryFieldsForTruncateTest" {
                 .@"if" = IfOperation{
                     .condition = "size",
                     .operand = 2,
-                    .operator = ">",
+                    .operator = "gt",
                 },
                 .truncate_settings = TruncateSettings{
                     .from = "bottom",

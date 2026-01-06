@@ -116,7 +116,7 @@ test "initRunTest" {
         .strategy = enums.ActionStrategy.delete.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };
@@ -125,14 +125,14 @@ test "initRunTest" {
         .strategy = enums.ActionStrategy.rotate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
         .rotate_archives_dir = mock_archive_path,
         .compress = "gzip",
         .keep_archive = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };
@@ -141,7 +141,7 @@ test "initRunTest" {
         .strategy = enums.ActionStrategy.truncate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
         .truncate_settings = configs.TruncateSettings{
@@ -155,7 +155,7 @@ test "initRunTest" {
         .strategy = enums.ActionStrategy.truncate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };
@@ -164,7 +164,7 @@ test "initRunTest" {
         .strategy = "test",
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };
@@ -222,7 +222,7 @@ test "createRunDestoryTest" {
         .strategy = enums.ActionStrategy.delete.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };

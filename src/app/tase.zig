@@ -198,7 +198,7 @@ test "performCheckTest" {
                 .strategy = "delete",
                 .@"if" = configs.IfOperation{
                     .condition = "days",
-                    .operator = ">",
+                    .operator = "gt",
                     .operand = 2,
                 },
             },

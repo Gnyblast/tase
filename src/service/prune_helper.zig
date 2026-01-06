@@ -62,13 +62,13 @@ fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Stat, timezo
     const modification = datetime.Datetime.fromTimestamp(mtime_ms).shiftTimezone(timezone.*);
     const now = datetime.Datetime.now().shiftTimezone(timezone.*).shiftDays(-ifOpr.operand.?);
     switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator.?) orelse return false) {
-        .@">" => {
+        .gt => {
             return now.cmp(modification) == .gt;
         },
-        .@"<" => {
+        .lt => {
             return now.cmp(modification) == .lt;
         },
-        .@"=" => {
+        .eq => {
             return now.cmp(modification) == .eq;
         },
     }
@@ -76,13 +76,13 @@ fn compareByAge(ifOpr: configs.IfOperation, file_stats: std.fs.File.Stat, timezo
 
 fn compareBySize(ifOpr: configs.IfOperation, file_stats: std.fs.File.Stat) bool {
     switch (std.meta.stringToEnum(enums.Operators, ifOpr.operator.?) orelse return false) {
-        .@">" => {
+        .gt => {
             return utils.bytesToMegabytes(file_stats.size) > @as(f64, @floatFromInt(ifOpr.operand.?));
         },
-        .@"<" => {
+        .lt => {
             return utils.bytesToMegabytes(file_stats.size) < @as(f64, @floatFromInt(ifOpr.operand.?));
         },
-        .@"=" => {
+        .eq => {
             return utils.bytesToMegabytes(file_stats.size) == @as(f64, @floatFromInt(ifOpr.operand.?));
         },
     }

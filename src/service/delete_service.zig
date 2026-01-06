@@ -43,7 +43,7 @@ test "doDeleteTest" {
         .strategy = enums.ActionStrategy.delete.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };
@@ -51,7 +51,7 @@ test "doDeleteTest" {
         .strategy = enums.ActionStrategy.delete.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = ">",
+            .operator = "gt",
             .operand = 10,
         },
     };
@@ -59,7 +59,7 @@ test "doDeleteTest" {
         .strategy = enums.ActionStrategy.delete.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "=",
+            .operator = "eq",
             .operand = 10,
         },
     };
@@ -67,7 +67,7 @@ test "doDeleteTest" {
         .strategy = enums.ActionStrategy.delete.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.days.str(),
-            .operator = ">",
+            .operator = "gt",
             .operand = 10,
         },
     };
@@ -75,7 +75,7 @@ test "doDeleteTest" {
         .strategy = enums.ActionStrategy.delete.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.days.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };
@@ -83,7 +83,7 @@ test "doDeleteTest" {
         .strategy = enums.ActionStrategy.delete.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.days.str(),
-            .operator = "=",
+            .operator = "eq",
             .operand = 10,
         },
     };

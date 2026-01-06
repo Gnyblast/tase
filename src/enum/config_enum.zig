@@ -60,9 +60,9 @@ pub const IfConditions = enum {
 };
 
 pub const Operators = enum {
-    @">",
-    @"<",
-    @"=",
+    gt,
+    lt,
+    eq,
 };
 
 pub const CompressType = enum {

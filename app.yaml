@@ -13,7 +13,7 @@ configs:
       from: top
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 3
 
   ##?? TRUNCATE
@@ -28,7 +28,7 @@ configs:
       from: top
       if:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 2048
 
   ##?? ROTATE WITHOUT COMPRESS
@@ -44,10 +44,12 @@ configs:
       rotate_archives_dir: "/var/log/rotate_app_no_compress/archives"
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 3
-      keep_archive_size: 7
-      keep_archive_condition: "days"
+      keep_archive:
+        condition: "days"
+        operator: "gt"
+        operand: 7
 
   ##?? ROTATE WITH COMPRESS
   - app_name: "rotate_app_compress"
@@ -62,10 +64,12 @@ configs:
       rotate_archives_dir: "/var/log/rotate_app_compress/archives"
       if:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 4096
-      keep_archive_size: 7
-      keep_archive_condition: "days"
+      keep_archive:
+        condition: "days"
+        operator: "gt"
+        operand: 7
       ##?? gzip
       compress: gzip
       ##?? Between 4-9
@@ -83,7 +87,7 @@ configs:
       strategy: rotate
       if:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 4096
       compress: gzip
       compression_level: 7
@@ -101,7 +105,7 @@ configs:
       if:
         ##?? days - size (size in mb)
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 3
 
 agents:

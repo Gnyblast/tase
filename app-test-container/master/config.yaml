@@ -12,7 +12,7 @@ configs:
       rotate_archives_dir: "/var/log/rotate-by-days-no-compress/archives"
       if:
         condition: days
-        operator: "<"
+        operator: "lt"
         operand: 1
 
   ##?? ROTATE BY DAYS COMPRESS
@@ -27,7 +27,7 @@ configs:
       rotate_archives_dir: "/var/log/rotate-by-days-compress/archives"
       if:
         condition: days
-        operator: "<"
+        operator: "lt"
         operand: 1
       compress: gzip
       compression_level: 5
@@ -46,11 +46,11 @@ configs:
       clean_archive: true
       keep_archive:
         condition: days
-        operator: "<"
+        operator: "lt"
         operand: 3
       if:
         condition: days
-        operator: "<"
+        operator: "lt"
         operand: 1
       compress: gzip
       compression_level: 6
@@ -67,7 +67,7 @@ configs:
       rotate_archives_dir: "/var/log/rotate-by-size-no-compress/archives"
       if:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 12
 
   ##?? ROTATE BY SIZE COMPRESS
@@ -82,7 +82,7 @@ configs:
       rotate_archives_dir: "/var/log/rotate-by-size-compress/archives"
       if:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 14
       compress: gzip
       compression_level: 5
@@ -100,11 +100,11 @@ configs:
       clean_archive: true
       keep_archive:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 14
       if:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 12
 
   ##?? DELETE
@@ -118,7 +118,7 @@ configs:
       strategy: delete
       if:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 12
 
   - app_name: "delete_by_days"
@@ -132,7 +132,7 @@ configs:
       strategy: delete
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 2
 
   ## ?? TRUNCATE BY LINES KEEP BOTTOM
@@ -146,7 +146,7 @@ configs:
       strategy: truncate
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 2
       truncate_settings:
         action: "keep"
@@ -164,7 +164,7 @@ configs:
       strategy: truncate
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 2
       truncate_settings:
         action: "delete"
@@ -182,7 +182,7 @@ configs:
       strategy: truncate
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 2
       truncate_settings:
         action: "keep"
@@ -200,7 +200,7 @@ configs:
       strategy: truncate
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 2
       truncate_settings:
         action: "delete"
@@ -218,7 +218,7 @@ configs:
       strategy: truncate
       if:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 20
       truncate_settings:
         action: "keep"
@@ -236,7 +236,7 @@ configs:
       strategy: truncate
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 2
       truncate_settings:
         action: "delete"
@@ -254,7 +254,7 @@ configs:
       strategy: truncate
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 2
       truncate_settings:
         action: "keep"
@@ -272,7 +272,7 @@ configs:
       strategy: truncate
       if:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 20
       truncate_settings:
         action: "delete"

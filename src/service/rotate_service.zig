@@ -134,14 +134,14 @@ test "doRotateTest" {
         .strategy = enums.ActionStrategy.rotate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
         .rotate_archives_dir = mock_archive_path,
         .compress = "gzip",
         .keep_archive = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };
@@ -195,14 +195,14 @@ test "compressAndRotateTest" {
         .strategy = enums.ActionStrategy.rotate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
         .rotate_archives_dir = mock_archive_path,
         .compress = "gzip",
         .keep_archive = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };
@@ -234,14 +234,14 @@ test "getPrunerTest" {
         .strategy = enums.ActionStrategy.rotate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
         .rotate_archives_dir = mock_archive_path,
         .compress = enums.CompressType.gzip.str(),
         .keep_archive = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };
@@ -250,13 +250,13 @@ test "getPrunerTest" {
         .strategy = enums.ActionStrategy.rotate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
         .rotate_archives_dir = mock_archive_path,
         .keep_archive = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };
@@ -265,14 +265,14 @@ test "getPrunerTest" {
         .strategy = enums.ActionStrategy.rotate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
         .rotate_archives_dir = mock_archive_path,
         .compress = "test",
         .keep_archive = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = "<",
+            .operator = "lt",
             .operand = 10,
         },
     };

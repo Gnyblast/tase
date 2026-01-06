@@ -182,7 +182,7 @@ var test_confs = [_]configs.LogConf{
             .strategy = "delete",
             .@"if" = configs.IfOperation{
                 .condition = "days",
-                .operator = ">",
+                .operator = "gt",
                 .operand = 2,
             },
         },

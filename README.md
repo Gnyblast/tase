@@ -121,32 +121,32 @@ The `action` object supports three strategies:
 | `truncate_settings.size`   | int    | Truncate by size in MB (it's mutually exclusive with `"lines"`)      | -       | Either `"lines"` or `"size"` |
 | `truncate_settings.action` | string | Keep or Delete matching `truncate_settings` (`"delete"` or `"keep"`) | -       | Yes                          |
 | `if.condition`             | string | Condition type (`"days"` or `"size" in MB`)                          | -       | Yes                          |
-| `if.operator`              | string | Comparison operator (`">"`, `"<"`, `"="`)                            | -       | Yes                          |
+| `if.operator`              | string | Comparison operator (`"gt"`, `"lt"`, `"eq"`)                         | -       | Yes                          |
 | `if.operand`               | number | Threshold value                                                      | -       | Yes                          |
 
 ##### Rotate Strategy
 
-| Property                 | Type   | Description                                 | Default                      | Required                         |
-| ------------------------ | ------ | ------------------------------------------- | ---------------------------- | -------------------------------- |
-| `strategy`               | string | Must be `"rotate"`                          | -                            | Yes                              |
-| `rotate_archives_dir`    | string | Directory for archiving rotated files       | same directory with log file | No                               |
-| `if.condition`           | string | Condition type (`"days"` or `"size" in MB`) | -                            | Yes                              |
-| `if.operator`            | string | Comparison operator (`">"`, `"<"`, `"="`)   | -                            | Yes                              |
-| `if.operand`             | number | Threshold value                             | -                            | Yes                              |
-| `keep_archive.condition` | string | Condition type (`"days"` or `"size" in MB`) | -                            | Yes if `keep_archive` is defined |
-| `keep_archive.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`)   | -                            | Yes if `keep_archive` is defined |
-| `keep_archive.operand`   | number | Threshold value                             | -                            | Yes if `keep_archive` is defined |
-| `compress`               | string | Compression algorithm (`"gzip"`)            | -                            | No                               |
-| `compression_level`      | number | Compression level (4-9)                     | 4                            | No                               |
+| Property                 | Type   | Description                                  | Default                      | Required                         |
+| ------------------------ | ------ | -------------------------------------------- | ---------------------------- | -------------------------------- |
+| `strategy`               | string | Must be `"rotate"`                           | -                            | Yes                              |
+| `rotate_archives_dir`    | string | Directory for archiving rotated files        | same directory with log file | No                               |
+| `if.condition`           | string | Condition type (`"days"` or `"size" in MB`)  | -                            | Yes                              |
+| `if.operator`            | string | Comparison operator (`"gt"`, `"lt"`, `"eq"`) | -                            | Yes                              |
+| `if.operand`             | number | Threshold value                              | -                            | Yes                              |
+| `keep_archive.condition` | string | Condition type (`"days"` or `"size" in MB`)  | -                            | Yes if `keep_archive` is defined |
+| `keep_archive.operator`  | string | Comparison operator (`"gt"`, `"lt"`, `"eq"`) | -                            | Yes if `keep_archive` is defined |
+| `keep_archive.operand`   | number | Threshold value                              | -                            | Yes if `keep_archive` is defined |
+| `compress`               | string | Compression algorithm (`"gzip"`)             | -                            | No                               |
+| `compression_level`      | number | Compression level (4-9)                      | 4                            | No                               |
 
 ##### Delete Strategy
 
-| Property       | Type   | Description                                 | Default | Required |
-| -------------- | ------ | ------------------------------------------- | ------- | -------- |
-| `strategy`     | string | Must be `"delete"`                          | -       | Yes      |
-| `if.condition` | string | Condition type (`"days"` or `"size" in MB`) | -       | Yes      |
-| `if.operator`  | string | Comparison operator (`">"`, `"<"`, `"="`)   | -       | Yes      |
-| `if.operand`   | number | Threshold value                             | -       | Yes      |
+| Property       | Type   | Description                                  | Default | Required |
+| -------------- | ------ | -------------------------------------------- | ------- | -------- |
+| `strategy`     | string | Must be `"delete"`                           | -       | Yes      |
+| `if.condition` | string | Condition type (`"days"` or `"size" in MB`)  | -       | Yes      |
+| `if.operator`  | string | Comparison operator (`"gt"`, `"lt"`, `"eq"`) | -       | Yes      |
+| `if.operand`   | number | Threshold value                              | -       | Yes      |
 
 #### 3. Agents Configuration
 
@@ -191,7 +191,7 @@ configs:
       strategy: rotate
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 7
       compression_type: gzip
       compression_level: 5
@@ -207,7 +207,7 @@ configs:
       strategy: delete
       if:
         condition: size
-        operator: ">"
+        operator: "gt"
         operand: 20
 
   - app_name: "truncate_by_lines_delete_top"
@@ -220,7 +220,7 @@ configs:
       strategy: truncate
       if:
         condition: days
-        operator: ">"
+        operator: "gt"
         operand: 2
       truncate_settings:
         action: "delete"

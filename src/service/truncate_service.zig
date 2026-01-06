@@ -295,7 +295,7 @@ test "doTruncateTest" {
         .strategy = enums.ActionStrategy.truncate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = ">",
+            .operator = "gt",
             .operand = 5,
         },
         .truncate_settings = .{
@@ -308,7 +308,7 @@ test "doTruncateTest" {
         .strategy = enums.ActionStrategy.truncate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = ">",
+            .operator = "gt",
             .operand = 5,
         },
         .truncate_settings = .{
@@ -321,7 +321,7 @@ test "doTruncateTest" {
         .strategy = enums.ActionStrategy.truncate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = ">",
+            .operator = "gt",
             .operand = 5,
         },
         .truncate_settings = .{
@@ -334,7 +334,7 @@ test "doTruncateTest" {
         .strategy = enums.ActionStrategy.truncate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = ">",
+            .operator = "gt",
             .operand = 5,
         },
         .truncate_settings = .{
@@ -347,7 +347,7 @@ test "doTruncateTest" {
         .strategy = enums.ActionStrategy.truncate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = ">",
+            .operator = "gt",
             .operand = 5,
         },
         .truncate_settings = .{
@@ -360,7 +360,7 @@ test "doTruncateTest" {
         .strategy = enums.ActionStrategy.truncate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = ">",
+            .operator = "gt",
             .operand = 5,
         },
         .truncate_settings = .{
@@ -373,7 +373,7 @@ test "doTruncateTest" {
         .strategy = enums.ActionStrategy.truncate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = ">",
+            .operator = "gt",
             .operand = 5,
         },
         .truncate_settings = .{
@@ -386,7 +386,7 @@ test "doTruncateTest" {
         .strategy = enums.ActionStrategy.truncate.str(),
         .@"if" = configs.IfOperation{
             .condition = enums.IfConditions.size.str(),
-            .operator = ">",
+            .operator = "gt",
             .operand = 5,
         },
         .truncate_settings = .{
