@@ -1,4 +1,7 @@
 const std = @import("std");
+const testing = std.testing;
+const datetime = @import("datetime").datetime;
+const configs = @import("../app/config.zig");
 const helper = @import("prune_helper.zig");
 const enums = @import("../enum/config_enum.zig");
 const TaseNativeErrors = @import("../factory/error_factory.zig").TaseNativeErrors;
@@ -282,4 +285,193 @@ fn shiftForward(file: *File, from: u64) !void {
     }
 
     try file.setEndPos(write_pos);
+}
+
+test "doTruncateTest" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    var tz = datetime.timezones.Asia.Nicosia;
+    var delete_from_top_lines = configs.LogAction{
+        .strategy = enums.ActionStrategy.truncate.str(),
+        .@"if" = configs.IfOperation{
+            .condition = enums.IfConditions.size.str(),
+            .operator = ">",
+            .operand = 5,
+        },
+        .truncate_settings = .{
+            .lines = 1,
+            .action = enums.TruncateAction.delete.str(),
+            .from = enums.TruncateFrom.top.str(),
+        },
+    };
+    var delete_from_top_size = configs.LogAction{
+        .strategy = enums.ActionStrategy.truncate.str(),
+        .@"if" = configs.IfOperation{
+            .condition = enums.IfConditions.size.str(),
+            .operator = ">",
+            .operand = 5,
+        },
+        .truncate_settings = .{
+            .size = 1,
+            .action = enums.TruncateAction.delete.str(),
+            .from = enums.TruncateFrom.top.str(),
+        },
+    };
+    var keep_from_top_lines = configs.LogAction{
+        .strategy = enums.ActionStrategy.truncate.str(),
+        .@"if" = configs.IfOperation{
+            .condition = enums.IfConditions.size.str(),
+            .operator = ">",
+            .operand = 5,
+        },
+        .truncate_settings = .{
+            .lines = 1,
+            .action = enums.TruncateAction.keep.str(),
+            .from = enums.TruncateFrom.top.str(),
+        },
+    };
+    var keep_from_top_size = configs.LogAction{
+        .strategy = enums.ActionStrategy.truncate.str(),
+        .@"if" = configs.IfOperation{
+            .condition = enums.IfConditions.size.str(),
+            .operator = ">",
+            .operand = 5,
+        },
+        .truncate_settings = .{
+            .size = 1,
+            .action = enums.TruncateAction.keep.str(),
+            .from = enums.TruncateFrom.top.str(),
+        },
+    };
+    var delete_from_bottom_lines = configs.LogAction{
+        .strategy = enums.ActionStrategy.truncate.str(),
+        .@"if" = configs.IfOperation{
+            .condition = enums.IfConditions.size.str(),
+            .operator = ">",
+            .operand = 5,
+        },
+        .truncate_settings = .{
+            .lines = 1,
+            .action = enums.TruncateAction.delete.str(),
+            .from = enums.TruncateFrom.bottom.str(),
+        },
+    };
+    var delete_from_bottom_size = configs.LogAction{
+        .strategy = enums.ActionStrategy.truncate.str(),
+        .@"if" = configs.IfOperation{
+            .condition = enums.IfConditions.size.str(),
+            .operator = ">",
+            .operand = 5,
+        },
+        .truncate_settings = .{
+            .size = 1,
+            .action = enums.TruncateAction.delete.str(),
+            .from = enums.TruncateFrom.bottom.str(),
+        },
+    };
+    var keep_from_bottom_lines = configs.LogAction{
+        .strategy = enums.ActionStrategy.truncate.str(),
+        .@"if" = configs.IfOperation{
+            .condition = enums.IfConditions.size.str(),
+            .operator = ">",
+            .operand = 5,
+        },
+        .truncate_settings = .{
+            .lines = 1,
+            .action = enums.TruncateAction.keep.str(),
+            .from = enums.TruncateFrom.bottom.str(),
+        },
+    };
+    var keep_from_bottom_size = configs.LogAction{
+        .strategy = enums.ActionStrategy.truncate.str(),
+        .@"if" = configs.IfOperation{
+            .condition = enums.IfConditions.size.str(),
+            .operator = ">",
+            .operand = 5,
+        },
+        .truncate_settings = .{
+            .size = 1,
+            .action = enums.TruncateAction.keep.str(),
+            .from = enums.TruncateFrom.bottom.str(),
+        },
+    };
+
+    const TestCase = struct {
+        log_action: *configs.LogAction,
+        matcher: []const u8,
+    };
+    var tcs = [_]TestCase{
+        .{
+            .log_action = &delete_from_top_lines,
+            .matcher = "mock-truncate.*",
+        },
+        .{
+            .log_action = &delete_from_top_size,
+            .matcher = "mock-truncate.*",
+        },
+        .{
+            .log_action = &keep_from_top_lines,
+            .matcher = "mock-truncate.*",
+        },
+        .{
+            .log_action = &keep_from_top_size,
+            .matcher = "mock-truncate.*",
+        },
+        .{
+            .log_action = &delete_from_bottom_lines,
+            .matcher = "mock-truncate.*",
+        },
+        .{
+            .log_action = &delete_from_bottom_size,
+            .matcher = "mock-truncate.*",
+        },
+        .{
+            .log_action = &keep_from_bottom_lines,
+            .matcher = "mock-truncate.*",
+        },
+        .{
+            .log_action = &keep_from_bottom_size,
+            .matcher = "mock-truncate.*",
+        },
+    };
+
+    // Multiline pattern
+    const pattern =
+        \\This is a test line
+        \\Another test line
+        \\Yet another line with data
+        \\--------------------------------
+        \\
+    ;
+
+    const cwd = try std.fs.realpathAlloc(testing.allocator, "./test/unit-test-dir");
+    defer testing.allocator.free(cwd);
+
+    for (&tcs) |tc| {
+        var paths = [_][]const u8{ cwd, "mock-truncate.log" };
+        const mock_file_path = try std.fs.path.join(testing.allocator, &paths);
+        defer testing.allocator.free(mock_file_path);
+        var mock_file = try std.fs.createFileAbsolute(mock_file_path, .{});
+
+        const target_size: usize = 10 * 1024 * 1024; // 10 MB
+        var written: usize = 0;
+
+        while (written < target_size) {
+            _ = try mock_file.write(pattern);
+            written += pattern.len;
+        }
+
+        defer mock_file.close();
+        defer std.fs.deleteFileAbsolute(mock_file_path) catch {};
+
+        const pruner = Pruner.init(
+            arena,
+            &tz,
+            cwd,
+            tc.matcher,
+            tc.log_action,
+        );
+
+        try doTruncate(pruner, testing.allocator);
+    }
 }
