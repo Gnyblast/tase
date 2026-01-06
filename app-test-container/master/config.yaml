@@ -135,7 +135,7 @@ configs:
         operator: ">"
         operand: 2
 
-  ## ?? TRUNCATE BY LINES KEEP BOTTOM 
+  ## ?? TRUNCATE BY LINES KEEP BOTTOM
   - app_name: "truncate_by_lines_keep_bottom"
     logs_dir: "/var/log/truncate-by-lines"
     log_files_regexp: 'keep-bottom\.log'
@@ -151,10 +151,9 @@ configs:
       truncate_settings:
         action: "keep"
         from: "bottom"
-        by: "line"
-        size: 1000
- 
-  ## ?? TRUNCATE BY LINES DELETE BOTTOM 
+        lines: 1000
+
+  ## ?? TRUNCATE BY LINES DELETE BOTTOM
   - app_name: "truncate_by_lines_delete_bottom"
     logs_dir: "/var/log/truncate-by-lines"
     log_files_regexp: 'delete-bottom\.log'
@@ -170,9 +169,8 @@ configs:
       truncate_settings:
         action: "delete"
         from: "bottom"
-        by: "line"
-        size: 1000
- 
+        lines: 1000
+
   ## ?? TRUNCATE BY LINES KEEP TOP
   - app_name: "truncate_by_lines_keep_top"
     logs_dir: "/var/log/truncate-by-lines"
@@ -189,8 +187,7 @@ configs:
       truncate_settings:
         action: "keep"
         from: "top"
-        by: "line"
-        size: 1000
+        lines: 1000
 
   ## ?? TRUNCATE BY LINES DELETE TOP
   - app_name: "truncate_by_lines_delete_top"
@@ -208,8 +205,7 @@ configs:
       truncate_settings:
         action: "delete"
         from: "top"
-        by: "line"
-        size: 1000
+        lines: 1000
 
   ## ?? TRUNCATE BY SIZE KEEP BOTTOM
   - app_name: "truncate_by_size_keep_bottom"
@@ -227,7 +223,6 @@ configs:
       truncate_settings:
         action: "keep"
         from: "bottom"
-        by: "size"
         size: 10
 
   ## ?? TRUNCATE BY SIZE DELETE BOTTOM
@@ -246,7 +241,6 @@ configs:
       truncate_settings:
         action: "delete"
         from: "bottom"
-        by: "size"
         size: 10
 
   ## ?? TRUNCATE BY SIZE KEEP TOP
@@ -265,8 +259,8 @@ configs:
       truncate_settings:
         action: "keep"
         from: "top"
-        by: "size"
         size: 2
+
   ## ?? TRUNCATE BY SIZE DELETE TOP
   - app_name: "truncate_by_size_delete_top"
     logs_dir: "/var/log/truncate-by-size"
@@ -283,7 +277,6 @@ configs:
       truncate_settings:
         action: "delete"
         from: "top"
-        by: "size"
         size: 15
 
 agents:
@@ -296,7 +289,7 @@ agents:
     hostname: "tase_rotate_agent"
     port: 7425
     secret: 6fd01c09e3a82eb3d2b7cafb5804c8e7
-  
+
   - name: tase_truncate_agent
     hostname: "tase_truncate_agent"
     port: 7426

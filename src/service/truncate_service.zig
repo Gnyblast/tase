@@ -46,18 +46,26 @@ fn processForBottom(pruner: Pruner, file: *File) !void {
 }
 
 fn processKeepBottom(pruner: Pruner, file: *File) !void {
-    const keep = @as(u64, @intCast(pruner.log_action.truncate_settings.?.size.?));
-    switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => try keepBottomBySize(file, keep),
-        .line => try keepBottomByLine(file, keep),
+    if (pruner.log_action.truncate_settings.?.size.? > 0) {
+        const keep = @as(u64, @intCast(pruner.log_action.truncate_settings.?.size.?));
+        return try keepBottomBySize(file, keep);
+    }
+
+    if (pruner.log_action.truncate_settings.?.lines.? > 0) {
+        const keep = @as(u64, @intCast(pruner.log_action.truncate_settings.?.lines.?));
+        return try keepBottomByLine(file, keep);
     }
 }
 
 fn processDeleteBottom(pruner: Pruner, file: *File) !void {
-    const del = @as(u64, @intCast(pruner.log_action.truncate_settings.?.size.?));
-    switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => try deleteBottomBySize(file, del),
-        .line => try deleteBottomByLine(file, del),
+    if (pruner.log_action.truncate_settings.?.size.? > 0) {
+        const del = @as(u64, @intCast(pruner.log_action.truncate_settings.?.size.?));
+        return try deleteBottomBySize(file, del);
+    }
+
+    if (pruner.log_action.truncate_settings.?.lines.? > 0) {
+        const del = @as(u64, @intCast(pruner.log_action.truncate_settings.?.lines.?));
+        return try deleteBottomByLine(file, del);
     }
 }
 
@@ -148,18 +156,26 @@ fn processForTop(pruner: Pruner, file: *File) !void {
 }
 
 fn processKeepTop(pruner: Pruner, file: *File) !void {
-    const keep = @as(u64, @intCast(pruner.log_action.truncate_settings.?.size.?));
-    switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => try keepTopBySize(file, keep),
-        .line => try keepTopByLine(file, keep),
+    if (pruner.log_action.truncate_settings.?.size.? > 0) {
+        const keep = @as(u64, @intCast(pruner.log_action.truncate_settings.?.size.?));
+        return try keepTopBySize(file, keep);
+    }
+
+    if (pruner.log_action.truncate_settings.?.lines.? > 0) {
+        const keep = @as(u64, @intCast(pruner.log_action.truncate_settings.?.lines.?));
+        return try keepTopByLine(file, keep);
     }
 }
 
 fn processDeleteTop(pruner: Pruner, file: *File) !void {
-    const del = @as(u64, @intCast(pruner.log_action.truncate_settings.?.size.?));
-    switch (std.meta.stringToEnum(enums.TruncateBy, pruner.log_action.truncate_settings.?.by.?) orelse return TaseNativeErrors.InvalidTruncateByFieldValue) {
-        .size => try deleteTopBySize(file, del),
-        .line => try deleteTopByLine(file, del),
+    if (pruner.log_action.truncate_settings.?.size.? > 0) {
+        const del = @as(u64, @intCast(pruner.log_action.truncate_settings.?.size.?));
+        return try deleteTopBySize(file, del);
+    }
+
+    if (pruner.log_action.truncate_settings.?.lines.? > 0) {
+        const del = @as(u64, @intCast(pruner.log_action.truncate_settings.?.lines.?));
+        return try deleteTopByLine(file, del);
     }
 }
 

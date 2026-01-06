@@ -113,16 +113,16 @@ The `action` object supports three strategies:
 
 ##### Truncate Strategy
 
-| Property                   | Type   | Description                                                          | Default | Required |
-| -------------------------- | ------ | -------------------------------------------------------------------- | ------- | -------- |
-| `strategy`                 | string | Must be `"truncate"`                                                 | -       | Yes      |
-| `truncate_settings.from`   | string | Truncate from top or bottom (`"top"` or `"bottom"`)                  | -       | Yes      |
-| `truncate_settings.by`     | string | Truncate by lines or size (`"line"` or `"size"`)                     | -       | Yes      |
-| `truncate_settings.size`   | int    | Truncate by line numbers or size in mb                               | -       | Yes      |
-| `truncate_settings.action` | string | Keep or Delete matching `truncate_settings` (`"delete"` or `"keep"`) | -       | Yes      |
-| `if.condition`             | string | Condition type (`"days"` or `"size" in MB`)                          | -       | Yes      |
-| `if.operator`              | string | Comparison operator (`">"`, `"<"`, `"="`)                            | -       | Yes      |
-| `if.operand`               | number | Threshold value                                                      | -       | Yes      |
+| Property                   | Type   | Description                                                          | Default | Required                     |
+| -------------------------- | ------ | -------------------------------------------------------------------- | ------- | ---------------------------- |
+| `strategy`                 | string | Must be `"truncate"`                                                 | -       | Yes                          |
+| `truncate_settings.from`   | string | Truncate from top or bottom (`"top"` or `"bottom"`)                  | -       | Yes                          |
+| `truncate_settings.lines`  | int    | Truncate by lines (it's mutually exclusive with `"size"`)            | -       | Either `"lines"` or `"size"` |
+| `truncate_settings.size`   | int    | Truncate by size in MB (it's mutually exclusive with `"lines"`)      | -       | Either `"lines"` or `"size"` |
+| `truncate_settings.action` | string | Keep or Delete matching `truncate_settings` (`"delete"` or `"keep"`) | -       | Yes                          |
+| `if.condition`             | string | Condition type (`"days"` or `"size" in MB`)                          | -       | Yes                          |
+| `if.operator`              | string | Comparison operator (`">"`, `"<"`, `"="`)                            | -       | Yes                          |
+| `if.operand`               | number | Threshold value                                                      | -       | Yes                          |
 
 ##### Rotate Strategy
 
@@ -209,6 +209,23 @@ configs:
         condition: size
         operator: ">"
         operand: 20
+
+  - app_name: "truncate_by_lines_delete_top"
+    logs_dir: "/var/log/myapp3"
+    log_files_regexp: 'test\.log'
+    cron_expression: "30 09 * * 1"
+    run_agent_names:
+      - agent_1
+    action:
+      strategy: truncate
+      if:
+        condition: days
+        operator: ">"
+        operand: 2
+      truncate_settings:
+        action: "delete"
+        from: "top"
+        lines: 1000
 ```
 
 For more example please see: [config](app-test-container/master/config.yaml)

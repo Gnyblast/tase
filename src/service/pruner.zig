@@ -146,9 +146,8 @@ test "initRunTest" {
         },
         .truncate_settings = configs.TruncateSettings{
             .from = enums.TruncateFrom.bottom.str(),
-            .size = 10,
+            .lines = 10,
             .action = enums.TruncateAction.delete.str(),
-            .by = enums.TruncateBy.line.str(),
         },
     };
 

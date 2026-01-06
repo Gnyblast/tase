@@ -23,14 +23,10 @@ pub const TaseNativeErrors = error{
     CompressionLevelInvalid,
     InvalidCompressionType,
     TruncateRequiresSettings,
-    MissingTruncateBy,
-    InvalidTruncateByFieldValue,
     InvalidTruncateFromFieldValue,
     MissingTruncateFrom,
     InvalidTruncateActionFieldValue,
     MissingTruncateAction,
-    MissingTruncateSize,
-    TruncateSizeError,
     SecretIsMandatory,
     MasterOrAgent,
     OnlyMasterOrAgent,
@@ -39,6 +35,8 @@ pub const TaseNativeErrors = error{
     InvalidServerType,
     NotValidAgentHostname,
     NoAgentsFound,
+    MissingTruncateSizeOrLines,
+    TruncateSizeAndLinesBothDefinedError,
 };
 
 const TaseError = struct {
@@ -151,14 +149,6 @@ pub const errors = [_]TaseError{
         .message = "\"truncate\" strategy requires \"truncate_settings\"",
     },
     .{
-        .err = TaseNativeErrors.MissingTruncateBy,
-        .message = "Missing \"by\" in \"truncate_setting\"",
-    },
-    .{
-        .err = TaseNativeErrors.InvalidTruncateByFieldValue,
-        .message = "\"by\" filed value in \"truncate_settings\" is invalid",
-    },
-    .{
         .err = TaseNativeErrors.InvalidTruncateFromFieldValue,
         .message = "\"from\" filed value in \"truncate_settings\" is invalid",
     },
@@ -173,14 +163,6 @@ pub const errors = [_]TaseError{
     .{
         .err = TaseNativeErrors.MissingTruncateAction,
         .message = "Missing \"action\" in \"truncate_setting\"",
-    },
-    .{
-        .err = TaseNativeErrors.MissingTruncateSize,
-        .message = "Value for \"truncata_settings.size\" cannot be less than 1",
-    },
-    .{
-        .err = TaseNativeErrors.TruncateSizeError,
-        .message = "\"size\" in \"truncate_settings\" must be greater than 0",
     },
     .{
         .err = TaseNativeErrors.SecretIsMandatory,
@@ -213,6 +195,14 @@ pub const errors = [_]TaseError{
     .{
         .err = TaseNativeErrors.NoAgentsFound,
         .message = "No matching agents found",
+    },
+    .{
+        .err = TaseNativeErrors.MissingTruncateSizeOrLines,
+        .message = "For truncate strategy either \"size\" or \"lines\" must be defined as greater than 0",
+    },
+    .{
+        .err = TaseNativeErrors.TruncateSizeAndLinesBothDefinedError,
+        .message = "For truncate strategy \"size\" and \"lines\" cannot be defined together",
     },
 };
 
