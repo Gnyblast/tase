@@ -5,11 +5,6 @@
 <p align="center">
 <img src="./trans_bg_wo_wm.png" alt="drawing" width="200"/>
 </p>
-<p align="center">
-<a href="https://discord.gg/mf9R2AzXYq" target="_blank">
-<img src="https://discordapp.com/api/guilds/1373029846510342234/widget.png?style=banner2">
-</a>
-</p>
 
 > [!WARNING]
 > Tase is well-tested on limited environments but not battle-tested fully.
