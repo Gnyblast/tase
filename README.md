@@ -236,6 +236,7 @@ Please read [Contiribution guide](CONTRIBUTING.md)
 ### Version 1.0.0
 
 - Create a builder for different CPU architectures and OS and implement a released inside
+- TLS upgrade for TCP
 
 ### Version 2.0.0
 
